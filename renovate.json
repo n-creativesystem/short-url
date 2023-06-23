@@ -1,6 +1,56 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:base"
+  "extends": ["config:base", ":timezone(Asia/Tokyo)"],
+  "stabilityDays": 7,
+  "labels": ["renovate"],
+  "packageRules": [
+    {
+      "matchManagers": ["gomod"],
+      "matchUpdateTypes": ["minor"],
+      "addLabels": ["golang", "minor"],
+      "groupName": "Go Modules Updates(minor)",
+      "stabilityDays": 3
+    },
+    {
+      "matchManagers": ["gomod"],
+      "matchUpdateTypes": ["patch"],
+      "addLabels": ["golang", "patch"],
+      "groupName": "Go Modules Updates(patch)",
+      "stabilityDays": 3
+    },
+    {
+      "matchManagers": ["yarn"],
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": ["minor"],
+      "addLabels": ["yarn", "minor", "dev only"],
+      "groupName": "yarn dev dependencies(minor)",
+      "stabilityDays": 3
+    },
+    {
+      "matchManagers": ["yarn"],
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": ["patch"],
+      "addLabels": ["yarn", "patch", "dev only"],
+      "groupName": "yarn dev dependencies(patch)",
+      "stabilityDays": 3
+    },
+    {
+      "matchManagers": ["yarn"],
+      "matchDepTypes": ["dependencies"],
+      "matchUpdateTypes": ["minor"],
+      "addLabels": ["yarn", "minor"],
+      "groupName": "yarn dependencies(minor)",
+      "groupSlug": "yarn-dev",
+      "stabilityDays": 3
+    },
+    {
+      "matchManagers": ["yarn"],
+      "matchDepTypes": ["dependencies"],
+      "matchUpdateTypes": ["patch"],
+      "addLabels": ["yarn", "patch"],
+      "groupName": "yarn dependencies(patch)",
+      "groupSlug": "yarn-dev",
+      "stabilityDays": 3
+    }
   ]
 }

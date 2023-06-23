@@ -1,0 +1,18 @@
+@use '@/styles/variables/color.module' as var;
+
+.container {
+  width: 100%;
+  text-align: center;
+  padding-top: 80px;
+  .content {
+    border: 1px solid #ccc;
+    padding: 32px;
+    width: 600px;
+    margin: 0 auto;
+    background-color: var.$v1_white;
+  }
+  .auth-button-content {
+    width: 250px;
+    margin: 0 auto;
+  }
+}

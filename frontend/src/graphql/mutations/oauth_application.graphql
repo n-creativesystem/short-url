@@ -1,0 +1,21 @@
+mutation createOAuthApplication($input: OAuthApplicationInput!) {
+  createOAuthApplication(input: $input) {
+    id
+    name
+    secret
+    domain
+  }
+}
+
+mutation updateOAuthApplication($id: String!, $input: OAuthApplicationInput!) {
+  updateOAuthApplication(id: $id, input: $input) {
+    id
+    name
+    secret
+    domain
+  }
+}
+
+mutation deleteOAuthApplication($id: String!) {
+  deleteOAuthApplication(id: $id)
+}

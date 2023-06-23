@@ -1,0 +1,25 @@
+query OAuthApplications($token: String) {
+  oauthApplications(token: $token) {
+    result {
+      id
+      name
+      secret
+      domain
+    }
+    _metadata {
+      prev
+      self
+      next
+      count
+    }
+  }
+}
+
+query OAuthApplication($id: String!) {
+  oauthApplication(id: $id) {
+    id
+    name
+    secret
+    domain
+  }
+}

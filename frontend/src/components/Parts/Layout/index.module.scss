@@ -1,0 +1,5 @@
+@use '@/styles/variables/index.module.scss' as var;
+
+.content {
+  height: var.$heightPageContent;
+}

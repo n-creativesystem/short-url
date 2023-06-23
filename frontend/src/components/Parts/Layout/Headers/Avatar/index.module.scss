@@ -1,0 +1,12 @@
+.button {
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  .avatar {
+    border-radius: 50%;
+    vertical-align: inherit;
+  }
+}

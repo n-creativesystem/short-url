@@ -1,0 +1,37 @@
+@use '@/styles/variables/index.module' as var;
+
+html,
+body {
+  font-family: var.$fontFamilyBase;
+  font-display: swap;
+  // 対応デバイスが増えた際にマルチクラスでデバイスごとに分岐
+  font-size: var.$fontSizeDesktopBase;
+  font-weight: var.$fontWeightBase;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  color: var.$colorFontBase;
+  background: var.$bgColorBase;
+}
+
+a {
+  color: var.$colorLink;
+  transition: none;
+
+  &:hover:not(.isDisabled) {
+    color: var.$colorLinkHover;
+  }
+  &:active:not(.isDisabled) {
+    color: var.$colorLinkActive;
+  }
+}
+
+p {
+  letter-spacing: 0.035rem;
+}
+
+ul {
+  font-size: 0;
+  li {
+    font-size: 1rem;
+  }
+}

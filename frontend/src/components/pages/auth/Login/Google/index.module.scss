@@ -1,0 +1,11 @@
+.socialButton {
+  padding: 0;
+  border: none;
+  background: transparent;
+  img {
+    display: block;
+  }
+  :hover {
+    cursor: pointer;
+  }
+}

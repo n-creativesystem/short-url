@@ -63,7 +63,7 @@ services:
     volumes:
       - redis:/data
   localstack:
-    image: localstack/localstack:1.4.0
+    image: localstack/localstack:2.1.0
     environment:
       SERVICES: kms
       EDGE_PORT: 4566

@@ -1,0 +1,127 @@
+{
+  // IntelliSense を使用して利用可能な属性を学べます。
+  // 既存の属性の説明をホバーして表示します。
+  // 詳細情報は次を確認してください: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "debug for backend",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}",
+      "args": [
+        "server",
+        "${input:service}",
+        "--port",
+        "${input:port}",
+        "--mode",
+        "debug",
+        "--driver",
+        "${input:driver}"
+      ],
+      "env": {
+        "APP_ENV": "dev"
+      },
+      "envFile": "${workspaceFolder}/.env"
+    },
+    {
+      "name": "debug for url service",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}",
+      "args": [
+        "server",
+        "service",
+        "--port",
+        "${input:port}",
+        "--mode",
+        "debug",
+        "--driver",
+        "${input:driver}"
+      ],
+      "env": {
+        "APP_ENV": "dev"
+      },
+      "envFile": "${workspaceFolder}/.env"
+    },
+    {
+      "name": "debug for webUI",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}",
+      "args": [
+        "server",
+        "web-ui",
+        "--port",
+        "${input:port}",
+        "--mode",
+        "debug",
+        "--driver",
+        "${input:driver}"
+      ],
+      "env": {
+        "APP_ENV": "dev"
+      },
+      "envFile": "${workspaceFolder}/.env",
+      "preLaunchTask": "migration"
+    },
+    {
+      "name": "debug for migrator up",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}",
+      "args": ["migrator", "up", "--driver", "${input:driver}"],
+      "env": {
+        "APP_ENV": "dev"
+      },
+      "envFile": "${workspaceFolder}/.env"
+    },
+    {
+      "name": "debug for migrator down",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}",
+      "args": ["migrator", "down", "--driver", "${input:driver}"],
+      "env": {
+        "APP_ENV": "dev"
+      },
+      "envFile": "${workspaceFolder}/.env"
+    },
+    {
+      "name": "debug for migrator create",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}",
+      "args": ["migrator", "create", "test"],
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env"
+    }
+  ],
+  "inputs": [
+    {
+      "id": "port",
+      "description": "port number",
+      "default": "8080",
+      "type": "promptString"
+    },
+    {
+      "id": "driver",
+      "description": "Backend driver",
+      "default": "dynamodb",
+      "options": ["mysql", "postgres", "sqlite", "dynamodb"],
+      "type": "pickString"
+    },
+    {
+      "id": "service",
+      "description": "service mode",
+      "options": ["api", "service", "web-ui"],
+      "type": "pickString"
+    }
+  ]
+}

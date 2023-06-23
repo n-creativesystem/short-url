@@ -1,0 +1,19 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "migration",
+      "type": "shell",
+      "command": "make",
+      "args": ["migration-up", "DRIVER=${input:driver}"]
+    }
+  ],
+  "inputs": [
+    {
+      "id": "driver",
+      "description": "Backend driver",
+      "default": "sqlite",
+      "type": "promptString"
+    }
+  ]
+}

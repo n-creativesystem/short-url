@@ -1,0 +1,28 @@
+pkgname: model
+no-tests: true
+wipe: true
+add-global-variants: true
+add-panic-variants: true
+add-enum-types: true
+aliases:
+  tables:
+    recipients:
+      relationships: {}
+mysql:
+  dbname: shorturl
+  host: db
+  port: 3306
+  user: admin
+  sslmode: "false"
+  pass: pass1234
+  blacklist:
+    - goose_db_version
+psql:
+  dbname: shorturl
+  host: postgres
+  port: 5432
+  user: admin
+  sslmode: disable
+  pass: pass1234
+  blacklist:
+    - goose_db_version

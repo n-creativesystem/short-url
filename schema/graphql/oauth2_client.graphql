@@ -1,0 +1,41 @@
+schema {
+  query: OAuth2ClientQuery
+  mutation: OAuth2ClientMutation
+}
+
+type MetadataType {
+  prev: String!
+  self: String!
+  next: String!
+  count: Int!
+}
+
+type OAuthApplication {
+  id: String!
+  name: String!
+  secret: String!
+  domain: String!
+}
+
+type OAuthApplicationType {
+  result: [OAuthApplication!]!
+  _metadata: MetadataType!
+}
+
+type OAuth2ClientQuery {
+  oauthApplications(token: String): OAuthApplicationType!
+  oauthApplication(id: String!): OAuthApplication!
+}
+
+type OAuth2ClientMutation {
+  createOAuthApplication(input: OAuthApplicationInput!): OAuthApplication!
+  updateOAuthApplication(
+    id: String!
+    input: OAuthApplicationInput!
+  ): OAuthApplication!
+  deleteOAuthApplication(id: String!): Boolean!
+}
+
+input OAuthApplicationInput {
+  name: String!
+}

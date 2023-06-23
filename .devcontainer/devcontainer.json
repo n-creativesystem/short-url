@@ -1,0 +1,39 @@
+{
+  "name": "short-url-dev",
+  "dockerComposeFile": ["../docker-compose.yaml"],
+  "service": "short-url-dev",
+  "workspaceFolder": "/src",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "terminal.integrated.profiles.linux": {
+          "bash": {
+            "path": "/bin/bash"
+          }
+        }
+      },
+      "extensions": [
+        "golang.Go",
+        "yokoe.vscode-postfix-go",
+        "eamodio.gitlens",
+        "mhutchie.git-graph",
+        "christian-kohler.path-intellisense",
+        "streetsidesoftware.code-spell-checker",
+        "redhat.vscode-yaml",
+        "zxh404.vscode-proto3",
+        "Gruntfuggly.todo-tree",
+        "esbenp.prettier-vscode",
+        "mads-hartmann.bash-ide-vscode",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "GraphQL.vscode-graphql",
+        "ms-azuretools.vscode-docker",
+        "rangav.vscode-thunder-client",
+        "ZixuanChen.vitest-explorer",
+        "kingwl.vscode-vitest-runner"
+      ]
+    }
+  },
+  "postAttachCommand": "bash tools/attach-command.sh"
+}

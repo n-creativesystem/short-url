@@ -1,0 +1,263 @@
+basePath: /api/v1
+definitions:
+  request.GenerateShortURL:
+    properties:
+      key:
+        description: nullable
+        type: string
+      url:
+        type: string
+    type: object
+  request.RevokeToken:
+    properties:
+      token:
+        type: string
+      token_type_hint:
+        description: Enums(access_token,refresh_token)
+        type: string
+    type: object
+  response.Error:
+    properties:
+      description:
+        type: string
+      field:
+        type: string
+      help:
+        type: string
+      message:
+        type: string
+    type: object
+  response.Errors:
+    properties:
+      errors:
+        items:
+          $ref: '#/definitions/response.Error'
+        type: array
+    type: object
+  response.GenerateShortURL:
+    properties:
+      url:
+        type: string
+    type: object
+  response.OAuth2Token:
+    properties:
+      access_token:
+        type: string
+      expires_in:
+        type: integer
+      refresh_token:
+        description: nullable
+        type: string
+      scope:
+        description: nullable
+        type: string
+      token_type:
+        type: string
+    type: object
+  response.Shorts:
+    properties:
+      author:
+        type: string
+      created_at:
+        type: string
+      key:
+        type: string
+      updated_at:
+        type: string
+      url:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: 短縮URL生成 API
+  license:
+    name: nozomi.nishinohara
+  title: Short url
+  version: "1.0"
+paths:
+  /oauth2:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Errors'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Errors'
+      security:
+      - OAuth2Application: []
+      summary: 登録されているOAuthアプリケーションの一覧
+      tags:
+      - API
+  /oauth2/revoke:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: revoke token
+        in: body
+        name: request_body
+        required: true
+        schema:
+          $ref: '#/definitions/request.RevokeToken'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Errors'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Errors'
+      security:
+      - OAuth2Application: []
+      summary: アクセストークンの取消
+      tags:
+      - API
+  /oauth2/token:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      parameters:
+      - description: client id
+        in: formData
+        name: client_id
+        required: true
+        type: string
+      - description: client secret
+        in: formData
+        name: client_secret
+        required: true
+        type: string
+      - description: grant_type
+        enum:
+        - client_credentials
+        in: formData
+        name: grant_type
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.OAuth2Token'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Errors'
+      summary: アクセストークンの生成
+      tags:
+      - API
+  /shorts:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Shorts'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Errors'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Errors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Errors'
+      security:
+      - OAuth2Application: []
+      summary: 短縮URLの一覧
+      tags:
+      - API
+  /shorts/{key}:
+    delete:
+      parameters:
+      - description: short url key
+        in: path
+        name: key
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Errors'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Errors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Errors'
+      security:
+      - OAuth2Application: []
+      summary: 短縮URLの削除
+      tags:
+      - API
+  /shorts/generate:
+    post:
+      parameters:
+      - description: generate short url request
+        in: body
+        name: request_body
+        required: true
+        schema:
+          $ref: '#/definitions/request.GenerateShortURL'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.GenerateShortURL'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Errors'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Errors'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Errors'
+      security:
+      - OAuth2Application: []
+      summary: 短縮URLの生成
+      tags:
+      - API
+schemes:
+- http
+- https
+securityDefinitions:
+  OAuth2Application:
+    description: エンドポイントを保護します
+    flow: application
+    tokenUrl: /api/v1/oauth2/token
+    type: oauth2
+swagger: "2.0"

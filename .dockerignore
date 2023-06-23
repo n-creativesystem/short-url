@@ -1,0 +1,14 @@
+.devcontainer
+.vscode
+.DS_Store
+cover/*
+*.env
+sqlite.db
+.devcontainer/
+pkg/infrastructure/router/static/app/
+fixtures
+db/*
+!db/migrations/*
+!db/**/*.go
+schema
+tools

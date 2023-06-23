@@ -1,0 +1,86 @@
+version: "3.7"
+services:
+  short-url-dev:
+    build:
+      context: .
+      dockerfile: .devcontainer/Dockerfile
+    volumes:
+      - ./:/src/
+      - node_modules:/src/frontend/node_modules
+    tty: true
+    networks:
+      - default
+  db:
+    image: mysql:8.0
+    platform: linux/x86_64
+    command: "--default-authentication-plugin=mysql_native_password"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: shorturl
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: pass1234
+      TZ: Asia/Tokyo
+    ports:
+      - 13306:3306
+    volumes:
+      - db:/var/lib/mysql
+      - ./db/conf.d:/etc/mysql/conf.d
+      - ./db/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d/
+    healthcheck:
+      test:
+        - CMD
+        - mysqladmin
+        - ping
+        - -h
+        - localhost
+      timeout: 5s
+      retries: 10
+  dynamodb:
+    image: amazon/dynamodb-local:1.21.0
+    command: -jar DynamoDBLocal.jar -sharedDb -dbPath . -optimizeDbBeforeStartup
+    ports:
+      - 18000:8000
+  #   depends_on:
+  #     - dynamodb-admin-ui
+  dynamodb-admin-ui:
+    image: aaronshaf/dynamodb-admin
+    environment:
+      DYNAMO_ENDPOINT: http://dynamodb:8000
+    ports:
+      - 18001:8001
+  postgres:
+    image: postgres:14-alpine
+    environment:
+      POSTGRES_DB: shorturl
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: pass1234
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    ports:
+      - 15432:5432
+  redis:
+    image: redis:6.2.12-alpine
+    volumes:
+      - redis:/data
+  localstack:
+    image: localstack/localstack:1.2.0
+    environment:
+      SERVICES: kms
+      EDGE_PORT: 4566
+      INIT_SCRIPTS_PATH: /docker-entrypoint-initaws.d
+      DEFAULT_REGION: ap-northeast-1
+      KMS_PROVIDER: local-kms
+      AWS_ACCESS_KEY_ID: dummy
+      AWS_SECRET_ACCESS_KEY: dummy
+    volumes:
+      - ./tools/localstack/init:/docker-entrypoint-initaws.d:ro
+      - ./tools/localstack/data:/data:rw
+networks:
+  default:
+    name: short-url-network
+volumes:
+  # NOTE: 初期化したい場合は `docker volume rm short-url_db` を実行
+  db:
+  postgres:
+  node_modules:
+  redis:

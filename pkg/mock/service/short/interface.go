@@ -6,6 +6,7 @@ package short
 
 import (
 	context "context"
+	io "io"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -48,6 +49,21 @@ func (m *MockService) FindAll(ctx context.Context, author string) ([]short.Short
 func (mr *MockServiceMockRecorder) FindAll(ctx, author interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAll", reflect.TypeOf((*MockService)(nil).FindAll), ctx, author)
+}
+
+// GenerateQRCode mocks base method.
+func (m *MockService) GenerateQRCode(ctx context.Context, key string) (io.Reader, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GenerateQRCode", ctx, key)
+	ret0, _ := ret[0].(io.Reader)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GenerateQRCode indicates an expected call of GenerateQRCode.
+func (mr *MockServiceMockRecorder) GenerateQRCode(ctx, key interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateQRCode", reflect.TypeOf((*MockService)(nil).GenerateQRCode), ctx, key)
 }
 
 // GenerateShortURL mocks base method.

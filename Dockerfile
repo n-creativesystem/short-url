@@ -9,7 +9,7 @@ COPY frontend ./
 
 RUN yarn build
 
-FROM --platform=$BUILDPLATFORM golang:1.20.3-bullseye as backend
+FROM --platform=$BUILDPLATFORM golang:1.20.5-bullseye as backend
 
 WORKDIR /workspace
 

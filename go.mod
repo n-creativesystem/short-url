@@ -43,6 +43,7 @@ require (
 	github.com/steinfletcher/apitest-jsonpath v1.7.2
 	github.com/stretchr/testify v1.8.3
 	github.com/swaggo/files v1.0.1
+	github.com/swaggo/files/v2 v2.0.0
 	github.com/swaggo/gin-swagger v1.6.0
 	github.com/swaggo/swag v1.16.1
 	github.com/swaggo/swag/v2 v2.0.0-rc3

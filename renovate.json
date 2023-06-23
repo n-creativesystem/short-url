@@ -19,7 +19,7 @@
       "stabilityDays": 3
     },
     {
-      "matchManagers": ["yarn"],
+      "matchManagers": ["npm"],
       "matchDepTypes": ["devDependencies"],
       "matchUpdateTypes": ["minor"],
       "addLabels": ["yarn", "minor", "dev only"],
@@ -27,7 +27,7 @@
       "stabilityDays": 3
     },
     {
-      "matchManagers": ["yarn"],
+      "matchManagers": ["npm"],
       "matchDepTypes": ["devDependencies"],
       "matchUpdateTypes": ["patch"],
       "addLabels": ["yarn", "patch", "dev only"],
@@ -35,7 +35,7 @@
       "stabilityDays": 3
     },
     {
-      "matchManagers": ["yarn"],
+      "matchManagers": ["npm"],
       "matchDepTypes": ["dependencies"],
       "matchUpdateTypes": ["minor"],
       "addLabels": ["yarn", "minor"],
@@ -44,7 +44,7 @@
       "stabilityDays": 3
     },
     {
-      "matchManagers": ["yarn"],
+      "matchManagers": ["npm"],
       "matchDepTypes": ["dependencies"],
       "matchUpdateTypes": ["patch"],
       "addLabels": ["yarn", "patch"],

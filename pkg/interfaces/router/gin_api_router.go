@@ -15,12 +15,11 @@ import (
 // @title Short url
 // @version 1.0
 // @description 短縮URL生成 API
-// @BasePath /api/v1
-// @schemes http https
 // @license.name nozomi.nishinohara
 // @securitydefinitions.oauth2.application OAuth2Application
-// @tokenUrl /api/v1/oauth2/token
-// @scope
+// @tokenurl /api/v1/oauth2/token
+// @in header
+// @name OAuth2Application
 // @description エンドポイントを保護します
 func NewAPI(input *RouterInput) *gin.Engine {
 	mainRoute := newGinRouter()

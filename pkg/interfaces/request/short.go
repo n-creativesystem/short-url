@@ -27,3 +27,17 @@ func (req *GenerateShortURL) Valid() *response.Errors {
 	)
 	return validError(err)
 }
+
+type RequestPathForGenerateQRCode struct {
+	Key string
+}
+
+func (req *RequestPathForGenerateQRCode) Valid() *response.Errors {
+	err := validation.ValidateStruct(req,
+		validation.Field(
+			&req.Key,
+			validation.RuneLength(1, 255).Error("The key range is {{.min}} to {{.max}}."),
+		),
+	)
+	return validError(err)
+}

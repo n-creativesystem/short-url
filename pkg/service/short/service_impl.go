@@ -1,8 +1,10 @@
 package short
 
 import (
+	"bytes"
 	"context"
 	"errors"
+	"io"
 
 	"github.com/n-creativesystem/short-url/pkg/domain/config"
 	"github.com/n-creativesystem/short-url/pkg/domain/repository"
@@ -10,6 +12,8 @@ import (
 	"github.com/n-creativesystem/short-url/pkg/domain/tx"
 	"github.com/n-creativesystem/short-url/pkg/service"
 	"github.com/n-creativesystem/short-url/pkg/utils/hash"
+	"github.com/n-creativesystem/short-url/pkg/utils/logging"
+	"github.com/skip2/go-qrcode"
 )
 
 type serviceImpl struct {
@@ -83,6 +87,22 @@ func (impl *serviceImpl) GenerateShortURL(ctx context.Context, url, key, author 
 	}
 
 	return value.GetKey(), nil
+}
+
+func (impl *serviceImpl) GenerateQRCode(ctx context.Context, key string) (io.Reader, error) {
+	result, err := impl.repo.Get(ctx, key)
+	if err != nil {
+		if errors.Is(err, repository.ErrRecordNotFound) {
+			return nil, service.ErrNotFound
+		}
+		return nil, service.Wrap(err, "Service shortURL: An error occurred while retrieving the URL.")
+	}
+	png, err := qrcode.Encode(result.GetURL(), qrcode.Medium, 256)
+	if err != nil {
+		logging.Default().Error(err)
+		return nil, errors.New("Service shortURL: QR Code generation failed.")
+	}
+	return bytes.NewReader(png), nil
 }
 
 func (impl *serviceImpl) Remove(ctx context.Context, key, author string) error {

@@ -38,6 +38,7 @@
     "envconfig",
     "filekms",
     "Lookuper",
+    "qrcode",
     "Secretbox",
     "sharedtest",
     "testid"

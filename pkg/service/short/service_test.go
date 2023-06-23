@@ -3,11 +3,15 @@ package short
 import (
 	"context"
 	"errors"
+	"io"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/n-creativesystem/short-url/fixtures"
 	"github.com/n-creativesystem/short-url/pkg/domain/config"
 	"github.com/n-creativesystem/short-url/pkg/domain/repository"
 	"github.com/n-creativesystem/short-url/pkg/domain/short"
@@ -482,6 +486,87 @@ func TestServiceForFindAll(t *testing.T) {
 				assert.Equal(t, tt.wantErr.Error(), err.Error())
 			}
 			tt.want(t, result)
+		})
+	}
+}
+
+func TestServiceForQRCodeGenerator(t *testing.T) {
+	var (
+		mockURL   = "http://localhost:8080/example"
+		appConfig = &config.Application{
+			RetryGenerateCount: 2,
+		}
+	)
+	fixtureDir, err := fixtures.GetDirectory()
+	require.NoError(t, err)
+	testQRCode := filepath.Join(fixtureDir, "qrcode.png")
+	qrcodeBuf, err := os.ReadFile(testQRCode)
+	require.NoError(t, err)
+	ctx := context.Background()
+	tests := []testTable[string, []byte]{
+		{
+			name: "success",
+			data: "key",
+			prepareMockFn: func(shortRepoMock *mock_short_repo.MockRepository, appConfigMock *mock_config_repo.MockApplicationRepository) {
+				model := short.NewShort(mockURL, "key", "test")
+				shortRepoMock.EXPECT().Get(ctx, "key").Return(model, nil)
+				appConfigMock.EXPECT().Get(gomock.Any()).Return(appConfig, nil)
+			},
+			want: func(t *testing.T, result []byte) {
+				assert.Equal(t, qrcodeBuf, result)
+			},
+			wantErr: nil,
+		},
+		{
+			name: "not found",
+			data: "not found",
+			prepareMockFn: func(shortRepoMock *mock_short_repo.MockRepository, appConfigMock *mock_config_repo.MockApplicationRepository) {
+				shortRepoMock.EXPECT().Get(ctx, gomock.Any()).Return(nil, repository.ErrRecordNotFound)
+				appConfigMock.EXPECT().Get(gomock.Any()).Return(appConfig, nil)
+			},
+			want: func(t *testing.T, result []byte) {
+				assert.Empty(t, result)
+			},
+			wantErr: service.ErrNotFound,
+		},
+		{
+			name: "fail",
+			data: "fail",
+			prepareMockFn: func(shortRepoMock *mock_short_repo.MockRepository, appConfigMock *mock_config_repo.MockApplicationRepository) {
+				shortRepoMock.EXPECT().Get(ctx, gomock.Any()).Return(nil, errors.New("Other error"))
+				appConfigMock.EXPECT().Get(gomock.Any()).Return(appConfig, nil)
+			},
+			want: func(t *testing.T, result []byte) {
+				assert.Empty(t, result)
+			},
+			wantErr: errors.New("Service shortURL: An error occurred while retrieving the URL.: Other error"),
+		},
+	}
+	t.Parallel()
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			mockCtl := gomock.NewController(t)
+			defer mockCtl.Finish()
+			mockRepo := testMockRepository(mockCtl)
+			mockAppCfg := testMockAppRepository(mockCtl)
+			tt.prepareMockFn(mockRepo, mockAppCfg)
+			appCfg, err := mockAppCfg.Get(ctx)
+			require.NoError(t, err)
+			beginner, _ := noop.NewBeginner()
+			impl := NewService(mockRepo, appCfg, beginner)
+			r, err := impl.GenerateQRCode(ctx, tt.data)
+			if (err != nil) != (tt.wantErr != nil) {
+				t.Errorf("GenerateQRCode() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			var buf []byte
+			if err != nil && tt.wantErr != nil {
+				require.Equal(t, tt.wantErr.Error(), err.Error())
+			} else {
+				buf, _ = io.ReadAll(r)
+			}
+			tt.want(t, buf)
 		})
 	}
 }

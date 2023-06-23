@@ -1,0 +1,59 @@
+/**
+ * Primitive Token - Typography
+ * 注意: 変数追加時は:exportにも追加してください (storybookで利用)
+ *
+ * フォントサイズ・フォントファミリーを定義する場所
+ * @refs: https://www.figma.com/file/hnbGqX6CjP060XG1Dagw2p/%E3%83%87%E3%82%B6%E3%82%A4%E3%83%B3?node-id=25%3A7274
+**/
+
+@use '@/styles/functions.module.scss' as fn;
+
+// font-family
+// ベースはゴシック体
+$fontFamilyBase: 'Hiragino Sans', 'ヒラギノ角ゴ ProN W3',
+  'Hiragino Kaku Gothic ProN', 'メイリオ', 'Meiryo', sans-serif;
+
+// font-size
+$fontSizeXL: fn.px2rem(18);
+$fontSizeL: fn.px2rem(16);
+$fontSizeM: 1rem;
+$fontSizeS: fn.px2rem(12);
+$fontSizeXS: fn.px2rem(10);
+$fontSizeBase: 14px;
+// いまのところデスクトップのみ
+$fontSizeDesktopBase: $fontSizeBase;
+
+// font-size heading
+$fontSizeH2: $fontSizeXL;
+$fontSizeH3: $fontSizeL;
+$fontSizeH4: $fontSizeM;
+$fontSizeH5: $fontSizeS;
+
+// font-weight
+// FIXME: windowsでデフォルト400が細くなるため500にしたい
+$fontWeightNormal: 400;
+$fontWeightBold: 600;
+$fontWeightBolder: 700;
+$fontWeightBase: $fontWeightNormal;
+
+:export {
+  fontFamily-fontFamilyBase: $fontFamilyBase;
+
+  fontSize-fontSizeXL: $fontSizeXL;
+  fontSize-fontSizeL: $fontSizeL;
+  fontSize-fontSizeM: $fontSizeM;
+  fontSize-fontSizeS: $fontSizeS;
+  fontSize-fontSizeXS: $fontSizeXS;
+  fontSize-fontSizeBase: $fontSizeBase;
+  fontSize-fontSizeDesktopBase: $fontSizeDesktopBase;
+
+  heading-fontSizeH2: $fontSizeH2;
+  heading-fontSizeH3: $fontSizeH3;
+  heading-fontSizeH4: $fontSizeH4;
+  heading-fontSizeH5: $fontSizeH5;
+
+  fontWeight-fontWeightNormal: $fontWeightNormal;
+  fontWeight-fontWeightBold: $fontWeightBold;
+  fontWeight-fontWeightBolder: $fontWeightBolder;
+  fontWeight-fontWeightBase: $fontWeightBase;
+}

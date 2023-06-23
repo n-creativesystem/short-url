@@ -1,0 +1,18 @@
+@use '@/styles/variables/index.module.scss' as var;
+
+.container {
+  margin-top: var.$appBarHeight;
+  align-items: center;
+  background-color: var.$bgColorBase;
+  border-bottom: 1px solid var.$borderColorBase;
+  display: flex;
+  height: var.$heightSubHeader;
+  box-sizing: border-box;
+
+  .title {
+    color: var.$colorFontBase;
+    margin: 0 0 0 16px;
+    font-size: var.$fontSizeXL;
+    font-weight: normal;
+  }
+}

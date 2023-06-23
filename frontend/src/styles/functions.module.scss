@@ -1,0 +1,6 @@
+@use 'sass:math';
+
+// デバイスが増えた時はbaseを渡すようにする
+@function px2rem($size, $base: 14) {
+  @return math.div($size, $base) + rem;
+}

@@ -1,0 +1,7 @@
+*.md
+*.mdx
+package.json
+yarn.lock
+**/node_modules
+scripts/genAntdCss.tsx
+src/utils/$path.ts

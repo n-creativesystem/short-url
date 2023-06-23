@@ -1,0 +1,192 @@
+@forward '@/styles/variables/font.module';
+@use '@/styles/variables/color.module' as var;
+
+// color
+$colorFontBase: var.$v1_textColorMain;
+$colorBrand: var.$v1_brand;
+$colorBrandAlpha: rgba($colorBrand, 0.75);
+$colorDefault: var.$v1_textColorGray;
+$colorReverse: var.$v1_white;
+$colorPrimary: $colorBrand;
+$colorSuccess: var.$v1_text_success;
+$colorWarning: var.$v1_text_warning;
+$colorDanger: var.$v1_text_danger;
+$colorError: $colorDanger;
+$colorDisable: var.$v1_textColorMoreGray;
+$colorSetting: $colorBrand;
+$colorPlaceholder: var.$v1_textColorMoreGray;
+$colorNote: var.$v1_textColorMoreGray;
+$colorLink: var.$v1_linkColor;
+$colorLinkHover: var.$v1_primaryDark;
+$colorLinkActive: var.$v1_primary;
+$colorIcon: var.$v1_iconEnable;
+$colorIconSuccess: var.$v1_icon_success;
+// form
+$colorErrorField: var.$v1_error;
+$colorDisabledField: var.$v1_textColorMoreGray;
+// day of week
+$colorSunday: var.$v1_errorDarken;
+$colorSaturday: var.$v1_primaryLight;
+
+// background-color
+$bgColorBase: var.$v1_white;
+$bgColorPage: var.$v1_background;
+$bgColorDefault: var.$solitude;
+$bgColorPrimary: $colorBrand;
+$bgColorPrimary2: var.$v1_primary;
+$bgColorPrimaryLight: var.$v1_primaryLight;
+$bgColorDanger: var.$v1_error;
+$bgColorDisable: var.$v1_disable;
+$bgColorNotify: var.$v1_error;
+$bgColorOverlay: var.$v1_overlay;
+$bgColorIcon: var.$v1_background;
+$bgColorSelected: var.$v1_backgroundSelected;
+$bgColorSelectedHover: var.$v1_backgroundSelectedHover;
+// form
+$bgColorDisableField: var.$v1_iconDisable;
+$bgColorErrorField: var.$v1_backgroundError;
+$bgColorCheckedRadioField: var.$v1_brand;
+$bgColorDisableRadioField: var.$v1_placeholder;
+$bgColorDisableRadioField2: var.$v1_bg_disable_radio_field;
+// tag
+$bgColorTagPending: var.$v1_attention;
+$bgColorTagProcessing: var.$v1_success;
+$bgColorTagProcessed: var.$v1_iconEnable;
+$bgColorTagArchived: var.$v1_secondaryMoreLight;
+$bgColorTagInOperation: var.$v1_error;
+// progress
+$bgColorProgressBase: var.$v1_background_progress;
+$bgColorProgressProcessing: var.$v1_primary;
+$bgColorProgressProcessed: var.$v1_success;
+$bgColorProgressError: var.$v1_error;
+
+// border-color
+$borderColorBase: var.$v1_border;
+$borderColorSection: var.$v1_disable;
+$borderColorBrand: $colorBrand;
+$borderColorPrimary: var.$v1_primary;
+$borderColorDanger: var.$v1_errorDarken;
+$borderColorGray: var.$v1_borderGray;
+// form
+$borderColorFocusField: var.$v1_brand;
+$borderColorDisableField: var.$v1_iconDisable;
+$borderColorErrorField: var.$v1_error;
+$borderColorCheckedRadioField: var.$v1_brand;
+$borderColorDisableRadioField: var.$v1_border;
+
+// shadow
+// form
+$shadowColorFocusField: var.$v1_focus_shadow;
+
+// width
+$widthContainerMin: 1280px;
+$widthContent: 960px;
+$widthNavigationOpen: 130px;
+$widthNavigationClose: 40px;
+$widthHeaderMin: $widthContent + $widthNavigationClose;
+$drawerWidth: 240px;
+
+// AppBar height
+$appBarHeight: 64px;
+
+// height
+$heightHeader: 40px;
+// ページタイトル
+$heightSubHeader: 50px;
+$heightHeaders: $appBarHeight + $heightSubHeader;
+// コンテンツの高さ
+$heightPageContent: calc(100vh - $heightHeaders);
+
+// z-index
+$zIndexDefault: 1;
+// 優先させたい操作を行うUI
+$zIndexControl: 10;
+// 他パーツの上に意図的に重ねたいもの
+$zIndexCover: 100;
+$zIndexModal: 1000;
+$maxZIndexModal: 9999;
+
+// js用にexport
+:export {
+  // color
+  colorFontBase: $colorFontBase;
+  colorBrand: $colorBrand;
+  colorBrandAlpha: $colorBrandAlpha;
+  colorDefault: $colorDefault;
+  colorReverse: $colorReverse;
+  colorPrimary: $colorPrimary;
+  colorSuccess: $colorSuccess;
+  colorError: $colorError;
+  colorWarning: $colorWarning;
+  colorDanger: $colorDanger;
+  colorDisable: $colorDisable;
+  colorSetting: $colorSetting;
+  colorPlaceholder: $colorPlaceholder;
+  colorNote: $colorNote;
+  colorLink: $colorLink;
+  colorLinkHover: $colorLinkHover;
+  colorLinkActive: $colorLinkActive;
+  colorIcon: $colorIcon;
+  colorIconSuccess: $colorIconSuccess;
+  colorErrorField: $colorErrorField;
+  colorDisabledField: $colorDisabledField;
+  colorSunday: $colorSunday;
+  colorSaturday: $colorSaturday;
+
+  // bgColor
+  bgColorOverlay: $bgColorOverlay;
+  bgColorPage: $bgColorPage;
+  bgColorDefault: $bgColorDefault;
+  bgColorPrimary: $bgColorPrimary;
+  bgColorPrimary2: $bgColorPrimary2;
+  bgColorPrimaryLight: $bgColorPrimaryLight;
+  bgColorDanger: $bgColorDanger;
+  bgColorDisable: $bgColorDisable;
+  bgColorNotify: $bgColorNotify;
+  bgColorOverlay: $bgColorOverlay;
+  bgColorIcon: $bgColorIcon;
+  bgColorSelected: $bgColorSelected;
+  bgColorSelectedHover: $bgColorSelectedHover;
+  bgColorDisableField: $bgColorDisableField;
+  bgColorErrorField: $bgColorErrorField;
+  bgColorCheckedRadioField: $bgColorCheckedRadioField;
+  bgColorDisableRadioField: $bgColorDisableRadioField;
+  bgColorDisableRadioField2: $bgColorDisableRadioField2;
+  bgColorTagPending: $bgColorTagPending;
+  bgColorTagProcessing: $bgColorTagProcessing;
+  bgColorTagProcessed: $bgColorTagProcessed;
+  bgColorTagArchived: $bgColorTagArchived;
+  bgColorTagInOperation: $bgColorTagInOperation;
+  bgColorProgressBase: $bgColorProgressBase;
+  bgColorProgressProcessing: $bgColorProgressProcessing;
+  bgColorProgressProcessed: $bgColorProgressProcessed;
+  bgColorProgressError: $bgColorProgressError;
+
+  // borderColor
+  borderColorBase: $borderColorBase;
+  borderColorSection: $borderColorSection;
+  borderColorBrand: $borderColorBrand;
+  borderColorPrimary: $borderColorPrimary;
+  borderColorDanger: $borderColorDanger;
+  borderColorFocusField: $borderColorFocusField;
+  borderColorDisableField: $borderColorDisableField;
+  borderColorErrorField: $borderColorErrorField;
+  borderColorCheckedRadioField: $borderColorCheckedRadioField;
+  borderColorDisableRadioField: $borderColorDisableRadioField;
+  borderColorGray: $borderColorGray;
+
+  // shadow
+  shadowColorFocusField: $shadowColorFocusField;
+
+  // else
+  zIndexModal: $zIndexModal;
+  heightHeader: $heightHeader;
+  widthContainerMin: $widthContainerMin;
+
+  // height
+  appBarHeight: $appBarHeight;
+  heightPageContent: $heightPageContent;
+
+  // width
+  drawerWidth: $drawerWidth;
+}

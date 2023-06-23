@@ -1,0 +1,233 @@
+/**
+ * Primitive Token - Color
+ * 注意: 変数追加時は:exportにも追加してください (storybookで利用)
+ *
+ * figmaの色定義
+ * 変数は概ねfigmaと同名にしているが、名称に含まれる特定の機能に依存はしていない (e.g. iconX -> 背景にも利用される)
+ * ref: https://www.figma.com/file/hnbGqX6CjP060XG1Dagw2p/%E3%83%87%E3%82%B6%E3%82%A4%E3%83%B3?node-id=25%3A980
+ * 
+ * 大幅なデザイン変更に備えて v1_ 接頭辞を付けている
+ * (大幅な変更があった場合はv2, v3と増やしていく)
+ **/
+
+// base
+$v1_white: #fff;
+$v1_black: #000;
+
+// primary
+$v1_primary: #0054ac;
+$v1_primaryDark: #003a78;
+$v1_primaryLight: #3376bc;
+$v1_primaryMoreLight: #e1f5ff;
+
+// secondary
+$v1_secondary: #32373f;
+$v1_secondaryDark: #23262c;
+$v1_secondaryMoreDarken: #1f1b1b;
+$v1_secondaryLight: #5b5f65;
+$v1_secondaryMoreLight: #eff0f1;
+
+// border
+$v1_border: #ccc;
+$v1_borderLight: #eee;
+$v1_borderGray: #999;
+
+// icon
+$v1_iconEnable: #7c8291;
+$v1_iconDisable: #d8dade;
+$v1_iconSidebar: #c2d1fc;
+
+// background
+$v1_background: #eff1f4;
+$v1_backgroundSecondary: #fff;
+$v1_backgroundActive: #3b7de9;
+$v1_backgroundActiveDarken: #2d67c6;
+$v1_backgroundSelected: #ebf2fd;
+
+// text
+$v1_textColorMain: #333;
+$v1_textColorGray: #666;
+$v1_textColorMoreGray: #999;
+$v1_placeholder: #ccc;
+
+// button/link color
+$v1_linkColor: #3b7de9;
+$v1_disable: #d4d8dd;
+$v1_focus: rgba(59, 125, 233, 0.2);
+
+// error
+$v1_error: #ec4949;
+$v1_backgroundError: #ffeeeb;
+$v1_errorDarken: #db3030;
+
+// success
+$v1_success: #08be8e;
+$v1_backgroundSuccess: #ecfdf8;
+$v1_successDarken: #06946e;
+
+// attention
+$v1_attention: #ffc415;
+$v1_backgroundAttention: #fff4d5;
+
+// ranking
+$v1_ranking01: #b7a87d;
+$v1_ranking02: #9c9c9c;
+$v1_ranking03: #907c64;
+
+// sns
+$v1_facebook: #3b5998;
+$v1_twitter: #1da1f2;
+$v1_instagram: linear-gradient(151.11deg, #c932c3 6.74%, #ef8732 90.8%);
+$v1_line: #00c200;
+
+// chart
+$v1_chart01: #0175c4;
+$v1_chart02: #25a88a;
+$v1_chart03: #cc38a0;
+$v1_chart04: #e0505f;
+$v1_chart05: #ff8740;
+$v1_chart06: #feca33;
+$v1_chart07: #9cd14c;
+$v1_chart08: #64b9cc;
+$v1_chart09: #a3abbd;
+
+// tag
+$v1_tag01: #d4f1ff;
+$v1_tag02: #bdf6db;
+$v1_tag03: #efd7ff;
+$v1_tag04: #ffd1ce;
+$v1_tag05: #ffecc3;
+$v1_tag06: #fdffc8;
+$v1_tag07: #e6ffcc;
+$v1_tag08: #b5fff3;
+$v1_tag09: #dde8ff;
+
+// figmaの色カタログに存在しない色
+$v1_brand: #3b7de9;
+$v1_text_success: #00ac83;
+$v1_text_danger: #d0021b;
+$v1_text_warning: #d68155;
+$v1_icon_success: #65ab51;
+$v1_focus_shadow: rgba(24, 144, 255, 0.5);
+$v1_overlay: rgb(0 0 0 / 35%);
+$v1_bg_disable_radio_field: #eaebec;
+$v1_bg_title: #fafafa;
+$v1_border_desc: #dcdee0;
+$v1_background_thead: #f7f7f8;
+$v1_backgroundSelectedHover: #dde8f8;
+$v1_background_progress: #f8f7f6;
+$v1_border_selected: #3c7ce8;
+
+/**
+ * @deprecated figmaの色定義とは異なるためできるだけ利用しない
+**/
+
+$dimGray: #666;
+$lightSlateGrey: #7c8291;
+$nightRider: #333;
+$solitude: #ecf2fd;
+$veryRightGray: #ccc;
+$white: #fff;
+$gray: #e5e5e5;
+$secondaryLight: #5b5f65;
+
+:export {
+  baseColor-v1_white: $v1_white;
+  baseColor-v1_black: $v1_black;
+
+  primaryColor-v1_primary: $v1_primary;
+  primaryColor-v1_primaryDark: $v1_primaryDark;
+  primaryColor-v1_primaryLight: $v1_primaryLight;
+  primaryColor-v1_primaryMoreLight: $v1_primaryMoreLight;
+
+  secondaryColor-v1_secondary: $v1_secondary;
+  secondaryColor-v1_secondaryDark: $v1_secondaryDark;
+  secondaryColor-v1_secondaryMoreDarken: $v1_secondaryMoreDarken;
+  secondaryColor-v1_secondaryLight: $v1_secondaryLight;
+  secondaryColor-v1_secondaryMoreLight: $v1_secondaryMoreLight;
+
+  borderColor-v1_border: $v1_border;
+  borderColor-v1_borderLight: $v1_borderLight;
+  borderColor-v1_borderGray: $v1_borderGray;
+
+  iconColor-v1_iconEnable: $v1_iconEnable;
+  iconColor-v1_iconDisable: $v1_iconDisable;
+  iconColor-v1_iconSidebar: $v1_iconSidebar;
+
+  backgroundColor-v1_background: $v1_background;
+  backgroundColor-v1_backgroundSecond: $v1_backgroundSecondary;
+  backgroundColor-v1_backgroundActive: $v1_backgroundActive;
+  backgroundColor-v1_backgroundActiveDarken: $v1_backgroundActiveDarken;
+  backgroundColor-v1_backgroundSelected: $v1_backgroundSelected;
+  backgroundColor-v1_backgroundSelectedHover: $v1_backgroundSelectedHover;
+  backgroundColor-v1_background_progress: $v1_background_progress;
+
+  textColor-v1_textColorMain: $v1_textColorMain;
+  textColor-v1_textColorGray: $v1_textColorGray;
+  textColor-v1_textColorMoreGray: $v1_textColorMoreGray;
+  textColor-v1_placeholder: $v1_placeholder;
+
+  buttonColor-v1_linkColor: $v1_linkColor;
+  buttonColor-v1_disable: $v1_disable;
+  buttonColor-v1_focus: $v1_focus;
+
+  errorColor-v1_error: $v1_error;
+  errorColor-v1_backgroundError: $v1_backgroundError;
+  errorColor-v1_errorDarken: $v1_errorDarken;
+
+  successColor-v1_success: $v1_success;
+  successColor-v1_backgroundSuccess: $v1_backgroundSuccess;
+  successColor-v1_successDarken: $v1_successDarken;
+
+  attentionColor-v1_attention: $v1_attention;
+  attentionColor-v1_backgroundAttention: $v1_backgroundAttention;
+
+  rankingColor-v1_ranking01: $v1_ranking01;
+  rankingColor-v1_ranking02: $v1_ranking02;
+  rankingColor-v1_ranking03: $v1_ranking03;
+
+  snsColor-v1_facebook: $v1_facebook;
+  snsColor-v1_twitter: $v1_twitter;
+  snsColor-v1_instagram: $v1_instagram;
+  snsColor-v1_line: $v1_line;
+
+  chartColor-v1_chart01: $v1_chart01;
+  chartColor-v1_chart02: $v1_chart02;
+  chartColor-v1_chart03: $v1_chart03;
+  chartColor-v1_chart04: $v1_chart04;
+  chartColor-v1_chart05: $v1_chart05;
+  chartColor-v1_chart06: $v1_chart06;
+  chartColor-v1_chart07: $v1_chart07;
+  chartColor-v1_chart08: $v1_chart08;
+  chartColor-v1_chart09: $v1_chart09;
+
+  tagColor-v1_tag01: $v1_tag01;
+  tagColor-v1_tag02: $v1_tag02;
+  tagColor-v1_tag03: $v1_tag03;
+  tagColor-v1_tag04: $v1_tag04;
+  tagColor-v1_tag05: $v1_tag05;
+  tagColor-v1_tag06: $v1_tag06;
+  tagColor-v1_tag07: $v1_tag07;
+  tagColor-v1_tag08: $v1_tag08;
+  tagColor-v1_tag09: $v1_tag09;
+
+  elseColor-v1_brand: $v1_brand;
+  elseColor-v1_text_success: $v1_text_success;
+  elseColor-v1_text_danger: $v1_text_danger;
+  elseColor-v1_text_warning: $v1_text_warning;
+  elseColor-v1_icon_success: $v1_icon_success;
+  elseColor-v1_focus_shadow: $v1_focus_shadow;
+  elseColor-v1_overlay: $v1_overlay;
+  elseColor-v1_bg_disable_radio_field: $v1_bg_disable_radio_field;
+  elseColor-v1_bg_title: $v1_bg_title;
+  elseColor-v1_background_thead: $v1_background_thead;
+
+  defaultColor-dimgray: $dimGray;
+  defaultColor-lightslategrey: $lightSlateGrey;
+  defaultColor-nightrider: $nightRider;
+  defaultColor-solitude: $solitude;
+  defaultColor-veryRightGray: $veryRightGray;
+  defaultColor-white: $white;
+  defaultColor-gray: $gray;
+  defaultColor-secondaryLight: $secondaryLight;
+}

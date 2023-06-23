@@ -1,4 +1,4 @@
-FROM node:18.16.0-bullseye AS frontend
+FROM node:18.16.1-bullseye AS frontend
 WORKDIR /workspace
 
 COPY frontend/yarn.lock frontend/package.json ./

@@ -1,97 +1,119 @@
-basePath: /api/v1
-definitions:
-  request.GenerateShortURL:
-    properties:
-      key:
-        description: nullable
-        type: string
-      url:
-        type: string
-    type: object
-  request.RevokeToken:
-    properties:
-      token:
-        type: string
-      token_type_hint:
-        description: Enums(access_token,refresh_token)
-        type: string
-    type: object
-  response.Error:
-    properties:
-      description:
-        type: string
-      field:
-        type: string
-      help:
-        type: string
-      message:
-        type: string
-    type: object
-  response.Errors:
-    properties:
-      errors:
-        items:
-          $ref: '#/definitions/response.Error'
-        type: array
-    type: object
-  response.GenerateShortURL:
-    properties:
-      url:
-        type: string
-    type: object
-  response.OAuth2Token:
-    properties:
-      access_token:
-        type: string
-      expires_in:
-        type: integer
-      refresh_token:
-        description: nullable
-        type: string
-      scope:
-        description: nullable
-        type: string
-      token_type:
-        type: string
-    type: object
-  response.Shorts:
-    properties:
-      author:
-        type: string
-      created_at:
-        type: string
-      key:
-        type: string
-      updated_at:
-        type: string
-      url:
-        type: string
-    type: object
+components:
+  schemas:
+    request.GenerateShortURL:
+      properties:
+        key:
+          description: nullable
+          type: string
+        url:
+          type: string
+      type: object
+    request.RevokeToken:
+      properties:
+        token:
+          type: string
+        token_type_hint:
+          description: Enums(access_token,refresh_token)
+          type: string
+      type: object
+    response.Error:
+      properties:
+        description:
+          type: string
+        field:
+          type: string
+        help:
+          type: string
+        message:
+          type: string
+      type: object
+    response.Errors:
+      properties:
+        errors:
+          items:
+            $ref: '#/components/schemas/response.Error'
+          type: array
+          uniqueItems: false
+      type: object
+    response.GenerateShortURL:
+      properties:
+        url:
+          type: string
+      type: object
+    response.OAuth2Token:
+      properties:
+        access_token:
+          type: string
+        expires_in:
+          type: integer
+        refresh_token:
+          description: nullable
+          type: string
+        scope:
+          description: nullable
+          type: string
+        token_type:
+          type: string
+      type: object
+    response.Shorts:
+      properties:
+        author:
+          type: string
+        created_at:
+          type: string
+        key:
+          type: string
+        updated_at:
+          type: string
+        url:
+          type: string
+      type: object
+  securitySchemes:
+    OAuth2Application:
+      description: エンドポイントを保護します
+      flows:
+        clientCredentials:
+          tokenUrl: /api/v1/oauth2/token
+      in: header
+      type: oauth2
+externalDocs:
+  description: ""
+  url: ""
 info:
-  contact: {}
   description: 短縮URL生成 API
   license:
     name: nozomi.nishinohara
   title: Short url
   version: "1.0"
+openapi: 3.1.0
 paths:
   /oauth2:
     get:
-      consumes:
-      - application/json
-      produces:
-      - application/json
+      operationId: OAuthApplicationList
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
       responses:
         "200":
+          content:
+            application/json:
+              schema:
+                type: object
           description: OK
         "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.Errors'
           description: Bad Request
-          schema:
-            $ref: '#/definitions/response.Errors'
         "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.Errors'
           description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.Errors'
       security:
       - OAuth2Application: []
       summary: 登録されているOAuthアプリケーションの一覧
@@ -99,28 +121,33 @@ paths:
       - API
   /oauth2/revoke:
     post:
-      consumes:
-      - application/json
-      parameters:
-      - description: revoke token
-        in: body
-        name: request_body
+      operationId: RevokeOAuthToken
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/request.RevokeToken'
+        description: revoke token
         required: true
-        schema:
-          $ref: '#/definitions/request.RevokeToken'
-      produces:
-      - application/json
       responses:
         "200":
+          content:
+            application/json:
+              schema:
+                type: object
           description: OK
         "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.Errors'
           description: Bad Request
-          schema:
-            $ref: '#/definitions/response.Errors'
         "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.Errors'
           description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.Errors'
       security:
       - OAuth2Application: []
       summary: アクセストークンの取消
@@ -128,61 +155,60 @@ paths:
       - API
   /oauth2/token:
     post:
-      consumes:
-      - application/x-www-form-urlencoded
-      parameters:
-      - description: client id
-        in: formData
-        name: client_id
+      operationId: OAuthTokenRequest
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              enum:
+              - client_credentials
+              type: string
+        description: grant_type
         required: true
-        type: string
-      - description: client secret
-        in: formData
-        name: client_secret
-        required: true
-        type: string
-      - description: grant_type
-        enum:
-        - client_credentials
-        in: formData
-        name: grant_type
-        required: true
-        type: string
-      produces:
-      - application/json
       responses:
         "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.OAuth2Token'
           description: OK
-          schema:
-            $ref: '#/definitions/response.OAuth2Token'
         "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.Errors'
           description: Bad Request
-          schema:
-            $ref: '#/definitions/response.Errors'
       summary: アクセストークンの生成
       tags:
       - API
   /shorts:
     get:
-      produces:
-      - application/json
+      operationId: ShortURLList
       responses:
         "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.Shorts'
           description: OK
-          schema:
-            $ref: '#/definitions/response.Shorts'
         "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.Errors'
           description: Bad Request
-          schema:
-            $ref: '#/definitions/response.Errors'
         "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.Errors'
           description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.Errors'
         "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.Errors'
           description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.Errors'
       security:
       - OAuth2Application: []
       summary: 短縮URLの一覧
@@ -190,74 +216,117 @@ paths:
       - API
   /shorts/{key}:
     delete:
+      operationId: RemoveShortURL
       parameters:
       - description: short url key
         in: path
         name: key
         required: true
-        type: string
-      produces:
-      - application/json
+        schema:
+          type: string
       responses:
         "204":
           description: No Content
         "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.Errors'
           description: Bad Request
-          schema:
-            $ref: '#/definitions/response.Errors'
         "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.Errors'
           description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.Errors'
         "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.Errors'
           description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.Errors'
       security:
       - OAuth2Application: []
       summary: 短縮URLの削除
       tags:
       - API
-  /shorts/generate:
-    post:
+  /shorts/{key}/qrcode:
+    get:
+      operationId: GenerateQRCode
       parameters:
-      - description: generate short url request
-        in: body
-        name: request_body
-        required: true
+      - description: short url request
+        in: path
+        name: key
         schema:
-          $ref: '#/definitions/request.GenerateShortURL'
-      produces:
-      - application/json
+          type: string
       responses:
         "200":
+          content:
+            image/png:
+              schema:
+                format: binary
+                type: string
           description: OK
-          schema:
-            $ref: '#/definitions/response.GenerateShortURL'
         "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.Errors'
           description: Bad Request
-          schema:
-            $ref: '#/definitions/response.Errors'
         "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.Errors'
           description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.Errors'
         "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.Errors'
           description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.Errors'
+      security:
+      - OAuth2Application: []
+      summary: 短縮URLのQRコード生成
+      tags:
+      - API
+  /shorts/generate:
+    post:
+      operationId: GenerateShortURL
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/request.GenerateShortURL'
+        description: generate short url request
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.GenerateShortURL'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.Errors'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.Errors'
+          description: Unauthorized
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response.Errors'
+          description: Internal Server Error
       security:
       - OAuth2Application: []
       summary: 短縮URLの生成
       tags:
       - API
-schemes:
-- http
-- https
-securityDefinitions:
-  OAuth2Application:
-    description: エンドポイントを保護します
-    flow: application
-    tokenUrl: /api/v1/oauth2/token
-    type: oauth2
-swagger: "2.0"

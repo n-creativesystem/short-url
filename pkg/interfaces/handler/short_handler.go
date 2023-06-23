@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"bytes"
 	"errors"
+	"io"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -94,6 +96,57 @@ func (h *ShortURLHandler) GenerateShortURL(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+// GenerateQRCode QRコードの生成
+//
+// @Summary 短縮URLのQRコード生成
+// @Tags API
+// @Produce png
+// @Param key path string false "short url request"
+// @Success 200
+// @Failure 400 {object} response.Errors
+// @Failure 401 {object} response.Errors
+// @Failure 500 {object} response.Errors
+// @Router /shorts/{key}/qrcode [get]
+// @Security OAuth2Application
+// @ID GenerateQRCode
+func (h *ShortURLHandler) GenerateQRCode(c *gin.Context) {
+	_, ok := getContext[oauth2.TokenInfo](c, accessInfo)
+	if !ok {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, response.NewErrorsWithMessage(http.StatusText(http.StatusUnauthorized)))
+		return
+	}
+	req := request.RequestPathForGenerateQRCode{
+		Key: c.Param("key"),
+	}
+	if !validation(c, &req) {
+		return
+	}
+	ctx := c.Request.Context()
+	qrCode, err := h.service.GenerateQRCode(ctx, req.Key)
+	if err != nil {
+		logging.Default().Error(err)
+		var clientErr *service.ClientError
+		if errors.As(err, &clientErr) {
+			errRes := response.NewErrorsWithMessage(clientErr.Error())
+			c.AbortWithStatusJSON(http.StatusBadRequest, &errRes)
+			return
+		}
+		errRes := response.NewErrorsWithMessage("An error occurred during URL generation.")
+		c.AbortWithStatusJSON(http.StatusInternalServerError, errRes)
+		return
+	}
+	writer := new(bytes.Buffer)
+	teeReader := io.TeeReader(qrCode, writer)
+	n, err := io.Copy(io.Discard, teeReader)
+	if err != nil {
+		logging.Default().Error(err)
+		errRes := response.NewErrorsWithMessage("QR Code generation failed.")
+		c.AbortWithStatusJSON(http.StatusInternalServerError, errRes)
+		return
+	}
+	c.DataFromReader(http.StatusOK, n, "image/png", writer, nil)
+}
+
 // Remove 短縮URLの削除
 //
 // @Summary 短縮URLの削除
@@ -179,7 +232,9 @@ func (h *ShortURLHandler) APIRouter(route gin.IRouter, middleware ...gin.Handler
 	{
 		g.Use(middleware...)
 		g.POST("/generate", h.GenerateShortURL)
+
 		g.DELETE("/:key", h.Remove)
+		g.GET("/:key/qrcode", h.GenerateQRCode)
 	}
 }
 

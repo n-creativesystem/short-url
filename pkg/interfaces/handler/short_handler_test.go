@@ -7,6 +7,9 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -14,6 +17,7 @@ import (
 	"github.com/go-oauth2/oauth2/v4"
 	"github.com/go-oauth2/oauth2/v4/models"
 	"github.com/golang/mock/gomock"
+	"github.com/n-creativesystem/short-url/fixtures"
 	"github.com/n-creativesystem/short-url/pkg/interfaces/request"
 	mock_short "github.com/n-creativesystem/short-url/pkg/mock/service/short"
 	"github.com/n-creativesystem/short-url/pkg/service"
@@ -335,6 +339,64 @@ func TestShortHandlerForRemove(t *testing.T) {
 			})
 			e.ServeHTTP(w, req)
 			assert.Equal(t, tt.wantCode, w.Code)
+		})
+	}
+}
+
+func TestShortHandlerForGenerateQRCode(t *testing.T) {
+	fixtureDir, err := fixtures.GetDirectory()
+	require.NoError(t, err)
+	testQRCode := filepath.Join(fixtureDir, "qrcode.png")
+	qrcodeBuf, err := os.ReadFile(testQRCode)
+	require.NoError(t, err)
+	fileSize := len(qrcodeBuf)
+	type testTable struct {
+		name           string
+		data           string
+		prepareMockFn  func(mockSvc *mock_short.MockService)
+		prepareRequest func(*http.Request)
+		wantLocation   string
+		accessInfo     oauth2.TokenInfo
+	}
+	tests := []testTable{
+		{
+			name: "success",
+			data: "aaa",
+			prepareMockFn: func(mockSvc *mock_short.MockService) {
+				mockSvc.EXPECT().GenerateQRCode(gomock.Any(), "aaa").Return(bytes.NewReader(qrcodeBuf), nil)
+			},
+			prepareRequest: func(r *http.Request) {},
+			wantLocation:   "http://localhost:8080/success",
+			accessInfo: &models.Token{
+				UserID: "anonymous",
+			},
+		},
+	}
+	gin.SetMode(gin.TestMode)
+	t.Parallel()
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			mockCtl := gomock.NewController(t)
+			defer mockCtl.Finish()
+			mockSvc := mock_short.NewMockService(mockCtl)
+			handler := NewShortHandler(mockSvc, WithBaseURL("http://localhost"))
+			tt.prepareMockFn(mockSvc)
+			u := utils.MustURL("/shorts", tt.data, "qrcode")
+			w := httptest.NewRecorder()
+			req, _ := http.NewRequest(http.MethodGet, u, nil)
+			if tt.prepareRequest != nil {
+				tt.prepareRequest(req)
+			}
+			_, e := gin.CreateTestContext(w)
+			handler.APIRouter(e, func(ctx *gin.Context) {
+				ctx.Set(accessInfo, tt.accessInfo)
+			})
+			e.ServeHTTP(w, req)
+			require.Equal(t, http.StatusOK, w.Code)
+			require.Equal(t, w.Header().Get("Content-Length"), strconv.Itoa(fileSize))
+			buf := w.Body.Bytes()
+			require.Equal(t, qrcodeBuf, buf)
 		})
 	}
 }

@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"os"
+
 	"github.com/n-creativesystem/short-url/pkg/utils"
 )
 
@@ -22,7 +24,7 @@ func WithBaseURL(baseURL string) ShortOption {
 
 func newShortOption() shortOption {
 	return shortOption{
-		baseURL: "https://mfw.link/",
+		baseURL: os.Getenv("SERVICE_URL"),
 	}
 }
 

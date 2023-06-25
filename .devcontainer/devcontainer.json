@@ -26,12 +26,12 @@
         "esbenp.prettier-vscode",
         "mads-hartmann.bash-ide-vscode",
         "dbaeumer.vscode-eslint",
-        "esbenp.prettier-vscode",
         "GraphQL.vscode-graphql",
         "ms-azuretools.vscode-docker",
         "rangav.vscode-thunder-client",
         "ZixuanChen.vitest-explorer",
-        "kingwl.vscode-vitest-runner"
+        "kingwl.vscode-vitest-runner",
+        "ritwickdey.LiveServer"
       ]
     }
   },

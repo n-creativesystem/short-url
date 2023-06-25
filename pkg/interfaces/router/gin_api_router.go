@@ -8,8 +8,6 @@ import (
 	"github.com/n-creativesystem/short-url/pkg/interfaces/response"
 	_ "github.com/n-creativesystem/short-url/pkg/interfaces/router/swagger/api/docs"
 	"github.com/n-creativesystem/short-url/pkg/service/short"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 // @title Short url
@@ -30,11 +28,6 @@ func NewAPI(input *RouterInput) *gin.Engine {
 	shortService := short.NewService(input.ShortRepository, input.AppConfig, input.Beginner)
 	shortHandler := handler.NewShortHandler(shortService)
 	shortHandler.APIRouter(api, oauth2Handler.ValidationBearerToken())
-	swag := mainRoute.Group("/swagger")
-	{
-		// index.htmlでswagger uiを表示することができる
-		swag.GET("/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	}
 	mainRoute.NoRoute(func(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusNotFound, response.NewErrorsWithMessage("Not found."))
 	})

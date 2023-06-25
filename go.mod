@@ -43,10 +43,6 @@ require (
 	github.com/steinfletcher/apitest v1.5.15
 	github.com/steinfletcher/apitest-jsonpath v1.7.2
 	github.com/stretchr/testify v1.8.4
-	github.com/swaggo/files v1.0.1
-	github.com/swaggo/files/v2 v2.0.0
-	github.com/swaggo/gin-swagger v1.6.0
-	github.com/swaggo/swag v1.16.1
 	github.com/swaggo/swag/v2 v2.0.0-rc3
 	github.com/vektah/gqlparser/v2 v2.5.3
 	go.etcd.io/bbolt v1.3.7
@@ -164,7 +160,6 @@ require (
 	golang.org/x/tools v0.9.3 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20230530153820-e85fd2cbaebc // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230530153820-e85fd2cbaebc // indirect
 	google.golang.org/grpc v1.55.0 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect

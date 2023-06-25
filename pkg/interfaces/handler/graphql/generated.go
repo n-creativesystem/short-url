@@ -96,7 +96,7 @@ func (e *executableSchema) Schema() *ast.Schema {
 }
 
 func (e *executableSchema) Complexity(typeName, field string, childComplexity int, rawArgs map[string]interface{}) (int, bool) {
-	ec := executionContext{nil, e}
+	ec := executionContext{nil, e, 0, 0, nil}
 	_ = ec
 	switch typeName + "." + field {
 
@@ -236,7 +236,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	rc := graphql.GetOperationContext(ctx)
-	ec := executionContext{rc, e}
+	ec := executionContext{rc, e, 0, 0, make(chan graphql.DeferredResult)}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputOAuthApplicationInput,
 	)
@@ -245,18 +245,33 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	switch rc.Operation.Operation {
 	case ast.Query:
 		return func(ctx context.Context) *graphql.Response {
-			if !first {
-				return nil
+			var response graphql.Response
+			var data graphql.Marshaler
+			if first {
+				first = false
+				ctx = graphql.WithUnmarshalerMap(ctx, inputUnmarshalMap)
+				data = ec._OAuth2ClientQuery(ctx, rc.Operation.SelectionSet)
+			} else {
+				if atomic.LoadInt32(&ec.pendingDeferred) > 0 {
+					result := <-ec.deferredResults
+					atomic.AddInt32(&ec.pendingDeferred, -1)
+					data = result.Result
+					response.Path = result.Path
+					response.Label = result.Label
+					response.Errors = result.Errors
+				} else {
+					return nil
+				}
 			}
-			first = false
-			ctx = graphql.WithUnmarshalerMap(ctx, inputUnmarshalMap)
-			data := ec._OAuth2ClientQuery(ctx, rc.Operation.SelectionSet)
 			var buf bytes.Buffer
 			data.MarshalGQL(&buf)
-
-			return &graphql.Response{
-				Data: buf.Bytes(),
+			response.Data = buf.Bytes()
+			if atomic.LoadInt32(&ec.deferred) > 0 {
+				hasNext := atomic.LoadInt32(&ec.pendingDeferred) > 0
+				response.HasNext = &hasNext
 			}
+
+			return &response
 		}
 	case ast.Mutation:
 		return func(ctx context.Context) *graphql.Response {
@@ -282,6 +297,28 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 type executionContext struct {
 	*graphql.OperationContext
 	*executableSchema
+	deferred        int32
+	pendingDeferred int32
+	deferredResults chan graphql.DeferredResult
+}
+
+func (ec *executionContext) processDeferredGroup(dg graphql.DeferredGroup) {
+	atomic.AddInt32(&ec.pendingDeferred, 1)
+	go func() {
+		ctx := graphql.WithFreshResponseContext(dg.Context)
+		dg.FieldSet.Dispatch(ctx)
+		ds := graphql.DeferredResult{
+			Path:   dg.Path,
+			Label:  dg.Label,
+			Result: dg.FieldSet,
+			Errors: graphql.GetErrors(ctx),
+		}
+		// null fields should bubble up
+		if dg.FieldSet.Invalids > 0 {
+			ds.Result = graphql.Null
+		}
+		ec.deferredResults <- ds
+	}()
 }
 
 func (ec *executionContext) introspectSchema() (*introspection.Schema, error) {
@@ -354,7 +391,7 @@ func (ec *executionContext) field_OAuth2ClientMutation_createOAuthApplication_ar
 	var arg0 models.OAuthApplicationInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNOAuthApplicationInput2githubᚗcomᚋklavisᚑcorpᚋshortᚑurlᚋpkgᚋapiᚋhandlerᚋgraphqlᚋmodelsᚐOAuthApplicationInput(ctx, tmp)
+		arg0, err = ec.unmarshalNOAuthApplicationInput2githubᚗcomᚋnᚑcreativesystemᚋshortᚑurlᚋpkgᚋinterfacesᚋhandlerᚋgraphqlᚋmodelsᚐOAuthApplicationInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -393,7 +430,7 @@ func (ec *executionContext) field_OAuth2ClientMutation_updateOAuthApplication_ar
 	var arg1 models.OAuthApplicationInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg1, err = ec.unmarshalNOAuthApplicationInput2githubᚗcomᚋklavisᚑcorpᚋshortᚑurlᚋpkgᚋapiᚋhandlerᚋgraphqlᚋmodelsᚐOAuthApplicationInput(ctx, tmp)
+		arg1, err = ec.unmarshalNOAuthApplicationInput2githubᚗcomᚋnᚑcreativesystemᚋshortᚑurlᚋpkgᚋinterfacesᚋhandlerᚋgraphqlᚋmodelsᚐOAuthApplicationInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -689,7 +726,7 @@ func (ec *executionContext) _OAuth2ClientMutation_createOAuthApplication(ctx con
 	}
 	res := resTmp.(*models.OAuthApplication)
 	fc.Result = res
-	return ec.marshalNOAuthApplication2ᚖgithubᚗcomᚋklavisᚑcorpᚋshortᚑurlᚋpkgᚋapiᚋhandlerᚋgraphqlᚋmodelsᚐOAuthApplication(ctx, field.Selections, res)
+	return ec.marshalNOAuthApplication2ᚖgithubᚗcomᚋnᚑcreativesystemᚋshortᚑurlᚋpkgᚋinterfacesᚋhandlerᚋgraphqlᚋmodelsᚐOAuthApplication(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_OAuth2ClientMutation_createOAuthApplication(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -721,7 +758,7 @@ func (ec *executionContext) fieldContext_OAuth2ClientMutation_createOAuthApplica
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_OAuth2ClientMutation_createOAuthApplication_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
-		return
+		return fc, err
 	}
 	return fc, nil
 }
@@ -754,7 +791,7 @@ func (ec *executionContext) _OAuth2ClientMutation_updateOAuthApplication(ctx con
 	}
 	res := resTmp.(*models.OAuthApplication)
 	fc.Result = res
-	return ec.marshalNOAuthApplication2ᚖgithubᚗcomᚋklavisᚑcorpᚋshortᚑurlᚋpkgᚋapiᚋhandlerᚋgraphqlᚋmodelsᚐOAuthApplication(ctx, field.Selections, res)
+	return ec.marshalNOAuthApplication2ᚖgithubᚗcomᚋnᚑcreativesystemᚋshortᚑurlᚋpkgᚋinterfacesᚋhandlerᚋgraphqlᚋmodelsᚐOAuthApplication(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_OAuth2ClientMutation_updateOAuthApplication(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -786,7 +823,7 @@ func (ec *executionContext) fieldContext_OAuth2ClientMutation_updateOAuthApplica
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_OAuth2ClientMutation_updateOAuthApplication_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
-		return
+		return fc, err
 	}
 	return fc, nil
 }
@@ -841,7 +878,7 @@ func (ec *executionContext) fieldContext_OAuth2ClientMutation_deleteOAuthApplica
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_OAuth2ClientMutation_deleteOAuthApplication_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
-		return
+		return fc, err
 	}
 	return fc, nil
 }
@@ -874,7 +911,7 @@ func (ec *executionContext) _OAuth2ClientQuery_oauthApplications(ctx context.Con
 	}
 	res := resTmp.(*models.OAuthApplicationType)
 	fc.Result = res
-	return ec.marshalNOAuthApplicationType2ᚖgithubᚗcomᚋklavisᚑcorpᚋshortᚑurlᚋpkgᚋapiᚋhandlerᚋgraphqlᚋmodelsᚐOAuthApplicationType(ctx, field.Selections, res)
+	return ec.marshalNOAuthApplicationType2ᚖgithubᚗcomᚋnᚑcreativesystemᚋshortᚑurlᚋpkgᚋinterfacesᚋhandlerᚋgraphqlᚋmodelsᚐOAuthApplicationType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_OAuth2ClientQuery_oauthApplications(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -902,7 +939,7 @@ func (ec *executionContext) fieldContext_OAuth2ClientQuery_oauthApplications(ctx
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_OAuth2ClientQuery_oauthApplications_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
-		return
+		return fc, err
 	}
 	return fc, nil
 }
@@ -935,7 +972,7 @@ func (ec *executionContext) _OAuth2ClientQuery_oauthApplication(ctx context.Cont
 	}
 	res := resTmp.(*models.OAuthApplication)
 	fc.Result = res
-	return ec.marshalNOAuthApplication2ᚖgithubᚗcomᚋklavisᚑcorpᚋshortᚑurlᚋpkgᚋapiᚋhandlerᚋgraphqlᚋmodelsᚐOAuthApplication(ctx, field.Selections, res)
+	return ec.marshalNOAuthApplication2ᚖgithubᚗcomᚋnᚑcreativesystemᚋshortᚑurlᚋpkgᚋinterfacesᚋhandlerᚋgraphqlᚋmodelsᚐOAuthApplication(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_OAuth2ClientQuery_oauthApplication(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -967,7 +1004,7 @@ func (ec *executionContext) fieldContext_OAuth2ClientQuery_oauthApplication(ctx 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_OAuth2ClientQuery_oauthApplication_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
-		return
+		return fc, err
 	}
 	return fc, nil
 }
@@ -1041,7 +1078,7 @@ func (ec *executionContext) fieldContext_OAuth2ClientQuery___type(ctx context.Co
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_OAuth2ClientQuery___type_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
-		return
+		return fc, err
 	}
 	return fc, nil
 }
@@ -1305,7 +1342,7 @@ func (ec *executionContext) _OAuthApplicationType_result(ctx context.Context, fi
 	}
 	res := resTmp.([]*models.OAuthApplication)
 	fc.Result = res
-	return ec.marshalNOAuthApplication2ᚕᚖgithubᚗcomᚋklavisᚑcorpᚋshortᚑurlᚋpkgᚋapiᚋhandlerᚋgraphqlᚋmodelsᚐOAuthApplicationᚄ(ctx, field.Selections, res)
+	return ec.marshalNOAuthApplication2ᚕᚖgithubᚗcomᚋnᚑcreativesystemᚋshortᚑurlᚋpkgᚋinterfacesᚋhandlerᚋgraphqlᚋmodelsᚐOAuthApplicationᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_OAuthApplicationType_result(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1359,7 +1396,7 @@ func (ec *executionContext) _OAuthApplicationType__metadata(ctx context.Context,
 	}
 	res := resTmp.(*models.MetadataType)
 	fc.Result = res
-	return ec.marshalNMetadataType2ᚖgithubᚗcomᚋklavisᚑcorpᚋshortᚑurlᚋpkgᚋapiᚋhandlerᚋgraphqlᚋmodelsᚐMetadataType(ctx, field.Selections, res)
+	return ec.marshalNMetadataType2ᚖgithubᚗcomᚋnᚑcreativesystemᚋshortᚑurlᚋpkgᚋinterfacesᚋhandlerᚋgraphqlᚋmodelsᚐMetadataType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_OAuthApplicationType__metadata(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2806,7 +2843,7 @@ func (ec *executionContext) fieldContext___Type_fields(ctx context.Context, fiel
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field___Type_fields_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
-		return
+		return fc, err
 	}
 	return fc, nil
 }
@@ -2994,7 +3031,7 @@ func (ec *executionContext) fieldContext___Type_enumValues(ctx context.Context, 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field___Type_enumValues_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
-		return
+		return fc, err
 	}
 	return fc, nil
 }
@@ -3199,48 +3236,53 @@ var metadataTypeImplementors = []string{"MetadataType"}
 
 func (ec *executionContext) _MetadataType(ctx context.Context, sel ast.SelectionSet, obj *models.MetadataType) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, metadataTypeImplementors)
+
 	out := graphql.NewFieldSet(fields)
-	var invalids uint32
+	deferred := make(map[string]*graphql.FieldSet)
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("MetadataType")
 		case "prev":
-
 			out.Values[i] = ec._MetadataType_prev(ctx, field, obj)
-
 			if out.Values[i] == graphql.Null {
-				invalids++
+				out.Invalids++
 			}
 		case "self":
-
 			out.Values[i] = ec._MetadataType_self(ctx, field, obj)
-
 			if out.Values[i] == graphql.Null {
-				invalids++
+				out.Invalids++
 			}
 		case "next":
-
 			out.Values[i] = ec._MetadataType_next(ctx, field, obj)
-
 			if out.Values[i] == graphql.Null {
-				invalids++
+				out.Invalids++
 			}
 		case "count":
-
 			out.Values[i] = ec._MetadataType_count(ctx, field, obj)
-
 			if out.Values[i] == graphql.Null {
-				invalids++
+				out.Invalids++
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
 	}
-	out.Dispatch()
-	if invalids > 0 {
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
 		return graphql.Null
 	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
 	return out
 }
 
@@ -3253,7 +3295,7 @@ func (ec *executionContext) _OAuth2ClientMutation(ctx context.Context, sel ast.S
 	})
 
 	out := graphql.NewFieldSet(fields)
-	var invalids uint32
+	deferred := make(map[string]*graphql.FieldSet)
 	for i, field := range fields {
 		innerCtx := graphql.WithRootFieldContext(ctx, &graphql.RootFieldContext{
 			Object: field.Name,
@@ -3264,40 +3306,46 @@ func (ec *executionContext) _OAuth2ClientMutation(ctx context.Context, sel ast.S
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("OAuth2ClientMutation")
 		case "createOAuthApplication":
-
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._OAuth2ClientMutation_createOAuthApplication(ctx, field)
 			})
-
 			if out.Values[i] == graphql.Null {
-				invalids++
+				out.Invalids++
 			}
 		case "updateOAuthApplication":
-
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._OAuth2ClientMutation_updateOAuthApplication(ctx, field)
 			})
-
 			if out.Values[i] == graphql.Null {
-				invalids++
+				out.Invalids++
 			}
 		case "deleteOAuthApplication":
-
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._OAuth2ClientMutation_deleteOAuthApplication(ctx, field)
 			})
-
 			if out.Values[i] == graphql.Null {
-				invalids++
+				out.Invalids++
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
 	}
-	out.Dispatch()
-	if invalids > 0 {
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
 		return graphql.Null
 	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
 	return out
 }
 
@@ -3310,7 +3358,7 @@ func (ec *executionContext) _OAuth2ClientQuery(ctx context.Context, sel ast.Sele
 	})
 
 	out := graphql.NewFieldSet(fields)
-	var invalids uint32
+	deferred := make(map[string]*graphql.FieldSet)
 	for i, field := range fields {
 		innerCtx := graphql.WithRootFieldContext(ctx, &graphql.RootFieldContext{
 			Object: field.Name,
@@ -3323,7 +3371,7 @@ func (ec *executionContext) _OAuth2ClientQuery(ctx context.Context, sel ast.Sele
 		case "oauthApplications":
 			field := field
 
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
 				defer func() {
 					if r := recover(); r != nil {
 						ec.Error(ctx, ec.Recover(ctx, r))
@@ -3331,22 +3379,21 @@ func (ec *executionContext) _OAuth2ClientQuery(ctx context.Context, sel ast.Sele
 				}()
 				res = ec._OAuth2ClientQuery_oauthApplications(ctx, field)
 				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
+					atomic.AddUint32(&fs.Invalids, 1)
 				}
 				return res
 			}
 
 			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 			}
 
-			out.Concurrently(i, func() graphql.Marshaler {
-				return rrm(innerCtx)
-			})
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "oauthApplication":
 			field := field
 
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
 				defer func() {
 					if r := recover(); r != nil {
 						ec.Error(ctx, ec.Recover(ctx, r))
@@ -3354,38 +3401,45 @@ func (ec *executionContext) _OAuth2ClientQuery(ctx context.Context, sel ast.Sele
 				}()
 				res = ec._OAuth2ClientQuery_oauthApplication(ctx, field)
 				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
+					atomic.AddUint32(&fs.Invalids, 1)
 				}
 				return res
 			}
 
 			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 			}
 
-			out.Concurrently(i, func() graphql.Marshaler {
-				return rrm(innerCtx)
-			})
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "__type":
-
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._OAuth2ClientQuery___type(ctx, field)
 			})
-
 		case "__schema":
-
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._OAuth2ClientQuery___schema(ctx, field)
 			})
-
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
 	}
-	out.Dispatch()
-	if invalids > 0 {
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
 		return graphql.Null
 	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
 	return out
 }
 
@@ -3393,48 +3447,53 @@ var oAuthApplicationImplementors = []string{"OAuthApplication"}
 
 func (ec *executionContext) _OAuthApplication(ctx context.Context, sel ast.SelectionSet, obj *models.OAuthApplication) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, oAuthApplicationImplementors)
+
 	out := graphql.NewFieldSet(fields)
-	var invalids uint32
+	deferred := make(map[string]*graphql.FieldSet)
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("OAuthApplication")
 		case "id":
-
 			out.Values[i] = ec._OAuthApplication_id(ctx, field, obj)
-
 			if out.Values[i] == graphql.Null {
-				invalids++
+				out.Invalids++
 			}
 		case "name":
-
 			out.Values[i] = ec._OAuthApplication_name(ctx, field, obj)
-
 			if out.Values[i] == graphql.Null {
-				invalids++
+				out.Invalids++
 			}
 		case "secret":
-
 			out.Values[i] = ec._OAuthApplication_secret(ctx, field, obj)
-
 			if out.Values[i] == graphql.Null {
-				invalids++
+				out.Invalids++
 			}
 		case "domain":
-
 			out.Values[i] = ec._OAuthApplication_domain(ctx, field, obj)
-
 			if out.Values[i] == graphql.Null {
-				invalids++
+				out.Invalids++
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
 	}
-	out.Dispatch()
-	if invalids > 0 {
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
 		return graphql.Null
 	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
 	return out
 }
 
@@ -3442,34 +3501,43 @@ var oAuthApplicationTypeImplementors = []string{"OAuthApplicationType"}
 
 func (ec *executionContext) _OAuthApplicationType(ctx context.Context, sel ast.SelectionSet, obj *models.OAuthApplicationType) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, oAuthApplicationTypeImplementors)
+
 	out := graphql.NewFieldSet(fields)
-	var invalids uint32
+	deferred := make(map[string]*graphql.FieldSet)
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("OAuthApplicationType")
 		case "result":
-
 			out.Values[i] = ec._OAuthApplicationType_result(ctx, field, obj)
-
 			if out.Values[i] == graphql.Null {
-				invalids++
+				out.Invalids++
 			}
 		case "_metadata":
-
 			out.Values[i] = ec._OAuthApplicationType__metadata(ctx, field, obj)
-
 			if out.Values[i] == graphql.Null {
-				invalids++
+				out.Invalids++
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
 	}
-	out.Dispatch()
-	if invalids > 0 {
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
 		return graphql.Null
 	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
 	return out
 }
 
@@ -3477,52 +3545,55 @@ var __DirectiveImplementors = []string{"__Directive"}
 
 func (ec *executionContext) ___Directive(ctx context.Context, sel ast.SelectionSet, obj *introspection.Directive) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, __DirectiveImplementors)
+
 	out := graphql.NewFieldSet(fields)
-	var invalids uint32
+	deferred := make(map[string]*graphql.FieldSet)
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("__Directive")
 		case "name":
-
 			out.Values[i] = ec.___Directive_name(ctx, field, obj)
-
 			if out.Values[i] == graphql.Null {
-				invalids++
+				out.Invalids++
 			}
 		case "description":
-
 			out.Values[i] = ec.___Directive_description(ctx, field, obj)
-
 		case "locations":
-
 			out.Values[i] = ec.___Directive_locations(ctx, field, obj)
-
 			if out.Values[i] == graphql.Null {
-				invalids++
+				out.Invalids++
 			}
 		case "args":
-
 			out.Values[i] = ec.___Directive_args(ctx, field, obj)
-
 			if out.Values[i] == graphql.Null {
-				invalids++
+				out.Invalids++
 			}
 		case "isRepeatable":
-
 			out.Values[i] = ec.___Directive_isRepeatable(ctx, field, obj)
-
 			if out.Values[i] == graphql.Null {
-				invalids++
+				out.Invalids++
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
 	}
-	out.Dispatch()
-	if invalids > 0 {
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
 		return graphql.Null
 	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
 	return out
 }
 
@@ -3530,42 +3601,47 @@ var __EnumValueImplementors = []string{"__EnumValue"}
 
 func (ec *executionContext) ___EnumValue(ctx context.Context, sel ast.SelectionSet, obj *introspection.EnumValue) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, __EnumValueImplementors)
+
 	out := graphql.NewFieldSet(fields)
-	var invalids uint32
+	deferred := make(map[string]*graphql.FieldSet)
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("__EnumValue")
 		case "name":
-
 			out.Values[i] = ec.___EnumValue_name(ctx, field, obj)
-
 			if out.Values[i] == graphql.Null {
-				invalids++
+				out.Invalids++
 			}
 		case "description":
-
 			out.Values[i] = ec.___EnumValue_description(ctx, field, obj)
-
 		case "isDeprecated":
-
 			out.Values[i] = ec.___EnumValue_isDeprecated(ctx, field, obj)
-
 			if out.Values[i] == graphql.Null {
-				invalids++
+				out.Invalids++
 			}
 		case "deprecationReason":
-
 			out.Values[i] = ec.___EnumValue_deprecationReason(ctx, field, obj)
-
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
 	}
-	out.Dispatch()
-	if invalids > 0 {
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
 		return graphql.Null
 	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
 	return out
 }
 
@@ -3573,56 +3649,57 @@ var __FieldImplementors = []string{"__Field"}
 
 func (ec *executionContext) ___Field(ctx context.Context, sel ast.SelectionSet, obj *introspection.Field) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, __FieldImplementors)
+
 	out := graphql.NewFieldSet(fields)
-	var invalids uint32
+	deferred := make(map[string]*graphql.FieldSet)
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("__Field")
 		case "name":
-
 			out.Values[i] = ec.___Field_name(ctx, field, obj)
-
 			if out.Values[i] == graphql.Null {
-				invalids++
+				out.Invalids++
 			}
 		case "description":
-
 			out.Values[i] = ec.___Field_description(ctx, field, obj)
-
 		case "args":
-
 			out.Values[i] = ec.___Field_args(ctx, field, obj)
-
 			if out.Values[i] == graphql.Null {
-				invalids++
+				out.Invalids++
 			}
 		case "type":
-
 			out.Values[i] = ec.___Field_type(ctx, field, obj)
-
 			if out.Values[i] == graphql.Null {
-				invalids++
+				out.Invalids++
 			}
 		case "isDeprecated":
-
 			out.Values[i] = ec.___Field_isDeprecated(ctx, field, obj)
-
 			if out.Values[i] == graphql.Null {
-				invalids++
+				out.Invalids++
 			}
 		case "deprecationReason":
-
 			out.Values[i] = ec.___Field_deprecationReason(ctx, field, obj)
-
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
 	}
-	out.Dispatch()
-	if invalids > 0 {
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
 		return graphql.Null
 	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
 	return out
 }
 
@@ -3630,42 +3707,47 @@ var __InputValueImplementors = []string{"__InputValue"}
 
 func (ec *executionContext) ___InputValue(ctx context.Context, sel ast.SelectionSet, obj *introspection.InputValue) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, __InputValueImplementors)
+
 	out := graphql.NewFieldSet(fields)
-	var invalids uint32
+	deferred := make(map[string]*graphql.FieldSet)
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("__InputValue")
 		case "name":
-
 			out.Values[i] = ec.___InputValue_name(ctx, field, obj)
-
 			if out.Values[i] == graphql.Null {
-				invalids++
+				out.Invalids++
 			}
 		case "description":
-
 			out.Values[i] = ec.___InputValue_description(ctx, field, obj)
-
 		case "type":
-
 			out.Values[i] = ec.___InputValue_type(ctx, field, obj)
-
 			if out.Values[i] == graphql.Null {
-				invalids++
+				out.Invalids++
 			}
 		case "defaultValue":
-
 			out.Values[i] = ec.___InputValue_defaultValue(ctx, field, obj)
-
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
 	}
-	out.Dispatch()
-	if invalids > 0 {
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
 		return graphql.Null
 	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
 	return out
 }
 
@@ -3673,53 +3755,54 @@ var __SchemaImplementors = []string{"__Schema"}
 
 func (ec *executionContext) ___Schema(ctx context.Context, sel ast.SelectionSet, obj *introspection.Schema) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, __SchemaImplementors)
+
 	out := graphql.NewFieldSet(fields)
-	var invalids uint32
+	deferred := make(map[string]*graphql.FieldSet)
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("__Schema")
 		case "description":
-
 			out.Values[i] = ec.___Schema_description(ctx, field, obj)
-
 		case "types":
-
 			out.Values[i] = ec.___Schema_types(ctx, field, obj)
-
 			if out.Values[i] == graphql.Null {
-				invalids++
+				out.Invalids++
 			}
 		case "queryType":
-
 			out.Values[i] = ec.___Schema_queryType(ctx, field, obj)
-
 			if out.Values[i] == graphql.Null {
-				invalids++
+				out.Invalids++
 			}
 		case "mutationType":
-
 			out.Values[i] = ec.___Schema_mutationType(ctx, field, obj)
-
 		case "subscriptionType":
-
 			out.Values[i] = ec.___Schema_subscriptionType(ctx, field, obj)
-
 		case "directives":
-
 			out.Values[i] = ec.___Schema_directives(ctx, field, obj)
-
 			if out.Values[i] == graphql.Null {
-				invalids++
+				out.Invalids++
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
 	}
-	out.Dispatch()
-	if invalids > 0 {
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
 		return graphql.Null
 	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
 	return out
 }
 
@@ -3727,63 +3810,56 @@ var __TypeImplementors = []string{"__Type"}
 
 func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, obj *introspection.Type) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, __TypeImplementors)
+
 	out := graphql.NewFieldSet(fields)
-	var invalids uint32
+	deferred := make(map[string]*graphql.FieldSet)
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("__Type")
 		case "kind":
-
 			out.Values[i] = ec.___Type_kind(ctx, field, obj)
-
 			if out.Values[i] == graphql.Null {
-				invalids++
+				out.Invalids++
 			}
 		case "name":
-
 			out.Values[i] = ec.___Type_name(ctx, field, obj)
-
 		case "description":
-
 			out.Values[i] = ec.___Type_description(ctx, field, obj)
-
 		case "fields":
-
 			out.Values[i] = ec.___Type_fields(ctx, field, obj)
-
 		case "interfaces":
-
 			out.Values[i] = ec.___Type_interfaces(ctx, field, obj)
-
 		case "possibleTypes":
-
 			out.Values[i] = ec.___Type_possibleTypes(ctx, field, obj)
-
 		case "enumValues":
-
 			out.Values[i] = ec.___Type_enumValues(ctx, field, obj)
-
 		case "inputFields":
-
 			out.Values[i] = ec.___Type_inputFields(ctx, field, obj)
-
 		case "ofType":
-
 			out.Values[i] = ec.___Type_ofType(ctx, field, obj)
-
 		case "specifiedByURL":
-
 			out.Values[i] = ec.___Type_specifiedByURL(ctx, field, obj)
-
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
 	}
-	out.Dispatch()
-	if invalids > 0 {
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
 		return graphql.Null
 	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
 	return out
 }
 
@@ -3821,7 +3897,7 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 	return res
 }
 
-func (ec *executionContext) marshalNMetadataType2ᚖgithubᚗcomᚋklavisᚑcorpᚋshortᚑurlᚋpkgᚋapiᚋhandlerᚋgraphqlᚋmodelsᚐMetadataType(ctx context.Context, sel ast.SelectionSet, v *models.MetadataType) graphql.Marshaler {
+func (ec *executionContext) marshalNMetadataType2ᚖgithubᚗcomᚋnᚑcreativesystemᚋshortᚑurlᚋpkgᚋinterfacesᚋhandlerᚋgraphqlᚋmodelsᚐMetadataType(ctx context.Context, sel ast.SelectionSet, v *models.MetadataType) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -3831,11 +3907,11 @@ func (ec *executionContext) marshalNMetadataType2ᚖgithubᚗcomᚋklavisᚑcorp
 	return ec._MetadataType(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNOAuthApplication2githubᚗcomᚋklavisᚑcorpᚋshortᚑurlᚋpkgᚋapiᚋhandlerᚋgraphqlᚋmodelsᚐOAuthApplication(ctx context.Context, sel ast.SelectionSet, v models.OAuthApplication) graphql.Marshaler {
+func (ec *executionContext) marshalNOAuthApplication2githubᚗcomᚋnᚑcreativesystemᚋshortᚑurlᚋpkgᚋinterfacesᚋhandlerᚋgraphqlᚋmodelsᚐOAuthApplication(ctx context.Context, sel ast.SelectionSet, v models.OAuthApplication) graphql.Marshaler {
 	return ec._OAuthApplication(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNOAuthApplication2ᚕᚖgithubᚗcomᚋklavisᚑcorpᚋshortᚑurlᚋpkgᚋapiᚋhandlerᚋgraphqlᚋmodelsᚐOAuthApplicationᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.OAuthApplication) graphql.Marshaler {
+func (ec *executionContext) marshalNOAuthApplication2ᚕᚖgithubᚗcomᚋnᚑcreativesystemᚋshortᚑurlᚋpkgᚋinterfacesᚋhandlerᚋgraphqlᚋmodelsᚐOAuthApplicationᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.OAuthApplication) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -3859,7 +3935,7 @@ func (ec *executionContext) marshalNOAuthApplication2ᚕᚖgithubᚗcomᚋklavis
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNOAuthApplication2ᚖgithubᚗcomᚋklavisᚑcorpᚋshortᚑurlᚋpkgᚋapiᚋhandlerᚋgraphqlᚋmodelsᚐOAuthApplication(ctx, sel, v[i])
+			ret[i] = ec.marshalNOAuthApplication2ᚖgithubᚗcomᚋnᚑcreativesystemᚋshortᚑurlᚋpkgᚋinterfacesᚋhandlerᚋgraphqlᚋmodelsᚐOAuthApplication(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -3879,7 +3955,7 @@ func (ec *executionContext) marshalNOAuthApplication2ᚕᚖgithubᚗcomᚋklavis
 	return ret
 }
 
-func (ec *executionContext) marshalNOAuthApplication2ᚖgithubᚗcomᚋklavisᚑcorpᚋshortᚑurlᚋpkgᚋapiᚋhandlerᚋgraphqlᚋmodelsᚐOAuthApplication(ctx context.Context, sel ast.SelectionSet, v *models.OAuthApplication) graphql.Marshaler {
+func (ec *executionContext) marshalNOAuthApplication2ᚖgithubᚗcomᚋnᚑcreativesystemᚋshortᚑurlᚋpkgᚋinterfacesᚋhandlerᚋgraphqlᚋmodelsᚐOAuthApplication(ctx context.Context, sel ast.SelectionSet, v *models.OAuthApplication) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -3889,16 +3965,16 @@ func (ec *executionContext) marshalNOAuthApplication2ᚖgithubᚗcomᚋklavisᚑ
 	return ec._OAuthApplication(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNOAuthApplicationInput2githubᚗcomᚋklavisᚑcorpᚋshortᚑurlᚋpkgᚋapiᚋhandlerᚋgraphqlᚋmodelsᚐOAuthApplicationInput(ctx context.Context, v interface{}) (models.OAuthApplicationInput, error) {
+func (ec *executionContext) unmarshalNOAuthApplicationInput2githubᚗcomᚋnᚑcreativesystemᚋshortᚑurlᚋpkgᚋinterfacesᚋhandlerᚋgraphqlᚋmodelsᚐOAuthApplicationInput(ctx context.Context, v interface{}) (models.OAuthApplicationInput, error) {
 	res, err := ec.unmarshalInputOAuthApplicationInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNOAuthApplicationType2githubᚗcomᚋklavisᚑcorpᚋshortᚑurlᚋpkgᚋapiᚋhandlerᚋgraphqlᚋmodelsᚐOAuthApplicationType(ctx context.Context, sel ast.SelectionSet, v models.OAuthApplicationType) graphql.Marshaler {
+func (ec *executionContext) marshalNOAuthApplicationType2githubᚗcomᚋnᚑcreativesystemᚋshortᚑurlᚋpkgᚋinterfacesᚋhandlerᚋgraphqlᚋmodelsᚐOAuthApplicationType(ctx context.Context, sel ast.SelectionSet, v models.OAuthApplicationType) graphql.Marshaler {
 	return ec._OAuthApplicationType(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNOAuthApplicationType2ᚖgithubᚗcomᚋklavisᚑcorpᚋshortᚑurlᚋpkgᚋapiᚋhandlerᚋgraphqlᚋmodelsᚐOAuthApplicationType(ctx context.Context, sel ast.SelectionSet, v *models.OAuthApplicationType) graphql.Marshaler {
+func (ec *executionContext) marshalNOAuthApplicationType2ᚖgithubᚗcomᚋnᚑcreativesystemᚋshortᚑurlᚋpkgᚋinterfacesᚋhandlerᚋgraphqlᚋmodelsᚐOAuthApplicationType(ctx context.Context, sel ast.SelectionSet, v *models.OAuthApplicationType) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")

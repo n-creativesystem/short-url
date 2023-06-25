@@ -91,5 +91,6 @@
   ],
   "vitest.nodeEnv": {
     "NODE_ENV": "test"
-  }
+  },
+  "liveServer.settings.root": "/docs"
 }

@@ -113,7 +113,7 @@ TAGS=""
 .PHONY: swag/gen
 swag/gen:
 	go run -mod=mod github.com/swaggo/swag/v2/cmd/swag init \
-		-o pkg/interfaces/router/swagger/$(MODE)/docs \
+		-o docs/openapi/$(MODE) \
 		--generalInfo $(INFO) \
 		--tags $(TAGS) \
 		--pd \

@@ -1,4 +1,4 @@
-import { useFetch } from '@/components/hooks/useFetch';
+import { useFetchByOpenAPI } from '@/components/hooks/useFetchOpenAPI';
 import {
   FC,
   ReactNode,
@@ -28,8 +28,12 @@ type Props = {
 
 const UserInfoProvider: FC<Props> = ({ children }) => {
   const [value, setValue] = useState<TUserInfoContext>({ loading: true });
-  const { data, hasError, isLoading, error } = useFetch<responseUserInfo>({
+  const { data, hasError, isLoading, error } = useFetchByOpenAPI<
+    '/auth/userinfo',
+    'get'
+  >({
     url: '/auth/userinfo',
+    method: 'get',
   });
   useEffect(() => {
     const value: TUserInfoContext = {

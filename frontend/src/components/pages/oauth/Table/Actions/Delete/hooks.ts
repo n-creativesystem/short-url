@@ -1,8 +1,6 @@
 import { errorModalVar } from '@/components/hooks/Context';
-import {
-  OAuthApplicationsDocument,
-  useDeleteOAuthApplicationMutation,
-} from '@/graphql/generated';
+import { useDeleteOAuthApplicationMutation } from '@/components/pages/oauth/Table/Actions/Delete/graphql';
+import { OAuthApplicationsDocument } from '@/components/pages/oauth/graphql';
 import { useCallback } from 'react';
 
 export const useDeleteHandler = () => (id: string) => {

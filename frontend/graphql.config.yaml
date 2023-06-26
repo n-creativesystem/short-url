@@ -1,19 +1,26 @@
 schema:
   - ../schema/graphql/oauth2_client.graphql
 documents:
-  # - src/components/**/*.{graphql,js,jsx,ts,tsx}
-  - src/graphql/queries/**/*.graphql
-  - src/graphql/mutations/**/*.graphql
+  - src/components/**/*.graphql
+  # - src/graphql/queries/**/*.graphql
+  # - src/graphql/mutations/**/*.graphql
   # - src/graphql/fragments/**/*.graphql
 extensions:
   codegen:
     overwrite: true
     generates:
-      src/graphql/generated/index.ts:
+      src/types/graphql/index.d.ts:
+        plugins:
+          - typescript
+      src/:
         plugins:
           - typescript
           - typescript-operations # query, mutationから型を作成
           - typescript-react-apollo # query, mutationからhooks, hocを作成
+        preset: near-operation-file
+        presetConfig:
+          extension: .tsx
+          baseTypesPath: types/graphql
         config:
           withHooks: true
     hooks:

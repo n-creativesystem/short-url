@@ -1,6 +1,6 @@
 import { Button } from '@/components/Parts/Button';
 import { useRouter } from '@/components/Parts/Navigation';
-import { useOAuthApplicationsQuery } from '@/graphql/generated';
+import { useOAuthApplicationsQuery } from '@/components/pages/oauth/graphql';
 import classNames from 'classnames';
 import { FC, memo } from 'react';
 import Presenter from './Presenter';

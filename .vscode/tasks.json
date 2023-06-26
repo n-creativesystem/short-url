@@ -5,15 +5,33 @@
       "label": "migration",
       "type": "shell",
       "command": "make",
-      "args": ["migration-up", "DRIVER=${input:driver}"]
+      "args": ["migration-up", "DRIVER=${input:driver}"],
+      "dependsOn": ["run env"]
+    },
+    {
+      "label": "run env",
+      "type": "shell",
+      "command": "make",
+      "args": ["run/env"]
     }
   ],
   "inputs": [
     {
       "id": "driver",
-      "description": "Backend driver",
-      "default": "sqlite",
-      "type": "promptString"
+      "type": "command",
+      "command": "extension.commandvariable.pickStringRemember",
+      "args": {
+        "description": "Backend driver(task)",
+        "key": "driver",
+        "fileName": "${workspaceFolder}/.vscode/driver.json",
+        "fileFormat": "json",
+        "jsonOption": {
+          "label": "content.driver[__itemIdx__]",
+          "value": {
+            "driver": "content.driver[__itemIdx__]"
+          }
+        }
+      }
     }
   ]
 }

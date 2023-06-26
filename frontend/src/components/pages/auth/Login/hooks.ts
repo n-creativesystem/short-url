@@ -1,6 +1,5 @@
 import { errorModalVar } from '@/components/hooks/Context';
-import { useFetch } from '@/components/hooks/useFetch';
-import { paths } from '@/openapi/schema';
+import { useFetchByOpenAPI } from '@/components/hooks/useFetchOpenAPI';
 import { GetOAuthButton } from './index.d';
 
 export const useAuthLogin = (label: string) => async () => {
@@ -8,10 +7,12 @@ export const useAuthLogin = (label: string) => async () => {
 };
 
 export const useEnabledAuth: () => GetOAuthButton = (): GetOAuthButton => {
-  const { data, isLoading, error, hasError } = useFetch<
-    paths['/auth/enabled']['get']['responses']['200']['schema']
+  const { data, isLoading, error, hasError } = useFetchByOpenAPI<
+    '/auth/enabled',
+    'get'
   >({
     url: '/auth/enabled',
+    method: 'get',
   });
   if (isLoading) {
     return {

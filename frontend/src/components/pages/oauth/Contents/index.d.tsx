@@ -1,7 +1,4 @@
-import type {
-  OAuthApplication,
-  OAuthApplicationInput,
-} from '@/graphql/generated';
+import type { OAuthApplication, OAuthApplicationInput } from '@t/graphql';
 
 export type Data = Omit<OAuthApplication, 'domain' | '__typename'>;
 

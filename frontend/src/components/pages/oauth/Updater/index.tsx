@@ -3,10 +3,8 @@ import { errorModalVar } from '@/components/hooks/Context';
 import NotFound from '@/components/pages/notfound';
 import { Presenter } from '@/components/pages/oauth/Contents/Presenter';
 import type { Input } from '@/components/pages/oauth/Contents/index.d';
-import {
-  useOAuthApplicationQuery,
-  useUpdateOAuthApplicationMutation,
-} from '@/graphql/generated';
+import { useUpdateOAuthApplicationMutation } from '@/components/pages/oauth/Updater/graphql';
+import { useOAuthApplicationQuery } from '@/components/pages/oauth/graphql';
 import { getGraphQLStatusCode } from '@/utils/errors';
 import { FC } from 'react';
 

@@ -1,0 +1,8 @@
+mutation createOAuthApplication($input: OAuthApplicationInput!) {
+  createOAuthApplication(input: $input) {
+    id
+    name
+    secret
+    domain
+  }
+}

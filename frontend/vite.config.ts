@@ -10,6 +10,7 @@ const config = defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
+      '@t': fileURLToPath(new URL('./src/types', import.meta.url)),
     },
   },
   server: {

@@ -21,9 +21,10 @@
     "noFallthroughCasesInSwitch": true,
     "baseUrl": "./",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@t/*": ["./src/types/*"]
     },
-    "typeRoots": ["node_modules/@types", "src/types"],
+    "typeRoots": ["node_modules/@types", "src/types", "src/graphql/@types"],
     "noErrorTruncation": true,
     "types": ["vitest/globals"]
   },

@@ -1,0 +1,8 @@
+mutation updateOAuthApplication($id: String!, $input: OAuthApplicationInput!) {
+  updateOAuthApplication(id: $id, input: $input) {
+    id
+    name
+    secret
+    domain
+  }
+}

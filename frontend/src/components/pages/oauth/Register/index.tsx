@@ -1,7 +1,7 @@
 import { useRouter } from '@/components/Parts/Navigation';
 import { Presenter } from '@/components/pages/oauth/Contents/Presenter';
 import type { Input } from '@/components/pages/oauth/Contents/index.d';
-import { useCreateOAuthApplicationMutation } from '@/graphql/generated';
+import { useCreateOAuthApplicationMutation } from '@/components/pages/oauth/Register/graphql';
 import { FC } from 'react';
 
 export const OAuthAppContainer: FC = () => {

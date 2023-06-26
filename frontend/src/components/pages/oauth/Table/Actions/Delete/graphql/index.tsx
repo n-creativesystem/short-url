@@ -21,6 +21,8 @@ export type Scalars = {
   Boolean: boolean;
   Int: number;
   Float: number;
+  Time: Types.CustomTime;
+  URL: Types.CustomURL;
 };
 
 export type MetadataType = {
@@ -31,38 +33,24 @@ export type MetadataType = {
   self: Scalars['String'];
 };
 
-export type OAuth2ClientMutation = {
-  __typename?: 'OAuth2ClientMutation';
+export type Mutation = {
+  __typename?: 'Mutation';
   createOAuthApplication: OAuthApplication;
   deleteOAuthApplication: Scalars['Boolean'];
   updateOAuthApplication: OAuthApplication;
 };
 
-export type OAuth2ClientMutationCreateOAuthApplicationArgs = {
+export type MutationCreateOAuthApplicationArgs = {
   input: OAuthApplicationInput;
 };
 
-export type OAuth2ClientMutationDeleteOAuthApplicationArgs = {
+export type MutationDeleteOAuthApplicationArgs = {
   id: Scalars['String'];
 };
 
-export type OAuth2ClientMutationUpdateOAuthApplicationArgs = {
+export type MutationUpdateOAuthApplicationArgs = {
   id: Scalars['String'];
   input: OAuthApplicationInput;
-};
-
-export type OAuth2ClientQuery = {
-  __typename?: 'OAuth2ClientQuery';
-  oauthApplication: OAuthApplication;
-  oauthApplications: OAuthApplicationType;
-};
-
-export type OAuth2ClientQueryOauthApplicationArgs = {
-  id: Scalars['String'];
-};
-
-export type OAuth2ClientQueryOauthApplicationsArgs = {
-  token?: InputMaybe<Scalars['String']>;
 };
 
 export type OAuthApplication = {
@@ -83,12 +71,45 @@ export type OAuthApplicationType = {
   result: Array<OAuthApplication>;
 };
 
+export type Query = {
+  __typename?: 'Query';
+  oauthApplication: OAuthApplication;
+  oauthApplications: OAuthApplicationType;
+  url: Url;
+  urls: UrlType;
+};
+
+export type QueryOauthApplicationArgs = {
+  id: Scalars['String'];
+};
+
+export type QueryOauthApplicationsArgs = {
+  token?: InputMaybe<Scalars['String']>;
+};
+
+export type QueryUrlArgs = {
+  key: Scalars['String'];
+};
+
+export type Url = {
+  __typename?: 'Url';
+  created_at: Scalars['Time'];
+  key: Scalars['String'];
+  updated_at: Scalars['Time'];
+  url: Scalars['URL'];
+};
+
+export type UrlType = {
+  __typename?: 'UrlType';
+  result: Array<Url>;
+};
+
 export type DeleteOAuthApplicationMutationVariables = Types.Exact<{
   id: Types.Scalars['String'];
 }>;
 
 export type DeleteOAuthApplicationMutation = {
-  __typename?: 'OAuth2ClientMutation';
+  __typename?: 'Mutation';
   deleteOAuthApplication: boolean;
 };
 

@@ -18,7 +18,8 @@ __debug_bin
 .DS_Store
 cover/*
 !cover/.gitkeep
-.unit.env
 sqlite.db
 *.env
 !.env
+!.test.env
+!.app.env

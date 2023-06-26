@@ -31,7 +31,8 @@
         "rangav.vscode-thunder-client",
         "ZixuanChen.vitest-explorer",
         "kingwl.vscode-vitest-runner",
-        "ritwickdey.LiveServer"
+        "ritwickdey.LiveServer",
+        "rioj7.command-variable"
       ]
     }
   },

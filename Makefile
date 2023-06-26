@@ -138,12 +138,17 @@ swag/gen/ui:
 # swag/gen/main:
 # 	make swag/gen MODE=main
 
+.PHONY: run/env
+run/env:
+	@tools/envs.sh
+
 RUN_DRIVER?="mysql"
 RUN_PORT?=3000
 .PHONY: run/uiserver
-run/uiserver:
-	export $$(cat .env | grep -v ^#) && go run main.go server web-ui --port $(RUN_PORT) --driver $(RUN_DRIVER) --mode debug
+run/uiserver:run/env
+	@export $$(cat .run.env | grep -v ^#) && go run main.go server web-ui --port $(RUN_PORT) --driver $(RUN_DRIVER) --mode debug
 
 .PHONY: run/apiserver
-run/apiserver:
-	export $$(cat .env | grep -v ^#) && go run main.go server api --port $(RUN_PORT) --driver $(RUN_DRIVER) --mode debug
+run/apiserver:run/env
+	@export $$(cat .run.env | grep -v ^#) && go run main.go server api --port $(RUN_PORT) --driver $(RUN_DRIVER) --mode debug
+

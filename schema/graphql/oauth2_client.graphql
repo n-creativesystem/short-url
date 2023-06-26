@@ -1,15 +1,3 @@
-schema {
-  query: OAuth2ClientQuery
-  mutation: OAuth2ClientMutation
-}
-
-type MetadataType {
-  prev: String!
-  self: String!
-  next: String!
-  count: Int!
-}
-
 type OAuthApplication {
   id: String!
   name: String!
@@ -22,12 +10,12 @@ type OAuthApplicationType {
   _metadata: MetadataType!
 }
 
-type OAuth2ClientQuery {
+extend type Query {
   oauthApplications(token: String): OAuthApplicationType!
   oauthApplication(id: String!): OAuthApplication!
 }
 
-type OAuth2ClientMutation {
+extend type Mutation {
   createOAuthApplication(input: OAuthApplicationInput!): OAuthApplication!
   updateOAuthApplication(
     id: String!

@@ -16,3 +16,11 @@ resolver:
   dir: pkg/interfaces/handler/graphql
   package: graphql
   filename_template: '{name}.resolvers.go'
+
+models:
+  URL:
+    model:
+      - github.com/n-creativesystem/short-url/pkg/interfaces/handler/graphql/models/original.URL
+  Time:
+    model:
+      - github.com/n-creativesystem/short-url/pkg/interfaces/handler/graphql/models/original.Time

@@ -1,0 +1,9 @@
+type MetadataType {
+  prev: String!
+  self: String!
+  next: String!
+  count: Int!
+}
+
+scalar URL
+scalar Time

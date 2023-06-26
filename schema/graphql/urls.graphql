@@ -1,0 +1,15 @@
+type Url {
+  key: String!
+  url: URL!
+  created_at: Time!
+  updated_at: Time!
+}
+
+type UrlType {
+  result: [Url!]!
+}
+
+extend type Query {
+  urls: UrlType!
+  url(key: String!): Url!
+}

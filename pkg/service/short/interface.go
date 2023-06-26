@@ -14,4 +14,5 @@ type Service interface {
 	GenerateQRCode(ctx context.Context, key string) (io.Reader, error)
 	Remove(ctx context.Context, key, author string) error
 	FindAll(ctx context.Context, author string) ([]short.ShortWithTimeStamp, error)
+	FindByKeyAndAuthor(ctx context.Context, key, author string) (*short.ShortWithTimeStamp, error)
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/n-creativesystem/short-url/pkg/interfaces/handler/graphql"
 	"github.com/n-creativesystem/short-url/pkg/interfaces/middleware"
 	"github.com/n-creativesystem/short-url/pkg/interfaces/middleware/session"
+	"github.com/n-creativesystem/short-url/pkg/service/short"
 )
 
 // @title Web UI
@@ -35,10 +36,12 @@ func NewWebUI(input *RouterInput, cfg *config.WebUI) *gin.Engine {
 		}
 	}
 	route.GET("/manifest", handler.WebUIManifest(cfg))
+
+	shortService := short.NewService(input.ShortRepository, input.AppConfig, input.Beginner)
 	socialHandler := handler.NewSocialHandler(cfg.Providers, cfg.LoginSuccessURL, cfg.LogoutSuccessURL)
 	socialHandler.Router(route, middleware.Protected())
 	// Graphql handler
-	gqlResolver := graphql.NewResolver(input.OAuth2ClientService)
+	gqlResolver := graphql.NewResolver(input.OAuth2ClientService, shortService)
 	route.POST("/graphql", middleware.Protected(), csrfMiddleware, graphql.GraphQLHandler(gqlResolver))
 	route.GET("/playground", graphql.GraphQLPlayGroundHandler("/api/graphql"))
 

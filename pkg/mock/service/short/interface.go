@@ -51,6 +51,21 @@ func (mr *MockServiceMockRecorder) FindAll(ctx, author interface{}) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAll", reflect.TypeOf((*MockService)(nil).FindAll), ctx, author)
 }
 
+// FindByKeyAndAuthor mocks base method.
+func (m *MockService) FindByKeyAndAuthor(ctx context.Context, key, author string) (*short.ShortWithTimeStamp, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindByKeyAndAuthor", ctx, key, author)
+	ret0, _ := ret[0].(*short.ShortWithTimeStamp)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindByKeyAndAuthor indicates an expected call of FindByKeyAndAuthor.
+func (mr *MockServiceMockRecorder) FindByKeyAndAuthor(ctx, key, author interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByKeyAndAuthor", reflect.TypeOf((*MockService)(nil).FindByKeyAndAuthor), ctx, key, author)
+}
+
 // GenerateQRCode mocks base method.
 func (m *MockService) GenerateQRCode(ctx context.Context, key string) (io.Reader, error) {
 	m.ctrl.T.Helper()

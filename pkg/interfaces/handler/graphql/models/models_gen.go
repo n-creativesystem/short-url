@@ -2,6 +2,11 @@
 
 package models
 
+import (
+	"net/url"
+	"time"
+)
+
 type MetadataType struct {
 	Prev  string `json:"prev"`
 	Self  string `json:"self"`
@@ -23,4 +28,15 @@ type OAuthApplicationInput struct {
 type OAuthApplicationType struct {
 	Result   []*OAuthApplication `json:"result"`
 	Metadata *MetadataType       `json:"_metadata"`
+}
+
+type URL struct {
+	Key       string    `json:"key"`
+	URL       url.URL   `json:"url"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+type URLType struct {
+	Result []*URL `json:"result"`
 }

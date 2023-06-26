@@ -17,7 +17,7 @@ import (
 )
 
 // CreateOAuthApplication is the resolver for the createOAuthApplication field.
-func (r *oAuth2ClientMutationResolver) CreateOAuthApplication(ctx context.Context, input models.OAuthApplicationInput) (*models.OAuthApplication, error) {
+func (r *mutationResolver) CreateOAuthApplication(ctx context.Context, input models.OAuthApplicationInput) (*models.OAuthApplication, error) {
 	user, err := authorize(ctx)
 	if err != nil {
 		return nil, err
@@ -32,11 +32,11 @@ func (r *oAuth2ClientMutationResolver) CreateOAuthApplication(ctx context.Contex
 	if err != nil {
 		return nil, err
 	}
-	return r.OAuth2ClientQuery().OauthApplication(ctx, result.ClientId)
+	return r.Query().OauthApplication(ctx, result.ClientId)
 }
 
 // UpdateOAuthApplication is the resolver for the updateOAuthApplication field.
-func (r *oAuth2ClientMutationResolver) UpdateOAuthApplication(ctx context.Context, id string, input models.OAuthApplicationInput) (*models.OAuthApplication, error) {
+func (r *mutationResolver) UpdateOAuthApplication(ctx context.Context, id string, input models.OAuthApplicationInput) (*models.OAuthApplication, error) {
 	user, err := authorize(ctx)
 	if err != nil {
 		return nil, err
@@ -47,11 +47,11 @@ func (r *oAuth2ClientMutationResolver) UpdateOAuthApplication(ctx context.Contex
 	if err := r.oauth2clientSvc.UpdateClient(ctx, id, user, req.AppName); err != nil {
 		return nil, err
 	}
-	return r.OAuth2ClientQuery().OauthApplication(ctx, id)
+	return r.Query().OauthApplication(ctx, id)
 }
 
 // DeleteOAuthApplication is the resolver for the deleteOAuthApplication field.
-func (r *oAuth2ClientMutationResolver) DeleteOAuthApplication(ctx context.Context, id string) (bool, error) {
+func (r *mutationResolver) DeleteOAuthApplication(ctx context.Context, id string) (bool, error) {
 	user, err := authorize(ctx)
 	if err != nil {
 		return false, err
@@ -63,7 +63,7 @@ func (r *oAuth2ClientMutationResolver) DeleteOAuthApplication(ctx context.Contex
 }
 
 // OauthApplications is the resolver for the oauthApplications field.
-func (r *oAuth2ClientQueryResolver) OauthApplications(ctx context.Context, token *string) (*models.OAuthApplicationType, error) {
+func (r *queryResolver) OauthApplications(ctx context.Context, token *string) (*models.OAuthApplicationType, error) {
 	user, err := authorize(ctx)
 	if err != nil {
 		return nil, err
@@ -84,7 +84,7 @@ func (r *oAuth2ClientQueryResolver) OauthApplications(ctx context.Context, token
 }
 
 // OauthApplication is the resolver for the oauthApplication field.
-func (r *oAuth2ClientQueryResolver) OauthApplication(ctx context.Context, id string) (*models.OAuthApplication, error) {
+func (r *queryResolver) OauthApplication(ctx context.Context, id string) (*models.OAuthApplication, error) {
 	user, err := authorize(ctx)
 	if err != nil {
 		return nil, err
@@ -106,15 +106,11 @@ func (r *oAuth2ClientQueryResolver) OauthApplication(ctx context.Context, id str
 	return &app, nil
 }
 
-// OAuth2ClientMutation returns OAuth2ClientMutationResolver implementation.
-func (r *Resolver) OAuth2ClientMutation() OAuth2ClientMutationResolver {
-	return &oAuth2ClientMutationResolver{r}
-}
+// Mutation returns MutationResolver implementation.
+func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 
-// OAuth2ClientQuery returns OAuth2ClientQueryResolver implementation.
-func (r *Resolver) OAuth2ClientQuery() OAuth2ClientQueryResolver {
-	return &oAuth2ClientQueryResolver{r}
-}
+// Query returns QueryResolver implementation.
+func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
-type oAuth2ClientMutationResolver struct{ *Resolver }
-type oAuth2ClientQueryResolver struct{ *Resolver }
+type mutationResolver struct{ *Resolver }
+type queryResolver struct{ *Resolver }

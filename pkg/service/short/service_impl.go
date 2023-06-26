@@ -129,3 +129,14 @@ func (impl *serviceImpl) FindAll(ctx context.Context, author string) ([]short.Sh
 		return v, nil
 	}
 }
+
+func (impl *serviceImpl) FindByKeyAndAuthor(ctx context.Context, key, author string) (*short.ShortWithTimeStamp, error) {
+	result, err := impl.repo.FindByKeyAndAuthor(ctx, key, author)
+	if err != nil {
+		if errors.Is(err, repository.ErrRecordNotFound) {
+			return nil, service.ErrNotFound
+		}
+		return nil, service.Wrap(err, "Service shortURL: An error occurred while retrieving the URL.")
+	}
+	return result, nil
+}

@@ -1,6 +1,7 @@
 package short
 
 import (
+	"net/url"
 	"time"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -39,6 +40,11 @@ func (s *Short) GetKey() string {
 
 func (s *Short) GetURL() string {
 	return s.url
+}
+
+func (s *Short) GetUrl() url.URL {
+	v, _ := url.Parse(s.url)
+	return *v
 }
 
 func (s *Short) GetEncryptURL() credentials.EncryptString {

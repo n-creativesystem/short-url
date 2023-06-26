@@ -118,6 +118,27 @@ func (impl *repositoryImpl) FindAll(ctx context.Context, author string) ([]short
 	return impl.findAll(ctx, input)
 }
 
+func (impl *repositoryImpl) FindByKeyAndAuthor(ctx context.Context, key, author string) (*short.ShortWithTimeStamp, error) {
+	filter := "#col1 = :key and #col2 = :author"
+	input := dynamodb.ScanInput{
+		TableName:        aws.String(tableName),
+		FilterExpression: &filter,
+		ExpressionAttributeNames: map[string]string{
+			"#col1": "key",
+			"#col2": "author",
+		},
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":key":    &types.AttributeValueMemberS{Value: key},
+			":author": &types.AttributeValueMemberS{Value: author},
+		},
+	}
+	shorts, err := impl.findAll(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+	return &shorts[0], nil
+}
+
 func (impl *repositoryImpl) existsByKeyAndAuthor(ctx context.Context, key, author string) ([]string, error) {
 	filter := "#col1 = :key and #col2 = :author"
 	input := dynamodb.ScanInput{

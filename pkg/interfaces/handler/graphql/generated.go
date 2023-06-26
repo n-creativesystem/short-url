@@ -7,13 +7,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
 	"strconv"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
 	"github.com/n-creativesystem/short-url/pkg/interfaces/handler/graphql/models"
+	"github.com/n-creativesystem/short-url/pkg/interfaces/handler/graphql/models/original"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -36,8 +39,8 @@ type Config struct {
 }
 
 type ResolverRoot interface {
-	OAuth2ClientMutation() OAuth2ClientMutationResolver
-	OAuth2ClientQuery() OAuth2ClientQueryResolver
+	Mutation() MutationResolver
+	Query() QueryResolver
 }
 
 type DirectiveRoot struct {
@@ -51,15 +54,10 @@ type ComplexityRoot struct {
 		Self  func(childComplexity int) int
 	}
 
-	OAuth2ClientMutation struct {
+	Mutation struct {
 		CreateOAuthApplication func(childComplexity int, input models.OAuthApplicationInput) int
 		DeleteOAuthApplication func(childComplexity int, id string) int
 		UpdateOAuthApplication func(childComplexity int, id string, input models.OAuthApplicationInput) int
-	}
-
-	OAuth2ClientQuery struct {
-		OauthApplication  func(childComplexity int, id string) int
-		OauthApplications func(childComplexity int, token *string) int
 	}
 
 	OAuthApplication struct {
@@ -73,16 +71,36 @@ type ComplexityRoot struct {
 		Metadata func(childComplexity int) int
 		Result   func(childComplexity int) int
 	}
+
+	Query struct {
+		OauthApplication  func(childComplexity int, id string) int
+		OauthApplications func(childComplexity int, token *string) int
+		URL               func(childComplexity int, key string) int
+		Urls              func(childComplexity int) int
+	}
+
+	Url struct {
+		CreatedAt func(childComplexity int) int
+		Key       func(childComplexity int) int
+		URL       func(childComplexity int) int
+		UpdatedAt func(childComplexity int) int
+	}
+
+	UrlType struct {
+		Result func(childComplexity int) int
+	}
 }
 
-type OAuth2ClientMutationResolver interface {
+type MutationResolver interface {
 	CreateOAuthApplication(ctx context.Context, input models.OAuthApplicationInput) (*models.OAuthApplication, error)
 	UpdateOAuthApplication(ctx context.Context, id string, input models.OAuthApplicationInput) (*models.OAuthApplication, error)
 	DeleteOAuthApplication(ctx context.Context, id string) (bool, error)
 }
-type OAuth2ClientQueryResolver interface {
+type QueryResolver interface {
 	OauthApplications(ctx context.Context, token *string) (*models.OAuthApplicationType, error)
 	OauthApplication(ctx context.Context, id string) (*models.OAuthApplication, error)
+	Urls(ctx context.Context) (*models.URLType, error)
+	URL(ctx context.Context, key string) (*models.URL, error)
 }
 
 type executableSchema struct {
@@ -128,65 +146,41 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.MetadataType.Self(childComplexity), true
 
-	case "OAuth2ClientMutation.createOAuthApplication":
-		if e.complexity.OAuth2ClientMutation.CreateOAuthApplication == nil {
+	case "Mutation.createOAuthApplication":
+		if e.complexity.Mutation.CreateOAuthApplication == nil {
 			break
 		}
 
-		args, err := ec.field_OAuth2ClientMutation_createOAuthApplication_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_createOAuthApplication_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.OAuth2ClientMutation.CreateOAuthApplication(childComplexity, args["input"].(models.OAuthApplicationInput)), true
+		return e.complexity.Mutation.CreateOAuthApplication(childComplexity, args["input"].(models.OAuthApplicationInput)), true
 
-	case "OAuth2ClientMutation.deleteOAuthApplication":
-		if e.complexity.OAuth2ClientMutation.DeleteOAuthApplication == nil {
+	case "Mutation.deleteOAuthApplication":
+		if e.complexity.Mutation.DeleteOAuthApplication == nil {
 			break
 		}
 
-		args, err := ec.field_OAuth2ClientMutation_deleteOAuthApplication_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_deleteOAuthApplication_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.OAuth2ClientMutation.DeleteOAuthApplication(childComplexity, args["id"].(string)), true
+		return e.complexity.Mutation.DeleteOAuthApplication(childComplexity, args["id"].(string)), true
 
-	case "OAuth2ClientMutation.updateOAuthApplication":
-		if e.complexity.OAuth2ClientMutation.UpdateOAuthApplication == nil {
+	case "Mutation.updateOAuthApplication":
+		if e.complexity.Mutation.UpdateOAuthApplication == nil {
 			break
 		}
 
-		args, err := ec.field_OAuth2ClientMutation_updateOAuthApplication_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_updateOAuthApplication_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.OAuth2ClientMutation.UpdateOAuthApplication(childComplexity, args["id"].(string), args["input"].(models.OAuthApplicationInput)), true
-
-	case "OAuth2ClientQuery.oauthApplication":
-		if e.complexity.OAuth2ClientQuery.OauthApplication == nil {
-			break
-		}
-
-		args, err := ec.field_OAuth2ClientQuery_oauthApplication_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.OAuth2ClientQuery.OauthApplication(childComplexity, args["id"].(string)), true
-
-	case "OAuth2ClientQuery.oauthApplications":
-		if e.complexity.OAuth2ClientQuery.OauthApplications == nil {
-			break
-		}
-
-		args, err := ec.field_OAuth2ClientQuery_oauthApplications_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.OAuth2ClientQuery.OauthApplications(childComplexity, args["token"].(*string)), true
+		return e.complexity.Mutation.UpdateOAuthApplication(childComplexity, args["id"].(string), args["input"].(models.OAuthApplicationInput)), true
 
 	case "OAuthApplication.domain":
 		if e.complexity.OAuthApplication.Domain == nil {
@@ -230,6 +224,84 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.OAuthApplicationType.Result(childComplexity), true
 
+	case "Query.oauthApplication":
+		if e.complexity.Query.OauthApplication == nil {
+			break
+		}
+
+		args, err := ec.field_Query_oauthApplication_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.OauthApplication(childComplexity, args["id"].(string)), true
+
+	case "Query.oauthApplications":
+		if e.complexity.Query.OauthApplications == nil {
+			break
+		}
+
+		args, err := ec.field_Query_oauthApplications_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.OauthApplications(childComplexity, args["token"].(*string)), true
+
+	case "Query.url":
+		if e.complexity.Query.URL == nil {
+			break
+		}
+
+		args, err := ec.field_Query_url_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.URL(childComplexity, args["key"].(string)), true
+
+	case "Query.urls":
+		if e.complexity.Query.Urls == nil {
+			break
+		}
+
+		return e.complexity.Query.Urls(childComplexity), true
+
+	case "Url.created_at":
+		if e.complexity.Url.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.Url.CreatedAt(childComplexity), true
+
+	case "Url.key":
+		if e.complexity.Url.Key == nil {
+			break
+		}
+
+		return e.complexity.Url.Key(childComplexity), true
+
+	case "Url.url":
+		if e.complexity.Url.URL == nil {
+			break
+		}
+
+		return e.complexity.Url.URL(childComplexity), true
+
+	case "Url.updated_at":
+		if e.complexity.Url.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.Url.UpdatedAt(childComplexity), true
+
+	case "UrlType.result":
+		if e.complexity.UrlType.Result == nil {
+			break
+		}
+
+		return e.complexity.UrlType.Result(childComplexity), true
+
 	}
 	return 0, false
 }
@@ -250,7 +322,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 			if first {
 				first = false
 				ctx = graphql.WithUnmarshalerMap(ctx, inputUnmarshalMap)
-				data = ec._OAuth2ClientQuery(ctx, rc.Operation.SelectionSet)
+				data = ec._Query(ctx, rc.Operation.SelectionSet)
 			} else {
 				if atomic.LoadInt32(&ec.pendingDeferred) > 0 {
 					result := <-ec.deferredResults
@@ -280,7 +352,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 			}
 			first = false
 			ctx = graphql.WithUnmarshalerMap(ctx, inputUnmarshalMap)
-			data := ec._OAuth2ClientMutation(ctx, rc.Operation.SelectionSet)
+			data := ec._Mutation(ctx, rc.Operation.SelectionSet)
 			var buf bytes.Buffer
 			data.MarshalGQL(&buf)
 
@@ -336,19 +408,7 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "../../../../schema/graphql/oauth2_client.graphql", Input: `schema {
-  query: OAuth2ClientQuery
-  mutation: OAuth2ClientMutation
-}
-
-type MetadataType {
-  prev: String!
-  self: String!
-  next: String!
-  count: Int!
-}
-
-type OAuthApplication {
+	{Name: "../../../../schema/graphql/oauth2_client.graphql", Input: `type OAuthApplication {
   id: String!
   name: String!
   secret: String!
@@ -360,12 +420,12 @@ type OAuthApplicationType {
   _metadata: MetadataType!
 }
 
-type OAuth2ClientQuery {
+extend type Query {
   oauthApplications(token: String): OAuthApplicationType!
   oauthApplication(id: String!): OAuthApplication!
 }
 
-type OAuth2ClientMutation {
+extend type Mutation {
   createOAuthApplication(input: OAuthApplicationInput!): OAuthApplication!
   updateOAuthApplication(
     id: String!
@@ -378,6 +438,32 @@ input OAuthApplicationInput {
   name: String!
 }
 `, BuiltIn: false},
+	{Name: "../../../../schema/graphql/types.graphql", Input: `type MetadataType {
+  prev: String!
+  self: String!
+  next: String!
+  count: Int!
+}
+
+scalar URL
+scalar Time
+`, BuiltIn: false},
+	{Name: "../../../../schema/graphql/urls.graphql", Input: `type Url {
+  key: String!
+  url: URL!
+  created_at: Time!
+  updated_at: Time!
+}
+
+type UrlType {
+  result: [Url!]!
+}
+
+extend type Query {
+  urls: UrlType!
+  url(key: String!): Url!
+}
+`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
@@ -385,7 +471,7 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
 // region    ***************************** args.gotpl *****************************
 
-func (ec *executionContext) field_OAuth2ClientMutation_createOAuthApplication_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_createOAuthApplication_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 models.OAuthApplicationInput
@@ -400,7 +486,7 @@ func (ec *executionContext) field_OAuth2ClientMutation_createOAuthApplication_ar
 	return args, nil
 }
 
-func (ec *executionContext) field_OAuth2ClientMutation_deleteOAuthApplication_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_deleteOAuthApplication_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
@@ -415,7 +501,7 @@ func (ec *executionContext) field_OAuth2ClientMutation_deleteOAuthApplication_ar
 	return args, nil
 }
 
-func (ec *executionContext) field_OAuth2ClientMutation_updateOAuthApplication_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_updateOAuthApplication_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
@@ -439,7 +525,7 @@ func (ec *executionContext) field_OAuth2ClientMutation_updateOAuthApplication_ar
 	return args, nil
 }
 
-func (ec *executionContext) field_OAuth2ClientQuery___type_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
@@ -454,7 +540,7 @@ func (ec *executionContext) field_OAuth2ClientQuery___type_args(ctx context.Cont
 	return args, nil
 }
 
-func (ec *executionContext) field_OAuth2ClientQuery_oauthApplication_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Query_oauthApplication_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
@@ -469,7 +555,7 @@ func (ec *executionContext) field_OAuth2ClientQuery_oauthApplication_args(ctx co
 	return args, nil
 }
 
-func (ec *executionContext) field_OAuth2ClientQuery_oauthApplications_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Query_oauthApplications_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 *string
@@ -481,6 +567,21 @@ func (ec *executionContext) field_OAuth2ClientQuery_oauthApplications_args(ctx c
 		}
 	}
 	args["token"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_url_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["key"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("key"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["key"] = arg0
 	return args, nil
 }
 
@@ -698,8 +799,8 @@ func (ec *executionContext) fieldContext_MetadataType_count(ctx context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _OAuth2ClientMutation_createOAuthApplication(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_OAuth2ClientMutation_createOAuthApplication(ctx, field)
+func (ec *executionContext) _Mutation_createOAuthApplication(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_createOAuthApplication(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -712,7 +813,7 @@ func (ec *executionContext) _OAuth2ClientMutation_createOAuthApplication(ctx con
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.OAuth2ClientMutation().CreateOAuthApplication(rctx, fc.Args["input"].(models.OAuthApplicationInput))
+		return ec.resolvers.Mutation().CreateOAuthApplication(rctx, fc.Args["input"].(models.OAuthApplicationInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -729,9 +830,9 @@ func (ec *executionContext) _OAuth2ClientMutation_createOAuthApplication(ctx con
 	return ec.marshalNOAuthApplication2ᚖgithubᚗcomᚋnᚑcreativesystemᚋshortᚑurlᚋpkgᚋinterfacesᚋhandlerᚋgraphqlᚋmodelsᚐOAuthApplication(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_OAuth2ClientMutation_createOAuthApplication(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_createOAuthApplication(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "OAuth2ClientMutation",
+		Object:     "Mutation",
 		Field:      field,
 		IsMethod:   true,
 		IsResolver: true,
@@ -756,15 +857,15 @@ func (ec *executionContext) fieldContext_OAuth2ClientMutation_createOAuthApplica
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_OAuth2ClientMutation_createOAuthApplication_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_createOAuthApplication_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _OAuth2ClientMutation_updateOAuthApplication(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_OAuth2ClientMutation_updateOAuthApplication(ctx, field)
+func (ec *executionContext) _Mutation_updateOAuthApplication(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updateOAuthApplication(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -777,7 +878,7 @@ func (ec *executionContext) _OAuth2ClientMutation_updateOAuthApplication(ctx con
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.OAuth2ClientMutation().UpdateOAuthApplication(rctx, fc.Args["id"].(string), fc.Args["input"].(models.OAuthApplicationInput))
+		return ec.resolvers.Mutation().UpdateOAuthApplication(rctx, fc.Args["id"].(string), fc.Args["input"].(models.OAuthApplicationInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -794,9 +895,9 @@ func (ec *executionContext) _OAuth2ClientMutation_updateOAuthApplication(ctx con
 	return ec.marshalNOAuthApplication2ᚖgithubᚗcomᚋnᚑcreativesystemᚋshortᚑurlᚋpkgᚋinterfacesᚋhandlerᚋgraphqlᚋmodelsᚐOAuthApplication(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_OAuth2ClientMutation_updateOAuthApplication(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_updateOAuthApplication(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "OAuth2ClientMutation",
+		Object:     "Mutation",
 		Field:      field,
 		IsMethod:   true,
 		IsResolver: true,
@@ -821,15 +922,15 @@ func (ec *executionContext) fieldContext_OAuth2ClientMutation_updateOAuthApplica
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_OAuth2ClientMutation_updateOAuthApplication_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_updateOAuthApplication_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _OAuth2ClientMutation_deleteOAuthApplication(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_OAuth2ClientMutation_deleteOAuthApplication(ctx, field)
+func (ec *executionContext) _Mutation_deleteOAuthApplication(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_deleteOAuthApplication(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -842,7 +943,7 @@ func (ec *executionContext) _OAuth2ClientMutation_deleteOAuthApplication(ctx con
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.OAuth2ClientMutation().DeleteOAuthApplication(rctx, fc.Args["id"].(string))
+		return ec.resolvers.Mutation().DeleteOAuthApplication(rctx, fc.Args["id"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -859,9 +960,9 @@ func (ec *executionContext) _OAuth2ClientMutation_deleteOAuthApplication(ctx con
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_OAuth2ClientMutation_deleteOAuthApplication(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_deleteOAuthApplication(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "OAuth2ClientMutation",
+		Object:     "Mutation",
 		Field:      field,
 		IsMethod:   true,
 		IsResolver: true,
@@ -876,264 +977,9 @@ func (ec *executionContext) fieldContext_OAuth2ClientMutation_deleteOAuthApplica
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_OAuth2ClientMutation_deleteOAuthApplication_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_deleteOAuthApplication_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _OAuth2ClientQuery_oauthApplications(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_OAuth2ClientQuery_oauthApplications(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.OAuth2ClientQuery().OauthApplications(rctx, fc.Args["token"].(*string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*models.OAuthApplicationType)
-	fc.Result = res
-	return ec.marshalNOAuthApplicationType2ᚖgithubᚗcomᚋnᚑcreativesystemᚋshortᚑurlᚋpkgᚋinterfacesᚋhandlerᚋgraphqlᚋmodelsᚐOAuthApplicationType(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_OAuth2ClientQuery_oauthApplications(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "OAuth2ClientQuery",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "result":
-				return ec.fieldContext_OAuthApplicationType_result(ctx, field)
-			case "_metadata":
-				return ec.fieldContext_OAuthApplicationType__metadata(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type OAuthApplicationType", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_OAuth2ClientQuery_oauthApplications_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _OAuth2ClientQuery_oauthApplication(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_OAuth2ClientQuery_oauthApplication(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.OAuth2ClientQuery().OauthApplication(rctx, fc.Args["id"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*models.OAuthApplication)
-	fc.Result = res
-	return ec.marshalNOAuthApplication2ᚖgithubᚗcomᚋnᚑcreativesystemᚋshortᚑurlᚋpkgᚋinterfacesᚋhandlerᚋgraphqlᚋmodelsᚐOAuthApplication(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_OAuth2ClientQuery_oauthApplication(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "OAuth2ClientQuery",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_OAuthApplication_id(ctx, field)
-			case "name":
-				return ec.fieldContext_OAuthApplication_name(ctx, field)
-			case "secret":
-				return ec.fieldContext_OAuthApplication_secret(ctx, field)
-			case "domain":
-				return ec.fieldContext_OAuthApplication_domain(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type OAuthApplication", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_OAuth2ClientQuery_oauthApplication_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _OAuth2ClientQuery___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_OAuth2ClientQuery___type(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.introspectType(fc.Args["name"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*introspection.Type)
-	fc.Result = res
-	return ec.marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_OAuth2ClientQuery___type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "OAuth2ClientQuery",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "kind":
-				return ec.fieldContext___Type_kind(ctx, field)
-			case "name":
-				return ec.fieldContext___Type_name(ctx, field)
-			case "description":
-				return ec.fieldContext___Type_description(ctx, field)
-			case "fields":
-				return ec.fieldContext___Type_fields(ctx, field)
-			case "interfaces":
-				return ec.fieldContext___Type_interfaces(ctx, field)
-			case "possibleTypes":
-				return ec.fieldContext___Type_possibleTypes(ctx, field)
-			case "enumValues":
-				return ec.fieldContext___Type_enumValues(ctx, field)
-			case "inputFields":
-				return ec.fieldContext___Type_inputFields(ctx, field)
-			case "ofType":
-				return ec.fieldContext___Type_ofType(ctx, field)
-			case "specifiedByURL":
-				return ec.fieldContext___Type_specifiedByURL(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type __Type", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_OAuth2ClientQuery___type_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _OAuth2ClientQuery___schema(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_OAuth2ClientQuery___schema(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.introspectSchema()
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*introspection.Schema)
-	fc.Result = res
-	return ec.marshalO__Schema2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_OAuth2ClientQuery___schema(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "OAuth2ClientQuery",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "description":
-				return ec.fieldContext___Schema_description(ctx, field)
-			case "types":
-				return ec.fieldContext___Schema_types(ctx, field)
-			case "queryType":
-				return ec.fieldContext___Schema_queryType(ctx, field)
-			case "mutationType":
-				return ec.fieldContext___Schema_mutationType(ctx, field)
-			case "subscriptionType":
-				return ec.fieldContext___Schema_subscriptionType(ctx, field)
-			case "directives":
-				return ec.fieldContext___Schema_directives(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type __Schema", field.Name)
-		},
 	}
 	return fc, nil
 }
@@ -1417,6 +1263,604 @@ func (ec *executionContext) fieldContext_OAuthApplicationType__metadata(ctx cont
 				return ec.fieldContext_MetadataType_count(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type MetadataType", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_oauthApplications(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_oauthApplications(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().OauthApplications(rctx, fc.Args["token"].(*string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.OAuthApplicationType)
+	fc.Result = res
+	return ec.marshalNOAuthApplicationType2ᚖgithubᚗcomᚋnᚑcreativesystemᚋshortᚑurlᚋpkgᚋinterfacesᚋhandlerᚋgraphqlᚋmodelsᚐOAuthApplicationType(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_oauthApplications(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "result":
+				return ec.fieldContext_OAuthApplicationType_result(ctx, field)
+			case "_metadata":
+				return ec.fieldContext_OAuthApplicationType__metadata(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type OAuthApplicationType", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_oauthApplications_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_oauthApplication(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_oauthApplication(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().OauthApplication(rctx, fc.Args["id"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.OAuthApplication)
+	fc.Result = res
+	return ec.marshalNOAuthApplication2ᚖgithubᚗcomᚋnᚑcreativesystemᚋshortᚑurlᚋpkgᚋinterfacesᚋhandlerᚋgraphqlᚋmodelsᚐOAuthApplication(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_oauthApplication(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_OAuthApplication_id(ctx, field)
+			case "name":
+				return ec.fieldContext_OAuthApplication_name(ctx, field)
+			case "secret":
+				return ec.fieldContext_OAuthApplication_secret(ctx, field)
+			case "domain":
+				return ec.fieldContext_OAuthApplication_domain(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type OAuthApplication", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_oauthApplication_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_urls(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_urls(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Urls(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.URLType)
+	fc.Result = res
+	return ec.marshalNUrlType2ᚖgithubᚗcomᚋnᚑcreativesystemᚋshortᚑurlᚋpkgᚋinterfacesᚋhandlerᚋgraphqlᚋmodelsᚐURLType(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_urls(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "result":
+				return ec.fieldContext_UrlType_result(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UrlType", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_url(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_url(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().URL(rctx, fc.Args["key"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.URL)
+	fc.Result = res
+	return ec.marshalNUrl2ᚖgithubᚗcomᚋnᚑcreativesystemᚋshortᚑurlᚋpkgᚋinterfacesᚋhandlerᚋgraphqlᚋmodelsᚐURL(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_url(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "key":
+				return ec.fieldContext_Url_key(ctx, field)
+			case "url":
+				return ec.fieldContext_Url_url(ctx, field)
+			case "created_at":
+				return ec.fieldContext_Url_created_at(ctx, field)
+			case "updated_at":
+				return ec.fieldContext_Url_updated_at(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Url", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_url_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query___type(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.introspectType(fc.Args["name"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*introspection.Type)
+	fc.Result = res
+	return ec.marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query___type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "kind":
+				return ec.fieldContext___Type_kind(ctx, field)
+			case "name":
+				return ec.fieldContext___Type_name(ctx, field)
+			case "description":
+				return ec.fieldContext___Type_description(ctx, field)
+			case "fields":
+				return ec.fieldContext___Type_fields(ctx, field)
+			case "interfaces":
+				return ec.fieldContext___Type_interfaces(ctx, field)
+			case "possibleTypes":
+				return ec.fieldContext___Type_possibleTypes(ctx, field)
+			case "enumValues":
+				return ec.fieldContext___Type_enumValues(ctx, field)
+			case "inputFields":
+				return ec.fieldContext___Type_inputFields(ctx, field)
+			case "ofType":
+				return ec.fieldContext___Type_ofType(ctx, field)
+			case "specifiedByURL":
+				return ec.fieldContext___Type_specifiedByURL(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type __Type", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query___type_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query___schema(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.introspectSchema()
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*introspection.Schema)
+	fc.Result = res
+	return ec.marshalO__Schema2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query___schema(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "description":
+				return ec.fieldContext___Schema_description(ctx, field)
+			case "types":
+				return ec.fieldContext___Schema_types(ctx, field)
+			case "queryType":
+				return ec.fieldContext___Schema_queryType(ctx, field)
+			case "mutationType":
+				return ec.fieldContext___Schema_mutationType(ctx, field)
+			case "subscriptionType":
+				return ec.fieldContext___Schema_subscriptionType(ctx, field)
+			case "directives":
+				return ec.fieldContext___Schema_directives(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type __Schema", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Url_key(ctx context.Context, field graphql.CollectedField, obj *models.URL) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Url_key(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Key, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Url_key(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Url",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Url_url(ctx context.Context, field graphql.CollectedField, obj *models.URL) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Url_url(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.URL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(url.URL)
+	fc.Result = res
+	return ec.marshalNURL2netᚋurlᚐURL(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Url_url(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Url",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type URL does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Url_created_at(ctx context.Context, field graphql.CollectedField, obj *models.URL) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Url_created_at(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Url_created_at(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Url",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Url_updated_at(ctx context.Context, field graphql.CollectedField, obj *models.URL) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Url_updated_at(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Url_updated_at(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Url",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UrlType_result(ctx context.Context, field graphql.CollectedField, obj *models.URLType) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UrlType_result(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Result, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*models.URL)
+	fc.Result = res
+	return ec.marshalNUrl2ᚕᚖgithubᚗcomᚋnᚑcreativesystemᚋshortᚑurlᚋpkgᚋinterfacesᚋhandlerᚋgraphqlᚋmodelsᚐURLᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UrlType_result(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UrlType",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "key":
+				return ec.fieldContext_Url_key(ctx, field)
+			case "url":
+				return ec.fieldContext_Url_url(ctx, field)
+			case "created_at":
+				return ec.fieldContext_Url_created_at(ctx, field)
+			case "updated_at":
+				return ec.fieldContext_Url_updated_at(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Url", field.Name)
 		},
 	}
 	return fc, nil
@@ -3286,12 +3730,12 @@ func (ec *executionContext) _MetadataType(ctx context.Context, sel ast.Selection
 	return out
 }
 
-var oAuth2ClientMutationImplementors = []string{"OAuth2ClientMutation"}
+var mutationImplementors = []string{"Mutation"}
 
-func (ec *executionContext) _OAuth2ClientMutation(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, oAuth2ClientMutationImplementors)
+func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, mutationImplementors)
 	ctx = graphql.WithFieldContext(ctx, &graphql.FieldContext{
-		Object: "OAuth2ClientMutation",
+		Object: "Mutation",
 	})
 
 	out := graphql.NewFieldSet(fields)
@@ -3304,122 +3748,28 @@ func (ec *executionContext) _OAuth2ClientMutation(ctx context.Context, sel ast.S
 
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("OAuth2ClientMutation")
+			out.Values[i] = graphql.MarshalString("Mutation")
 		case "createOAuthApplication":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._OAuth2ClientMutation_createOAuthApplication(ctx, field)
+				return ec._Mutation_createOAuthApplication(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "updateOAuthApplication":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._OAuth2ClientMutation_updateOAuthApplication(ctx, field)
+				return ec._Mutation_updateOAuthApplication(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "deleteOAuthApplication":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._OAuth2ClientMutation_deleteOAuthApplication(ctx, field)
+				return ec._Mutation_deleteOAuthApplication(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
-var oAuth2ClientQueryImplementors = []string{"OAuth2ClientQuery"}
-
-func (ec *executionContext) _OAuth2ClientQuery(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, oAuth2ClientQueryImplementors)
-	ctx = graphql.WithFieldContext(ctx, &graphql.FieldContext{
-		Object: "OAuth2ClientQuery",
-	})
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		innerCtx := graphql.WithRootFieldContext(ctx, &graphql.RootFieldContext{
-			Object: field.Name,
-			Field:  field,
-		})
-
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("OAuth2ClientQuery")
-		case "oauthApplications":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._OAuth2ClientQuery_oauthApplications(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx,
-					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "oauthApplication":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._OAuth2ClientQuery_oauthApplication(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx,
-					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "__type":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._OAuth2ClientQuery___type(ctx, field)
-			})
-		case "__schema":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._OAuth2ClientQuery___schema(ctx, field)
-			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3515,6 +3865,237 @@ func (ec *executionContext) _OAuthApplicationType(ctx context.Context, sel ast.S
 			}
 		case "_metadata":
 			out.Values[i] = ec._OAuthApplicationType__metadata(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var queryImplementors = []string{"Query"}
+
+func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, queryImplementors)
+	ctx = graphql.WithFieldContext(ctx, &graphql.FieldContext{
+		Object: "Query",
+	})
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		innerCtx := graphql.WithRootFieldContext(ctx, &graphql.RootFieldContext{
+			Object: field.Name,
+			Field:  field,
+		})
+
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Query")
+		case "oauthApplications":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_oauthApplications(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "oauthApplication":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_oauthApplication(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "urls":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_urls(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "url":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_url(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "__type":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Query___type(ctx, field)
+			})
+		case "__schema":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Query___schema(ctx, field)
+			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var urlImplementors = []string{"Url"}
+
+func (ec *executionContext) _Url(ctx context.Context, sel ast.SelectionSet, obj *models.URL) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, urlImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Url")
+		case "key":
+			out.Values[i] = ec._Url_key(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "url":
+			out.Values[i] = ec._Url_url(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "created_at":
+			out.Values[i] = ec._Url_created_at(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updated_at":
+			out.Values[i] = ec._Url_updated_at(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var urlTypeImplementors = []string{"UrlType"}
+
+func (ec *executionContext) _UrlType(ctx context.Context, sel ast.SelectionSet, obj *models.URLType) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, urlTypeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("UrlType")
+		case "result":
+			out.Values[i] = ec._UrlType_result(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -3997,6 +4578,108 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNTime2timeᚐTime(ctx context.Context, v interface{}) (time.Time, error) {
+	res, err := original.UnmarshalTime(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel ast.SelectionSet, v time.Time) graphql.Marshaler {
+	res := original.MarshalTime(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNURL2netᚋurlᚐURL(ctx context.Context, v interface{}) (url.URL, error) {
+	res, err := original.UnmarshalURL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNURL2netᚋurlᚐURL(ctx context.Context, sel ast.SelectionSet, v url.URL) graphql.Marshaler {
+	res := original.MarshalURL(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) marshalNUrl2githubᚗcomᚋnᚑcreativesystemᚋshortᚑurlᚋpkgᚋinterfacesᚋhandlerᚋgraphqlᚋmodelsᚐURL(ctx context.Context, sel ast.SelectionSet, v models.URL) graphql.Marshaler {
+	return ec._Url(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNUrl2ᚕᚖgithubᚗcomᚋnᚑcreativesystemᚋshortᚑurlᚋpkgᚋinterfacesᚋhandlerᚋgraphqlᚋmodelsᚐURLᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.URL) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNUrl2ᚖgithubᚗcomᚋnᚑcreativesystemᚋshortᚑurlᚋpkgᚋinterfacesᚋhandlerᚋgraphqlᚋmodelsᚐURL(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNUrl2ᚖgithubᚗcomᚋnᚑcreativesystemᚋshortᚑurlᚋpkgᚋinterfacesᚋhandlerᚋgraphqlᚋmodelsᚐURL(ctx context.Context, sel ast.SelectionSet, v *models.URL) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Url(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNUrlType2githubᚗcomᚋnᚑcreativesystemᚋshortᚑurlᚋpkgᚋinterfacesᚋhandlerᚋgraphqlᚋmodelsᚐURLType(ctx context.Context, sel ast.SelectionSet, v models.URLType) graphql.Marshaler {
+	return ec._UrlType(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNUrlType2ᚖgithubᚗcomᚋnᚑcreativesystemᚋshortᚑurlᚋpkgᚋinterfacesᚋhandlerᚋgraphqlᚋmodelsᚐURLType(ctx context.Context, sel ast.SelectionSet, v *models.URLType) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._UrlType(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {

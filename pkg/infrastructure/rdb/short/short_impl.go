@@ -55,6 +55,22 @@ func (d *shortImpl) FindAll(ctx context.Context, author string) ([]short.ShortWi
 	return results, nil
 }
 
+func (d *shortImpl) FindByKeyAndAuthor(ctx context.Context, key, author string) (*short.ShortWithTimeStamp, error) {
+	db := rdb.GetExecutor(ctx)
+	ps := []predicate.Shorts{
+		shorts.KeyEQ(key),
+		shorts.AuthorEQ(author),
+	}
+	value, err := db.Shorts.Query().Where(ps...).First(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, repository.ErrRecordNotFound
+		}
+		return nil, err
+	}
+	return toModel(value), nil
+}
+
 func (d *shortImpl) findOne(ctx context.Context, ps ...predicate.Shorts) (*short.Short, error) {
 	db := rdb.GetExecutor(ctx)
 	v, err := db.Shorts.Query().Where(ps...).First(ctx)

@@ -36,7 +36,7 @@ services:
       timeout: 5s
       retries: 10
   dynamodb:
-    image: amazon/dynamodb-local:1.22.0
+    image: amazon/dynamodb-local:2.0.0
     command: -jar DynamoDBLocal.jar -sharedDb -dbPath . -optimizeDbBeforeStartup
     ports:
       - 18000:8000

@@ -24,7 +24,7 @@
       "@/*": ["./src/*"],
       "@t/*": ["./src/types/*"]
     },
-    "typeRoots": ["node_modules/@types", "src/types", "src/graphql/@types"],
+    "typeRoots": ["node_modules/@types", "src/types", "src/types/graphql"],
     "noErrorTruncation": true,
     "types": ["vitest/globals"]
   },

@@ -112,5 +112,6 @@ type appConfig struct {
 func (a *appConfig) ToModel() *config.Application {
 	return &config.Application{
 		RetryGenerateCount: a.RetryGenerateCount,
+		BaseURL:            os.Getenv("SERVICE_URL"),
 	}
 }

@@ -102,7 +102,7 @@ func serviceModeCommand() *cobra.Command {
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		Run: func(cmd *cobra.Command, args []string) {
-			pFlags := cmd.PersistentFlags()
+			pFlags := cmd.Flags()
 			port, err := pFlags.GetInt("port")
 			if err != nil {
 				logging.Default().Error(err)

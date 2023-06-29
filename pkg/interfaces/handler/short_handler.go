@@ -77,7 +77,7 @@ func (h *ShortURLHandler) GenerateShortURL(c *gin.Context) {
 		return
 	}
 	ctx := c.Request.Context()
-	shortCode, err := h.service.GenerateShortURL(ctx, req.URL, req.Key, token.GetUserID())
+	shortURL, err := h.service.GenerateShortURL(ctx, req.URL, req.Key, token.GetUserID())
 	if err != nil {
 		logging.Default().Error(err)
 		var clientErr *service.ClientError
@@ -91,7 +91,7 @@ func (h *ShortURLHandler) GenerateShortURL(c *gin.Context) {
 		return
 	}
 	res := &response.GenerateShortURL{
-		URL: h.option.MustURL(shortCode),
+		URL: shortURL,
 	}
 	c.JSON(http.StatusOK, res)
 }

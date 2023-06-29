@@ -1,0 +1,24 @@
+// Created https://migi.me/vsc_snippet/
+{
+  // @see VFCについて https://ikesyo.hatenablog.com/entry/2020/12/18/141737
+  // @see スニペットの参考元: https://blog.sa2taka.com/post/react-snipetts-with-vscode/#%E3%82%B9%E3%83%8B%E3%83%9A%E3%83%83%E3%83%88
+  "fc": {
+    "prefix": "fc",
+    "body": [
+      "import classNames from 'classnames';",
+      "import { FC, memo } from 'react';",
+      "import styles from './styles/${1:${TM_FILEPATH/.*[\\/\\\\]([^\\/\\\\]+)[\\/\\\\]index\\.tsx$|.*[\\/\\\\](.*?)(?:\\.[^.]*)$/$1$2/}}.module.scss';",
+      "",
+      "const cx = classNames.bind(styles);",
+      "",
+      "export type Props = {};",
+      "",
+      "export const $1: FC<Props> = memo(({}) => {",
+      "  return <></>;",
+      "});",
+      "$1.displayName = '$1';",
+      ""
+    ],
+    "description": "functional component"
+  }
+}

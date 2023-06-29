@@ -10,7 +10,7 @@ import (
 
 type Service interface {
 	GetURL(ctx context.Context, key string) (string, error)
-	GenerateShortURL(ctx context.Context, url string, key, author string) (string, error)
+	GenerateShortURL(ctx context.Context, url string, key, author string) (*short.ShortWithTimeStamp, error)
 	GenerateQRCode(ctx context.Context, key string) (io.Reader, error)
 	Remove(ctx context.Context, key, author string) error
 	FindAll(ctx context.Context, author string) ([]short.ShortWithTimeStamp, error)

@@ -82,10 +82,10 @@ func (mr *MockServiceMockRecorder) GenerateQRCode(ctx, key interface{}) *gomock.
 }
 
 // GenerateShortURL mocks base method.
-func (m *MockService) GenerateShortURL(ctx context.Context, url, key, author string) (string, error) {
+func (m *MockService) GenerateShortURL(ctx context.Context, url, key, author string) (*short.ShortWithTimeStamp, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GenerateShortURL", ctx, url, key, author)
-	ret0, _ := ret[0].(string)
+	ret0, _ := ret[0].(*short.ShortWithTimeStamp)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

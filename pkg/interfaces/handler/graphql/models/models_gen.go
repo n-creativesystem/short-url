@@ -7,6 +7,10 @@ import (
 	"time"
 )
 
+type CreateURLInput struct {
+	URL url.URL `json:"url"`
+}
+
 type MetadataType struct {
 	Prev  string `json:"prev"`
 	Self  string `json:"self"`

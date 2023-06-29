@@ -35,7 +35,7 @@ func TestShort(t *testing.T) {
 	require := require.New(t)
 	err := crypto.Init()
 	require.NoError(err)
-	ctx, rollback, err := tests.SetUpDynamoDB(tests.Table{Name: tableName, KeyColumn: shortColumns.ID})
+	ctx, rollback, err := tests.SetUpDynamoDB(tests.Table{Name: tableName, KeyColumn: shortColumns.Key})
 	require.NoError(err)
 	defer rollback()
 	repoImpl := NewRepository()

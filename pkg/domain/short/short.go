@@ -7,6 +7,7 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
 	_ "github.com/n-creativesystem/short-url/pkg/domain/validation"
+	"github.com/n-creativesystem/short-url/pkg/utils"
 	"github.com/n-creativesystem/short-url/pkg/utils/credentials"
 )
 
@@ -95,6 +96,10 @@ func (s *Short) Valid() error {
 		}
 	}
 	return errRes
+}
+
+func (s *Short) ServiceURL(baseURL string) string {
+	return utils.MustURL(baseURL, s.GetKey())
 }
 
 type ShortWithTimeStamp struct {

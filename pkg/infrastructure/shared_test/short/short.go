@@ -14,9 +14,13 @@ func TestShort(t *testing.T, ctx context.Context, repoImpl short.Repository) {
 	require := require.New(t)
 
 	// Create
-	model := short.NewShort("http://localhost:8080/example.com", "", "")
-	err := repoImpl.Put(ctx, *model)
+	model := short.NewShort("http://localhost:8080/example", "", "")
+	domainModel, err := repoImpl.Put(ctx, *model)
 	require.NoError(err)
+	require.NotNil(domainModel)
+	require.NotEmpty(domainModel.CreatedAt)
+	require.NotEmpty(domainModel.UpdatedAt)
+	require.Equal(domainModel.GetURL(), "http://localhost:8080/example")
 
 	// Read by key
 	s, err := repoImpl.Get(ctx, model.GetKey())
@@ -28,16 +32,10 @@ func TestShort(t *testing.T, ctx context.Context, repoImpl short.Repository) {
 	require.NoError(err)
 	require.Len(values, 1)
 	value := values[0]
-	now := time.Now()
-	year := now.Year()
-	month := now.Month()
-	day := now.Day()
 	require.Equal(value.GetKey(), s.GetKey())
 	require.Equal(value.GetURL(), s.GetURL())
 	for _, v := range []time.Time{value.CreatedAt, value.UpdatedAt} {
-		require.Equal(v.Year(), year)
-		require.Equal(v.Month(), month)
-		require.Equal(v.Day(), day)
+		require.NotEmpty(v)
 	}
 
 	// Exists

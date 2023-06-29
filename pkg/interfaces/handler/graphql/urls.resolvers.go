@@ -10,6 +10,20 @@ import (
 	"github.com/n-creativesystem/short-url/pkg/interfaces/handler/graphql/models"
 )
 
+// Create is the resolver for the create field.
+func (r *mutationResolver) Create(ctx context.Context, input models.CreateURLInput) (*models.URL, error) {
+	user, err := authorize(ctx)
+	if err != nil {
+		return nil, err
+	}
+	result, err := r.shortUrlSvc.GenerateShortURL(ctx, input.URL.String(), "", user)
+	if err != nil {
+		return nil, err
+	}
+	v := models.ShortModelToURL(*result)
+	return &v, nil
+}
+
 // Urls is the resolver for the urls field.
 func (r *queryResolver) Urls(ctx context.Context) (*models.URLType, error) {
 	user, err := authorize(ctx)
@@ -22,12 +36,7 @@ func (r *queryResolver) Urls(ctx context.Context) (*models.URLType, error) {
 	}
 	result := make([]*models.URL, 0, len(urls))
 	for _, u := range urls {
-		typ := models.URL{
-			Key:       u.GetKey(),
-			URL:       u.GetUrl(),
-			CreatedAt: u.CreatedAt,
-			UpdatedAt: u.UpdatedAt,
-		}
+		typ := models.ShortModelToURL(u)
 		result = append(result, &typ)
 	}
 	return &models.URLType{
@@ -45,10 +54,6 @@ func (r *queryResolver) URL(ctx context.Context, key string) (*models.URL, error
 	if err != nil {
 		return nil, err
 	}
-	return &models.URL{
-		Key:       v.GetKey(),
-		URL:       v.GetUrl(),
-		CreatedAt: v.CreatedAt,
-		UpdatedAt: v.UpdatedAt,
-	}, nil
+	u := models.ShortModelToURL(*v)
+	return &u, nil
 }

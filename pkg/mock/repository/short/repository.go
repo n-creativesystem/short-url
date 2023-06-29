@@ -111,11 +111,12 @@ func (mr *MockRepositoryMockRecorder) Get(ctx, key interface{}) *gomock.Call {
 }
 
 // Put mocks base method.
-func (m *MockRepository) Put(ctx context.Context, value short.Short) error {
+func (m *MockRepository) Put(ctx context.Context, value short.Short) (*short.ShortWithTimeStamp, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Put", ctx, value)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(*short.ShortWithTimeStamp)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // Put indicates an expected call of Put.

@@ -145,7 +145,12 @@ func TestServiceForGenerate(t *testing.T) {
 				})
 				shortRepoMock.EXPECT().Exists(ctx, gomock.Any()).Return(false, nil)
 				v := short.NewShort(mockURL, "", hashAuthor)
-				shortRepoMock.EXPECT().Put(ctx, gomock.Eq(*v)).Return(nil)
+				result := &short.ShortWithTimeStamp{
+					Short:     v,
+					CreatedAt: time.Now(),
+					UpdatedAt: time.Now(),
+				}
+				shortRepoMock.EXPECT().Put(ctx, gomock.Eq(*v)).Return(result, nil)
 				appConfigMock.EXPECT().Get(gomock.Any()).Return(appConfig, nil)
 			},
 			want: func(t *testing.T, result string) {
@@ -163,7 +168,12 @@ func TestServiceForGenerate(t *testing.T) {
 			prepareMockFn: func(shortRepoMock *mock_short_repo.MockRepository, appConfigMock *mock_config_repo.MockApplicationRepository) {
 				shortRepoMock.EXPECT().Exists(ctx, gomock.Any()).Return(false, nil)
 				v := short.NewShort(mockURL, "", hashAuthor)
-				shortRepoMock.EXPECT().Put(ctx, tests.NewIgnoreUnexportedFieldsMatcher(*v, "key")).Return(nil)
+				result := &short.ShortWithTimeStamp{
+					Short:     v,
+					CreatedAt: time.Now(),
+					UpdatedAt: time.Now(),
+				}
+				shortRepoMock.EXPECT().Put(ctx, tests.NewIgnoreUnexportedFieldsMatcher(*v, "key")).Return(result, nil)
 				appConfigMock.EXPECT().Get(gomock.Any()).Return(appConfig, nil)
 			},
 			want: func(t *testing.T, result string) {
@@ -300,7 +310,7 @@ func TestServiceForGenerate(t *testing.T) {
 			},
 			prepareMockFn: func(shortRepoMock *mock_short_repo.MockRepository, appConfigMock *mock_config_repo.MockApplicationRepository) {
 				shortRepoMock.EXPECT().Exists(ctx, gomock.Any()).Return(false, nil)
-				shortRepoMock.EXPECT().Put(ctx, gomock.Any()).Return(errors.New("Put other error."))
+				shortRepoMock.EXPECT().Put(ctx, gomock.Any()).Return(nil, errors.New("Put other error."))
 				appConfigMock.EXPECT().Get(gomock.Any()).Return(appConfig, nil)
 			},
 			want: func(t *testing.T, result string) {
@@ -328,9 +338,11 @@ func TestServiceForGenerate(t *testing.T) {
 				return
 			}
 			if err != nil && tt.wantErr != nil {
-				assert.Equal(t, tt.wantErr.Error(), err.Error())
+				require.Equal(t, tt.wantErr.Error(), err.Error())
+				require.Nil(t, result)
+			} else {
+				tt.want(t, result.ServiceURL(appCfg.BaseURL))
 			}
-			tt.want(t, result)
 			short.SetGenerator(nil)
 		})
 	}

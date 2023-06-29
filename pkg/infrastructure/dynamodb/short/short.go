@@ -48,20 +48,29 @@ func (impl *repositoryImpl) Get(ctx context.Context, key string) (*short.Short, 
 	return result.Short, nil
 }
 
-func (impl *repositoryImpl) Put(ctx context.Context, value short.Short) error {
+func (impl *repositoryImpl) Put(ctx context.Context, value short.Short) (*short.ShortWithTimeStamp, error) {
 	svc := infra.GetExecutor(ctx)
-	now := utils.NowString()
-	_, err := svc.PutItem(ctx, &dynamodb.PutItemInput{
+	now := utils.Now()
+	nowString := utils.TimeToString(now)
+	if _, err := svc.PutItem(ctx, &dynamodb.PutItemInput{
 		TableName: aws.String(tableName),
 		Item: map[string]types.AttributeValue{
 			shortColumns.Key:       &types.AttributeValueMemberS{Value: value.GetKey()},
 			shortColumns.URL:       &types.AttributeValueMemberS{Value: value.GetEncryptURL().MustEncrypt()},
 			shortColumns.Author:    &types.AttributeValueMemberS{Value: value.GetAuthor()},
-			shortColumns.CreatedAt: &types.AttributeValueMemberS{Value: now},
-			shortColumns.UpdatedAt: &types.AttributeValueMemberS{Value: now},
+			shortColumns.CreatedAt: &types.AttributeValueMemberS{Value: nowString},
+			shortColumns.UpdatedAt: &types.AttributeValueMemberS{Value: nowString},
 		},
-	})
-	return err
+	}); err != nil {
+		return nil, err
+	} else {
+		model := &short.ShortWithTimeStamp{
+			Short:     &value,
+			CreatedAt: now,
+			UpdatedAt: now,
+		}
+		return model, nil
+	}
 }
 
 func (impl *repositoryImpl) Del(ctx context.Context, key, author string) (bool, error) {

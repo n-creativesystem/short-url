@@ -17,14 +17,17 @@ func (d *shortImpl) Get(ctx context.Context, key string) (*short.Short, error) {
 	return d.findOne(ctx, shorts.KeyEQ(key))
 }
 
-func (d *shortImpl) Put(ctx context.Context, value short.Short) error {
+func (d *shortImpl) Put(ctx context.Context, value short.Short) (*short.ShortWithTimeStamp, error) {
 	db := rdb.GetExecutor(ctx)
 	model := db.Shorts.Create()
 	model.SetKey(value.GetKey())
 	model.SetURL(value.GetEncryptURL())
 	model.SetAuthor(value.GetAuthor())
-	_, err := model.Save(ctx)
-	return err
+	if entity, err := model.Save(ctx); err != nil {
+		return nil, err
+	} else {
+		return toModel(entity), nil
+	}
 }
 
 func (d *shortImpl) Del(ctx context.Context, key, author string) (bool, error) {

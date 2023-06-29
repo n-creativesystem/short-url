@@ -12,16 +12,20 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-oauth2/oauth2/v4"
 	"github.com/go-oauth2/oauth2/v4/models"
 	"github.com/golang/mock/gomock"
 	"github.com/n-creativesystem/short-url/fixtures"
+	"github.com/n-creativesystem/short-url/pkg/domain/config"
+	"github.com/n-creativesystem/short-url/pkg/domain/short"
 	"github.com/n-creativesystem/short-url/pkg/interfaces/request"
 	mock_short "github.com/n-creativesystem/short-url/pkg/mock/service/short"
 	"github.com/n-creativesystem/short-url/pkg/service"
 	"github.com/n-creativesystem/short-url/pkg/utils"
+	"github.com/n-creativesystem/short-url/pkg/utils/hash"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -70,7 +74,7 @@ func TestShortHandlerForRedirect(t *testing.T) {
 			mockCtl := gomock.NewController(t)
 			defer mockCtl.Finish()
 			mockSvc := mock_short.NewMockService(mockCtl)
-			handler := NewShortHandler(mockSvc, WithBaseURL("http://localhost"))
+			handler := NewShortHandler(mockSvc, WithAppConfig(&config.Application{BaseURL: "http://localhost"}))
 			tt.prepareMockFn(mockSvc)
 			u := utils.MustURL("/", tt.data)
 			w := httptest.NewRecorder()
@@ -100,6 +104,10 @@ func TestShortHandlerForGenerateShortURL(t *testing.T) {
 		want           result
 		accessInfo     oauth2.TokenInfo
 	}
+
+	author := "anonymous"
+	hashAuthor := hash.Sum([]byte(author))
+
 	tests := []testTable{
 		{
 			name: "success",
@@ -107,7 +115,13 @@ func TestShortHandlerForGenerateShortURL(t *testing.T) {
 				URL: "http://localhost:8080/success",
 			},
 			prepareMockFn: func(mockSvc *mock_short.MockService) {
-				mockSvc.EXPECT().GenerateShortURL(gomock.Any(), "http://localhost:8080/success", "", "anonymous").Return("ABC", nil)
+				v := short.NewShort("http://localhost:8080/success", "ABC", hashAuthor)
+				result := &short.ShortWithTimeStamp{
+					Short:     v,
+					CreatedAt: time.Now(),
+					UpdatedAt: time.Now(),
+				}
+				mockSvc.EXPECT().GenerateShortURL(gomock.Any(), "http://localhost:8080/success", "", "anonymous").Return(result, nil)
 			},
 			prepareRequest: func(r *http.Request) {},
 			want: result{
@@ -177,7 +191,7 @@ func TestShortHandlerForGenerateShortURL(t *testing.T) {
 				URL: "http://localhost/failed",
 			},
 			prepareMockFn: func(mockSvc *mock_short.MockService) {
-				mockSvc.EXPECT().GenerateShortURL(gomock.Any(), "http://localhost/failed", "", "anonymous").Return("", errors.New("Generate error"))
+				mockSvc.EXPECT().GenerateShortURL(gomock.Any(), "http://localhost/failed", "", "anonymous").Return(nil, errors.New("Generate error"))
 			},
 			prepareRequest: func(r *http.Request) {},
 			want: result{
@@ -226,7 +240,7 @@ func TestShortHandlerForGenerateShortURL(t *testing.T) {
 			mockCtl := gomock.NewController(t)
 			defer mockCtl.Finish()
 			mockSvc := mock_short.NewMockService(mockCtl)
-			handler := NewShortHandler(mockSvc, WithBaseURL("http://localhost"))
+			handler := NewShortHandler(mockSvc, WithAppConfig(&config.Application{BaseURL: "http://localhost"}))
 			tt.prepareMockFn(mockSvc)
 			w := httptest.NewRecorder()
 			buf := new(bytes.Buffer)
@@ -325,7 +339,7 @@ func TestShortHandlerForRemove(t *testing.T) {
 			mockCtl := gomock.NewController(t)
 			defer mockCtl.Finish()
 			mockSvc := mock_short.NewMockService(mockCtl)
-			handler := NewShortHandler(mockSvc, WithBaseURL("http://localhost"))
+			handler := NewShortHandler(mockSvc, WithAppConfig(&config.Application{BaseURL: "http://localhost"}))
 			tt.prepareMockFn(mockSvc)
 			u := utils.MustURL("/shorts", tt.data)
 			w := httptest.NewRecorder()
@@ -380,7 +394,7 @@ func TestShortHandlerForGenerateQRCode(t *testing.T) {
 			mockCtl := gomock.NewController(t)
 			defer mockCtl.Finish()
 			mockSvc := mock_short.NewMockService(mockCtl)
-			handler := NewShortHandler(mockSvc, WithBaseURL("http://localhost"))
+			handler := NewShortHandler(mockSvc, WithAppConfig(&config.Application{BaseURL: "http://localhost"}))
 			tt.prepareMockFn(mockSvc)
 			u := utils.MustURL("/shorts", tt.data, "qrcode")
 			w := httptest.NewRecorder()

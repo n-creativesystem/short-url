@@ -42,9 +42,10 @@ func (impl *serviceImpl) GetURL(ctx context.Context, key string) (string, error)
 	return result.GetURL(), nil
 }
 
-func (impl *serviceImpl) GenerateShortURL(ctx context.Context, url, key, author string) (string, error) {
+func (impl *serviceImpl) GenerateShortURL(ctx context.Context, url, key, author string) (*short.ShortWithTimeStamp, error) {
 	author = hash.Sum([]byte(author))
 	value := short.NewShort(url, key, author)
+	var result *short.ShortWithTimeStamp
 	err := impl.tx.BeginTx(ctx, func(ctx context.Context) error {
 		if err := value.Valid(); err != nil {
 			return service.NewClientError(err)
@@ -77,17 +78,19 @@ func (impl *serviceImpl) GenerateShortURL(ctx context.Context, url, key, author 
 			return errors.New("The number of URL generation attempts reached, but URL could not be generated.")
 		}
 
-		if err := impl.repo.Put(ctx, *value); err != nil {
+		if v, err := impl.repo.Put(ctx, *value); err != nil {
 			return service.Wrap(err, "Service shortURL: An error occurred during URL generation.")
+		} else {
+			result = v
 		}
 		return nil
 	})
 
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return utils.MustURL(impl.appConfig.BaseURL, value.GetKey()), nil
+	return result, nil
 }
 
 func (impl *serviceImpl) GenerateQRCode(ctx context.Context, key string) (io.Reader, error) {

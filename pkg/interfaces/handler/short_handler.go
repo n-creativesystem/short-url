@@ -77,7 +77,7 @@ func (h *ShortURLHandler) GenerateShortURL(c *gin.Context) {
 		return
 	}
 	ctx := c.Request.Context()
-	shortURL, err := h.service.GenerateShortURL(ctx, req.URL, req.Key, token.GetUserID())
+	result, err := h.service.GenerateShortURL(ctx, req.URL, req.Key, token.GetUserID())
 	if err != nil {
 		logging.Default().Error(err)
 		var clientErr *service.ClientError
@@ -91,7 +91,7 @@ func (h *ShortURLHandler) GenerateShortURL(c *gin.Context) {
 		return
 	}
 	res := &response.GenerateShortURL{
-		URL: shortURL,
+		URL: result.ServiceURL(h.option.appConfig.BaseURL),
 	}
 	c.JSON(http.StatusOK, res)
 }
@@ -244,7 +244,7 @@ func (h *ShortURLHandler) ServiceRouter(route gin.IRouter, middleware ...gin.Han
 
 func (h *ShortURLHandler) redirect(c *gin.Context, err error) {
 	logging.Default().Error(err)
-	c.Redirect(http.StatusTemporaryRedirect, h.option.MustURL("/notfound"))
+	c.Redirect(http.StatusTemporaryRedirect, utils.MustURL(h.option.appConfig.BaseURL, "/notfound"))
 }
 
 func (h *ShortURLHandler) getKey(c *gin.Context) types.String {

@@ -13,3 +13,11 @@ extend type Query {
   urls: UrlType!
   url(key: String!): Url!
 }
+
+input CreateUrlInput {
+  url: URL!
+}
+
+extend type Mutation {
+  create(input: CreateUrlInput!): Url!
+}

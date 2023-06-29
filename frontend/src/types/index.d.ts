@@ -10,3 +10,6 @@ type Expand<T> = T extends object
     ? { [K in keyof O]: Expand<O[K]> }
     : never
   : T;
+
+type CustomTime = string & { readonly brand: unique symbol };
+type CustomURL = URL & { readonly brand: unique symbol };

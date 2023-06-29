@@ -1,4 +1,5 @@
 import { makeVar } from '@/components/hooks/reactive';
+import { createContext } from 'react';
 import type { ErrorModal, InternalErrorPage } from './types';
 
 export const initialErrorModal: ErrorModal = {
@@ -16,3 +17,5 @@ export const initialInternalErrorPage: InternalErrorPage = {
 export const internalErrorPageVar = makeVar<InternalErrorPage>(
   initialInternalErrorPage
 );
+
+export const LoadingContext = createContext(false);

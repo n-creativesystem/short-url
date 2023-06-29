@@ -1,6 +1,6 @@
 import { Link } from '@/components/Parts/Navigation';
 import { DataTable, GridColDef } from '@/components/Parts/Table';
-import { OAuthApplication } from '@/graphql/types';
+import { OAuthApplication } from '@t/graphql';
 import { FC, memo } from 'react';
 import { DeleteAction } from './Actions';
 

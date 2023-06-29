@@ -1,4 +1,6 @@
 export type { GridColDef, GridValueGetterParams } from '@mui/x-data-grid';
+import { Skeleton } from '@/components/Parts/Loading';
+import { LoadingContext } from '@/components/hooks/Context';
 import {
   DataGrid,
   DataGridProps,
@@ -6,7 +8,7 @@ import {
   jaJP,
 } from '@mui/x-data-grid';
 import classNames from 'classnames';
-import { FC } from 'react';
+import { FC, useContext } from 'react';
 import styles from './index.module.scss';
 
 const cx = classNames.bind(styles);
@@ -23,7 +25,11 @@ export const DataTable: FC<Props> = ({ className, ...props }) => {
       ...(props.initialState?.pagination?.paginationModel || {}),
     },
   };
-  return (
+  const loading = useContext(LoadingContext);
+
+  return loading ? (
+    <Skeleton width={styles.containerWidth} height={styles.containerHeight} />
+  ) : (
     <div className={cx(styles.container, className)}>
       <DataGrid
         {...props}

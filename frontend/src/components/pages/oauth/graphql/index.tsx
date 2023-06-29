@@ -21,8 +21,8 @@ export type Scalars = {
   Boolean: boolean;
   Int: number;
   Float: number;
-  Time: Types.CustomTime;
-  URL: Types.CustomURL;
+  Time: CustomTime;
+  URL: CustomURL;
 };
 
 export type MetadataType = {

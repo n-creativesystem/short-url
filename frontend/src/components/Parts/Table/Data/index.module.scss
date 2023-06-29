@@ -1,4 +1,11 @@
+$containerHeight: 60vh;
+$containerWidth: 100%;
 .container {
-  height: 60vh;
-  width: 100%;
+  height: $containerHeight;
+  width: $containerWidth;
+}
+
+:export {
+  containerHeight: $containerHeight;
+  containerWidth: $containerWidth;
 }

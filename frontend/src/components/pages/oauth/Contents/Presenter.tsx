@@ -1,7 +1,7 @@
 import { AsyncButton, CopyButton } from '@/components/Parts/Button';
 import { Form, Input } from '@/components/Parts/Form';
 import { Box } from '@mui/material';
-import { FC, memo } from 'react';
+import { FC, memo, useCallback } from 'react';
 import { Controller, SubmitHandler, useForm } from 'react-hook-form';
 import type { Data, Input as TInput } from './index.d';
 type Props = {
@@ -9,19 +9,28 @@ type Props = {
   onClick: (input: TInput) => Promise<void>;
 };
 
+const initialValue = () => ({
+  name: '',
+  id: '',
+  secret: '',
+});
+
 export const Presenter: FC<Props> = memo(({ data, onClick: onClickInput }) => {
-  const initialValues = data || { name: '', id: '', secret: '' };
   const {
     control,
     handleSubmit,
     formState: { errors },
   } = useForm<Data>({
-    defaultValues: initialValues,
+    defaultValues: initialValue(),
+    values: data,
   });
-  const onSubmit: SubmitHandler<Data> = (data) => {
-    return onClickInput({ ...data });
-  };
-  const visibleCopy = initialValues.id !== '';
+  const onSubmit: SubmitHandler<Data> = useCallback(
+    (data) => {
+      return onClickInput({ ...data });
+    },
+    [data]
+  );
+  const visibleCopy = data?.id !== '';
 
   const validationRules = {
     name: {

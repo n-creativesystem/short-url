@@ -22,7 +22,8 @@
     "baseUrl": "./",
     "paths": {
       "@/*": ["./src/*"],
-      "@t/*": ["./src/types/*"]
+      "@t/*": ["./src/types/*"],
+      "@gql/*": ["./src/graphql/*"]
     },
     "typeRoots": ["node_modules/@types", "src/types", "src/types/graphql"],
     "noErrorTruncation": true,

@@ -14,19 +14,37 @@ import (
 type shortImpl struct{}
 
 func (d *shortImpl) Get(ctx context.Context, key string) (*short.Short, error) {
-	return d.findOne(ctx, shorts.KeyEQ(key))
+	if v, err := d.findOne(ctx, shorts.KeyEQ(key)); err != nil {
+		return nil, err
+	} else {
+		return v.Short, nil
+	}
 }
 
 func (d *shortImpl) Put(ctx context.Context, value short.Short) (*short.ShortWithTimeStamp, error) {
 	db := rdb.GetExecutor(ctx)
-	model := db.Shorts.Create()
-	model.SetKey(value.GetKey())
-	model.SetURL(value.GetEncryptURL())
-	model.SetAuthor(value.GetAuthor())
-	if entity, err := model.Save(ctx); err != nil {
-		return nil, err
+	if value.IsNew() {
+		model := db.Shorts.Create()
+		model.SetKey(value.GetKey())
+		model.SetURL(value.GetEncryptURL())
+		model.SetAuthor(value.GetAuthor())
+		if entity, err := model.Save(ctx); err != nil {
+			return nil, err
+		} else {
+			return toModel(entity), nil
+		}
 	} else {
-		return toModel(entity), nil
+		where := shorts.KeyEQ(value.GetKey())
+		model := db.Shorts.Update()
+		model.SetURL(value.GetEncryptURL())
+		model.Where(where)
+		if count, err := model.Save(ctx); err != nil {
+			return nil, err
+		} else if count == 0 {
+			return nil, repository.ErrRecordNotFound
+		} else {
+			return d.findOne(ctx, where)
+		}
 	}
 }
 
@@ -74,7 +92,7 @@ func (d *shortImpl) FindByKeyAndAuthor(ctx context.Context, key, author string) 
 	return toModel(value), nil
 }
 
-func (d *shortImpl) findOne(ctx context.Context, ps ...predicate.Shorts) (*short.Short, error) {
+func (d *shortImpl) findOne(ctx context.Context, ps ...predicate.Shorts) (*short.ShortWithTimeStamp, error) {
 	db := rdb.GetExecutor(ctx)
 	v, err := db.Shorts.Query().Where(ps...).First(ctx)
 	if err != nil {
@@ -83,7 +101,7 @@ func (d *shortImpl) findOne(ctx context.Context, ps ...predicate.Shorts) (*short
 		}
 		return nil, err
 	}
-	return toModel(v).Short, nil
+	return toModel(v), nil
 }
 
 func toModel(v *ent.Shorts) *short.ShortWithTimeStamp {

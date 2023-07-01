@@ -124,3 +124,18 @@ func (mr *MockServiceMockRecorder) Remove(ctx, key, author interface{}) *gomock.
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Remove", reflect.TypeOf((*MockService)(nil).Remove), ctx, key, author)
 }
+
+// Update mocks base method.
+func (m *MockService) Update(ctx context.Context, key, author, url string) (*short.ShortWithTimeStamp, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Update", ctx, key, author, url)
+	ret0, _ := ret[0].(*short.ShortWithTimeStamp)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Update indicates an expected call of Update.
+func (mr *MockServiceMockRecorder) Update(ctx, key, author, url interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockService)(nil).Update), ctx, key, author, url)
+}

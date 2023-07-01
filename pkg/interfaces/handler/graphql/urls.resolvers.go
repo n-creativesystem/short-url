@@ -6,12 +6,13 @@ package graphql
 
 import (
 	"context"
+	"net/url"
 
 	"github.com/n-creativesystem/short-url/pkg/interfaces/handler/graphql/models"
 )
 
-// Create is the resolver for the create field.
-func (r *mutationResolver) Create(ctx context.Context, input models.CreateURLInput) (*models.URL, error) {
+// GenerateURL is the resolver for the generateURL field.
+func (r *mutationResolver) GenerateURL(ctx context.Context, input models.CreateURLInput) (*models.URL, error) {
 	user, err := authorize(ctx)
 	if err != nil {
 		return nil, err
@@ -22,6 +23,32 @@ func (r *mutationResolver) Create(ctx context.Context, input models.CreateURLInp
 	}
 	v := models.ShortModelToURL(*result)
 	return &v, nil
+}
+
+// UpdateURL is the resolver for the updateURL field.
+func (r *mutationResolver) UpdateURL(ctx context.Context, key string, url url.URL) (*models.URL, error) {
+	user, err := authorize(ctx)
+	if err != nil {
+		return nil, err
+	}
+	result, err := r.shortUrlSvc.Update(ctx, key, user, url.String())
+	if err != nil {
+		return nil, err
+	}
+	v := models.ShortModelToURL(*result)
+	return &v, nil
+}
+
+// DeleteURL is the resolver for the deleteURL field.
+func (r *mutationResolver) DeleteURL(ctx context.Context, key string) (bool, error) {
+	user, err := authorize(ctx)
+	if err != nil {
+		return false, err
+	}
+	if err := r.shortUrlSvc.Remove(ctx, key, user); err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 // Urls is the resolver for the urls field.

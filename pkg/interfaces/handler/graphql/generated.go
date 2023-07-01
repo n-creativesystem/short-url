@@ -55,10 +55,12 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		Create                 func(childComplexity int, input models.CreateURLInput) int
 		CreateOAuthApplication func(childComplexity int, input models.OAuthApplicationInput) int
 		DeleteOAuthApplication func(childComplexity int, id string) int
+		DeleteURL              func(childComplexity int, key string) int
+		GenerateURL            func(childComplexity int, input models.CreateURLInput) int
 		UpdateOAuthApplication func(childComplexity int, id string, input models.OAuthApplicationInput) int
+		UpdateURL              func(childComplexity int, key string, url url.URL) int
 	}
 
 	OAuthApplication struct {
@@ -96,7 +98,9 @@ type MutationResolver interface {
 	CreateOAuthApplication(ctx context.Context, input models.OAuthApplicationInput) (*models.OAuthApplication, error)
 	UpdateOAuthApplication(ctx context.Context, id string, input models.OAuthApplicationInput) (*models.OAuthApplication, error)
 	DeleteOAuthApplication(ctx context.Context, id string) (bool, error)
-	Create(ctx context.Context, input models.CreateURLInput) (*models.URL, error)
+	GenerateURL(ctx context.Context, input models.CreateURLInput) (*models.URL, error)
+	UpdateURL(ctx context.Context, key string, url url.URL) (*models.URL, error)
+	DeleteURL(ctx context.Context, key string) (bool, error)
 }
 type QueryResolver interface {
 	OauthApplications(ctx context.Context, token *string) (*models.OAuthApplicationType, error)
@@ -148,18 +152,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.MetadataType.Self(childComplexity), true
 
-	case "Mutation.create":
-		if e.complexity.Mutation.Create == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_create_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.Create(childComplexity, args["input"].(models.CreateURLInput)), true
-
 	case "Mutation.createOAuthApplication":
 		if e.complexity.Mutation.CreateOAuthApplication == nil {
 			break
@@ -184,6 +176,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.DeleteOAuthApplication(childComplexity, args["id"].(string)), true
 
+	case "Mutation.deleteURL":
+		if e.complexity.Mutation.DeleteURL == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteURL_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteURL(childComplexity, args["key"].(string)), true
+
+	case "Mutation.generateURL":
+		if e.complexity.Mutation.GenerateURL == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_generateURL_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.GenerateURL(childComplexity, args["input"].(models.CreateURLInput)), true
+
 	case "Mutation.updateOAuthApplication":
 		if e.complexity.Mutation.UpdateOAuthApplication == nil {
 			break
@@ -195,6 +211,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.UpdateOAuthApplication(childComplexity, args["id"].(string), args["input"].(models.OAuthApplicationInput)), true
+
+	case "Mutation.updateURL":
+		if e.complexity.Mutation.UpdateURL == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateURL_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateURL(childComplexity, args["key"].(string), args["url"].(url.URL)), true
 
 	case "OAuthApplication.domain":
 		if e.complexity.OAuthApplication.Domain == nil {
@@ -484,7 +512,9 @@ input CreateUrlInput {
 }
 
 extend type Mutation {
-  create(input: CreateUrlInput!): Url!
+  generateURL(input: CreateUrlInput!): Url!
+  updateURL(key: String!, url: URL!): Url!
+  deleteURL(key: String!): Boolean!
 }
 `, BuiltIn: false},
 }
@@ -509,21 +539,6 @@ func (ec *executionContext) field_Mutation_createOAuthApplication_args(ctx conte
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_create_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 models.CreateURLInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNCreateUrlInput2githubᚗcomᚋnᚑcreativesystemᚋshortᚑurlᚋpkgᚋinterfacesᚋhandlerᚋgraphqlᚋmodelsᚐCreateURLInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
-	return args, nil
-}
-
 func (ec *executionContext) field_Mutation_deleteOAuthApplication_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -536,6 +551,36 @@ func (ec *executionContext) field_Mutation_deleteOAuthApplication_args(ctx conte
 		}
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteURL_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["key"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("key"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["key"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_generateURL_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 models.CreateURLInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNCreateUrlInput2githubᚗcomᚋnᚑcreativesystemᚋshortᚑurlᚋpkgᚋinterfacesᚋhandlerᚋgraphqlᚋmodelsᚐCreateURLInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -560,6 +605,30 @@ func (ec *executionContext) field_Mutation_updateOAuthApplication_args(ctx conte
 		}
 	}
 	args["input"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateURL_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["key"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("key"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["key"] = arg0
+	var arg1 url.URL
+	if tmp, ok := rawArgs["url"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("url"))
+		arg1, err = ec.unmarshalNURL2netᚋurlᚐURL(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["url"] = arg1
 	return args, nil
 }
 
@@ -1022,8 +1091,8 @@ func (ec *executionContext) fieldContext_Mutation_deleteOAuthApplication(ctx con
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_create(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_create(ctx, field)
+func (ec *executionContext) _Mutation_generateURL(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_generateURL(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1036,7 +1105,7 @@ func (ec *executionContext) _Mutation_create(ctx context.Context, field graphql.
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().Create(rctx, fc.Args["input"].(models.CreateURLInput))
+		return ec.resolvers.Mutation().GenerateURL(rctx, fc.Args["input"].(models.CreateURLInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1053,7 +1122,7 @@ func (ec *executionContext) _Mutation_create(ctx context.Context, field graphql.
 	return ec.marshalNUrl2ᚖgithubᚗcomᚋnᚑcreativesystemᚋshortᚑurlᚋpkgᚋinterfacesᚋhandlerᚋgraphqlᚋmodelsᚐURL(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_create(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_generateURL(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -1080,7 +1149,127 @@ func (ec *executionContext) fieldContext_Mutation_create(ctx context.Context, fi
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_create_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_generateURL_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateURL(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updateURL(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateURL(rctx, fc.Args["key"].(string), fc.Args["url"].(url.URL))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.URL)
+	fc.Result = res
+	return ec.marshalNUrl2ᚖgithubᚗcomᚋnᚑcreativesystemᚋshortᚑurlᚋpkgᚋinterfacesᚋhandlerᚋgraphqlᚋmodelsᚐURL(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateURL(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "key":
+				return ec.fieldContext_Url_key(ctx, field)
+			case "url":
+				return ec.fieldContext_Url_url(ctx, field)
+			case "created_at":
+				return ec.fieldContext_Url_created_at(ctx, field)
+			case "updated_at":
+				return ec.fieldContext_Url_updated_at(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Url", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateURL_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteURL(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_deleteURL(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteURL(rctx, fc.Args["key"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteURL(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteURL_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -3902,9 +4091,23 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "create":
+		case "generateURL":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_create(ctx, field)
+				return ec._Mutation_generateURL(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updateURL":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateURL(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "deleteURL":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteURL(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++

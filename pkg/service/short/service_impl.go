@@ -43,6 +43,7 @@ func (impl *serviceImpl) GetURL(ctx context.Context, key string) (string, error)
 
 func (impl *serviceImpl) GenerateShortURL(ctx context.Context, url, key, author string) (*short.ShortWithTimeStamp, error) {
 	value := short.NewShort(url, key, author)
+	value.New()
 	var result *short.ShortWithTimeStamp
 	err := impl.tx.BeginTx(ctx, func(ctx context.Context) error {
 		if err := value.Valid(); err != nil {
@@ -122,6 +123,28 @@ func (impl *serviceImpl) Remove(ctx context.Context, key, author string) error {
 	})
 }
 
+func (impl *serviceImpl) Update(ctx context.Context, key, author, url string) (*short.ShortWithTimeStamp, error) {
+	v, err := impl.FindByKeyAndAuthor(ctx, key, author)
+	if err != nil {
+		return nil, service.Wrap(err, "Service shortURL: Update failed")
+	}
+	v.Short.SetURL(url)
+	if err := v.Valid(); err != nil {
+		return nil, err
+	}
+	if err = impl.tx.BeginTx(ctx, func(ctx context.Context) error {
+		var err error
+		v, err = impl.repo.Put(ctx, *v.Short)
+		if err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+	return v, nil
+}
+
 func (impl *serviceImpl) FindAll(ctx context.Context, author string) ([]short.ShortWithTimeStamp, error) {
 	if v, err := impl.repo.FindAll(ctx, author); err != nil {
 		if errors.Is(err, repository.ErrRecordNotFound) {
@@ -129,6 +152,7 @@ func (impl *serviceImpl) FindAll(ctx context.Context, author string) ([]short.Sh
 		}
 		return nil, service.Wrap(err, "Service shortURL: An error occurred while retrieving data.")
 	} else {
+		short.ShortWithTimeStamps(v).Update()
 		return v, nil
 	}
 }
@@ -141,5 +165,6 @@ func (impl *serviceImpl) FindByKeyAndAuthor(ctx context.Context, key, author str
 		}
 		return nil, service.Wrap(err, "Service shortURL: An error occurred while retrieving the URL.")
 	}
+	result.Update()
 	return result, nil
 }

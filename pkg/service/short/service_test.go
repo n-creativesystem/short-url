@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 	"time"
+	_ "unsafe"
 
 	"github.com/golang/mock/gomock"
 	"github.com/n-creativesystem/short-url/fixtures"
@@ -581,4 +582,81 @@ func TestServiceForQRCodeGenerator(t *testing.T) {
 			tt.want(t, buf)
 		})
 	}
+}
+
+func TestServiceForUpdate(t *testing.T) {
+	var (
+		mockURL       = "http://localhost:8080/example"
+		mockUpdateURL = "http://localhost:8080/example2"
+		mockKey       = "mock"
+		appConfig     = &config.Application{
+			RetryGenerateCount: 2,
+		}
+		author      = "anonymous"
+		hashAuthor  = hash.Sum([]byte(author))
+		resultValue = &short.ShortWithTimeStamp{
+			Short:     short.NewShort(mockURL, mockKey, hashAuthor),
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+		}
+	)
+	ctx := context.Background()
+	type testData struct {
+		key    string
+		url    string
+		author string
+	}
+	tests := []testTable[testData, string]{
+		{
+			name: "success",
+			data: testData{
+				key:    mockKey,
+				url:    mockUpdateURL,
+				author: author,
+			},
+			prepareMockFn: func(shortRepoMock *mock_short_repo.MockRepository, appConfigMock *mock_config_repo.MockApplicationRepository) {
+				shortRepoMock.EXPECT().FindByKeyAndAuthor(ctx, gomock.Any(), gomock.Any()).Return(resultValue, nil)
+				v := *resultValue
+				v.SetURL(mockUpdateURL)
+				shortRepoMock.EXPECT().Put(ctx, gomock.Any()).Return(&v, nil)
+				appConfigMock.EXPECT().Get(gomock.Any()).Return(appConfig, nil)
+			},
+			want: func(t *testing.T, result string) {
+				assert.Equal(t, mockUpdateURL, result)
+			},
+			wantErr: nil,
+		},
+	}
+	t.Parallel()
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			mockCtl := gomock.NewController(t)
+			defer mockCtl.Finish()
+			mockRepo := testMockRepository(mockCtl)
+			mockAppCfg := testMockAppRepository(mockCtl)
+			tt.prepareMockFn(mockRepo, mockAppCfg)
+			appCfg, err := mockAppCfg.Get(ctx)
+			require.NoError(t, err)
+			beginner, _ := noop.NewBeginner()
+			impl := NewService(mockRepo, appCfg, beginner)
+			result, err := impl.Update(ctx, tt.data.key, tt.data.author, tt.data.url)
+			if (err != nil) != (tt.wantErr != nil) {
+				t.Errorf("Update() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if err != nil && tt.wantErr != nil {
+				require.Equal(t, tt.wantErr.Error(), err.Error())
+				require.Nil(t, result)
+			} else {
+				tt.want(t, result.GetURL())
+			}
+			short.SetGenerator(nil)
+		})
+	}
+}
+
+//go:linkname now time.Now
+func now() time.Time {
+	return time.Date(2023, 07, 20, 7, 45, 0, 0, time.Local)
 }

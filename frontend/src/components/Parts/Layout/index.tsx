@@ -23,7 +23,7 @@ const Layout: FC = memo(() => {
   };
   return (
     <ApolloProvider client={client}>
-      <AppBar title="短縮URL" auth={<AvatarParts />} />
+      <AppBar title="QuickLink" auth={<AvatarParts />} />
       <MenuDrawer />
       <Box
         component="main"

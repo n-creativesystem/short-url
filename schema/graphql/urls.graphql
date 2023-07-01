@@ -19,5 +19,7 @@ input CreateUrlInput {
 }
 
 extend type Mutation {
-  create(input: CreateUrlInput!): Url!
+  generateURL(input: CreateUrlInput!): Url!
+  updateURL(key: String!, url: URL!): Url!
+  deleteURL(key: String!): Boolean!
 }

@@ -11,7 +11,6 @@ import (
 	"github.com/n-creativesystem/short-url/pkg/domain/tx"
 	"github.com/n-creativesystem/short-url/pkg/service"
 	"github.com/n-creativesystem/short-url/pkg/utils"
-	"github.com/n-creativesystem/short-url/pkg/utils/hash"
 )
 
 type serviceImpl struct {
@@ -39,7 +38,6 @@ func (impl *serviceImpl) GetByID(ctx context.Context, clientId string) (oauth2.C
 }
 
 func (impl *serviceImpl) FindAll(ctx context.Context, user string) ([]oauth2client.Client, error) {
-	user = hash.Sum([]byte(user))
 	if v, err := impl.repo.Find(ctx, user); err == nil {
 		return v, nil
 	} else {
@@ -48,7 +46,6 @@ func (impl *serviceImpl) FindAll(ctx context.Context, user string) ([]oauth2clie
 }
 
 func (impl *serviceImpl) FindByID(ctx context.Context, id, user string) (*oauth2client.Client, error) {
-	user = hash.Sum([]byte(user))
 	if v, err := impl.repo.FindByID(ctx, id, user); err == nil {
 		return v, nil
 	} else {
@@ -57,7 +54,6 @@ func (impl *serviceImpl) FindByID(ctx context.Context, id, user string) (*oauth2
 }
 
 func (impl *serviceImpl) RegisterClient(ctx context.Context, user, appName string) (RegisterResult, error) {
-	user = hash.Sum([]byte(user))
 	var result RegisterResult
 	clientId, err := utils.GenerateRandomString(20)
 	if err != nil {
@@ -79,12 +75,10 @@ func (impl *serviceImpl) RegisterClient(ctx context.Context, user, appName strin
 }
 
 func (impl *serviceImpl) UpdateClient(ctx context.Context, id, user, appName string) error {
-	user = hash.Sum([]byte(user))
 	return impl.repo.Update(ctx, id, user, appName)
 }
 
 func (impl *serviceImpl) DeleteClient(ctx context.Context, user, clientId string) error {
-	user = hash.Sum([]byte(user))
 	info, err := impl.repo.GetByID(ctx, clientId)
 	if err != nil {
 		return service.Wrap(err, "Service oauth2_client")

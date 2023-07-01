@@ -12,7 +12,6 @@ import (
 	"github.com/n-creativesystem/short-url/pkg/domain/tx"
 	"github.com/n-creativesystem/short-url/pkg/service"
 	"github.com/n-creativesystem/short-url/pkg/utils"
-	"github.com/n-creativesystem/short-url/pkg/utils/hash"
 	"github.com/n-creativesystem/short-url/pkg/utils/logging"
 	"github.com/skip2/go-qrcode"
 )
@@ -43,7 +42,6 @@ func (impl *serviceImpl) GetURL(ctx context.Context, key string) (string, error)
 }
 
 func (impl *serviceImpl) GenerateShortURL(ctx context.Context, url, key, author string) (*short.ShortWithTimeStamp, error) {
-	author = hash.Sum([]byte(author))
 	value := short.NewShort(url, key, author)
 	var result *short.ShortWithTimeStamp
 	err := impl.tx.BeginTx(ctx, func(ctx context.Context) error {
@@ -113,7 +111,6 @@ func (impl *serviceImpl) GenerateQRCode(ctx context.Context, key string) (io.Rea
 }
 
 func (impl *serviceImpl) Remove(ctx context.Context, key, author string) error {
-	author = hash.Sum([]byte(author))
 	return impl.tx.BeginTx(ctx, func(ctx context.Context) error {
 		if _, err := impl.repo.Del(ctx, key, author); err != nil {
 			if errors.Is(err, repository.ErrRecordNotFound) {
@@ -126,7 +123,6 @@ func (impl *serviceImpl) Remove(ctx context.Context, key, author string) error {
 }
 
 func (impl *serviceImpl) FindAll(ctx context.Context, author string) ([]short.ShortWithTimeStamp, error) {
-	author = hash.Sum([]byte(author))
 	if v, err := impl.repo.FindAll(ctx, author); err != nil {
 		if errors.Is(err, repository.ErrRecordNotFound) {
 			return nil, service.ErrNotFound

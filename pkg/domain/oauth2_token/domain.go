@@ -6,6 +6,7 @@ import (
 	"github.com/go-oauth2/oauth2/v4"
 	"github.com/go-oauth2/oauth2/v4/models"
 	"github.com/n-creativesystem/short-url/pkg/domain/repository"
+	"github.com/n-creativesystem/short-url/pkg/utils/credentials"
 	"github.com/n-creativesystem/short-url/pkg/utils/credentials/crypto"
 )
 
@@ -37,4 +38,25 @@ func toToken(data string) (TokenInfo, error) {
 		return nil, repository.ErrRecordNotFound
 	}
 	return NewToken(&token), nil
+}
+
+type InnerToken struct {
+	oauth2.TokenInfo
+	UserID credentials.MaskedStringer
+}
+
+func (t *InnerToken) GetUserID() string {
+	return t.UserID.UnmaskedString()
+}
+
+func (t *InnerToken) SetUserID(userID string) {
+	t.UserID = credentials.NewMaskedString(userID)
+}
+
+func NewInnerToken(token oauth2.TokenInfo) *InnerToken {
+	userId := credentials.NewEncryptStringWithMustDecrypt(token.GetUserID())
+	return &InnerToken{
+		TokenInfo: token,
+		UserID:    &userId,
+	}
 }

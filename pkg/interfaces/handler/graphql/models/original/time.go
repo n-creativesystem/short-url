@@ -1,6 +1,7 @@
 package original
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"time"
@@ -11,7 +12,8 @@ import (
 
 func MarshalTime(t time.Time) graphql.Marshaler {
 	return graphql.WriterFunc(func(w io.Writer) {
-		fmt.Fprintf(w, "%s", utils.TimeToString(t))
+		v := utils.TimeToString(t)
+		_ = json.NewEncoder(w).Encode(v)
 	})
 }
 

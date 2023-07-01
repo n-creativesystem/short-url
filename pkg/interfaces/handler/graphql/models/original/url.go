@@ -1,6 +1,7 @@
 package original
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/url"
@@ -10,7 +11,7 @@ import (
 
 func MarshalURL(u url.URL) graphql.Marshaler {
 	return graphql.WriterFunc(func(w io.Writer) {
-		fmt.Fprintf(w, "%s", u.String())
+		_ = json.NewEncoder(w).Encode(u.String())
 	})
 }
 

@@ -231,6 +231,7 @@ func (h *ShortURLHandler) APIRouter(route gin.IRouter, middleware ...gin.Handler
 	g := route.Group("/shorts")
 	{
 		g.Use(middleware...)
+		g.GET("", h.Shorts)
 		g.POST("/generate", h.GenerateShortURL)
 
 		g.DELETE("/:key", h.Remove)

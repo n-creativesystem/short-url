@@ -1,4 +1,4 @@
-import { Button } from '@/components/Parts/Button';
+import { RegisterButton } from '@/components/Parts/Table';
 import { OAuthApplication } from '@t/graphql';
 import classNames from 'classnames';
 import { FC, memo } from 'react';
@@ -17,11 +17,7 @@ const Presenter: FC<Props> = memo(
   ({ data, registerHandler, deleteHandler }) => {
     return (
       <>
-        <div className={cx(styles['register-button'])}>
-          <Button variant="contained" color="primary" onClick={registerHandler}>
-            新規作成
-          </Button>
-        </div>
+        <RegisterButton handler={registerHandler} />
         <Table data={data} deleteHandler={deleteHandler} />
       </>
     );

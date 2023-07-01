@@ -21,6 +21,10 @@ export type Scalars = {
   URL: CustomURL;
 };
 
+export type CreateUrlInput = {
+  url: Scalars['URL'];
+};
+
 export type MetadataType = {
   __typename?: 'MetadataType';
   count: Scalars['Int'];
@@ -33,7 +37,10 @@ export type Mutation = {
   __typename?: 'Mutation';
   createOAuthApplication: OAuthApplication;
   deleteOAuthApplication: Scalars['Boolean'];
+  deleteURL: Scalars['Boolean'];
+  generateURL: Url;
   updateOAuthApplication: OAuthApplication;
+  updateURL: Url;
 };
 
 export type MutationCreateOAuthApplicationArgs = {
@@ -44,9 +51,22 @@ export type MutationDeleteOAuthApplicationArgs = {
   id: Scalars['String'];
 };
 
+export type MutationDeleteUrlArgs = {
+  key: Scalars['String'];
+};
+
+export type MutationGenerateUrlArgs = {
+  input: CreateUrlInput;
+};
+
 export type MutationUpdateOAuthApplicationArgs = {
   id: Scalars['String'];
   input: OAuthApplicationInput;
+};
+
+export type MutationUpdateUrlArgs = {
+  key: Scalars['String'];
+  url: Scalars['URL'];
 };
 
 export type OAuthApplication = {

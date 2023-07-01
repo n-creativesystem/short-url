@@ -2,7 +2,6 @@ import { Link } from '@/components/Parts/Navigation';
 import { DataTable, GridColDef } from '@/components/Parts/Table';
 import { OAuthApplication } from '@t/graphql';
 import { FC, memo } from 'react';
-import { DeleteAction } from './Actions';
 
 type DataType = Omit<OAuthApplication, 'domain' | 'secret'>;
 
@@ -15,17 +14,15 @@ type columnsProps = {
   deleteHandler: (id: string) => () => Promise<void>;
 };
 
-const columns: (props: columnsProps) => GridColDef[] = ({ deleteHandler }) => {
+type TColumns = (props: columnsProps) => GridColDef[];
+
+const columns: TColumns = ({ deleteHandler }) => {
   return [
-    {
-      field: 'action',
-      headerName: '',
-      width: 80,
-      renderCell: (param) => {
-        const handler = deleteHandler(param.row.id);
-        return <DeleteAction handler={handler} />;
+    DataTable.DeleteActionColumn({
+      handler(param) {
+        return deleteHandler(param.row.id);
       },
-    },
+    }),
     {
       field: 'id',
       headerName: 'ID',

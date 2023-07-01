@@ -83,6 +83,12 @@ export const MenuDrawer = () => {
           </ListItemIcon>
           <ListItemText primary="アプリケーション" />
         </ListItemButton>
+        <ListItemButton to="/shorts" selected={pathname.startsWith('/shorts')}>
+          <ListItemIcon>
+            <SettingsApplicationsIcon />
+          </ListItemIcon>
+          <ListItemText primary="生成済みURL" />
+        </ListItemButton>
       </List>
     </Drawer>
   );

@@ -31,6 +31,10 @@ export type Scalars = {
   URL: { input: any; output: any };
 };
 
+export type CreateUrlInput = {
+  url: Scalars['URL']['input'];
+};
+
 export type MetadataType = {
   __typename?: 'MetadataType';
   count: Scalars['Int']['output'];
@@ -43,7 +47,10 @@ export type Mutation = {
   __typename?: 'Mutation';
   createOAuthApplication: OAuthApplication;
   deleteOAuthApplication: Scalars['Boolean']['output'];
+  deleteURL: Scalars['Boolean']['output'];
+  generateURL: Url;
   updateOAuthApplication: OAuthApplication;
+  updateURL: Url;
 };
 
 export type MutationCreateOAuthApplicationArgs = {
@@ -54,9 +61,22 @@ export type MutationDeleteOAuthApplicationArgs = {
   id: Scalars['String']['input'];
 };
 
+export type MutationDeleteUrlArgs = {
+  key: Scalars['String']['input'];
+};
+
+export type MutationGenerateUrlArgs = {
+  input: CreateUrlInput;
+};
+
 export type MutationUpdateOAuthApplicationArgs = {
   id: Scalars['String']['input'];
   input: OAuthApplicationInput;
+};
+
+export type MutationUpdateUrlArgs = {
+  key: Scalars['String']['input'];
+  url: Scalars['URL']['input'];
 };
 
 export type OAuthApplication = {
@@ -190,6 +210,72 @@ export type OAuthApplicationQuery = {
   };
 };
 
+export type ResultFragment = {
+  __typename?: 'Url';
+  key: string;
+  url: any;
+  created_at: any;
+  updated_at: any;
+} & { ' $fragmentName'?: 'ResultFragment' };
+
+export type UrlsQueryVariables = Exact<{ [key: string]: never }>;
+
+export type UrlsQuery = {
+  __typename?: 'Query';
+  urls: {
+    __typename?: 'UrlType';
+    result: Array<
+      { __typename?: 'Url' } & {
+        ' $fragmentRefs'?: { ResultFragment: ResultFragment };
+      }
+    >;
+  };
+};
+
+export type UpdateUrlMutationVariables = Exact<{
+  key: Scalars['String']['input'];
+  url: Scalars['URL']['input'];
+}>;
+
+export type UpdateUrlMutation = {
+  __typename?: 'Mutation';
+  updateURL: {
+    __typename?: 'Url';
+    key: string;
+    url: any;
+    created_at: any;
+    updated_at: any;
+  };
+};
+
+export type DeleteUrlMutationVariables = Exact<{
+  key: Scalars['String']['input'];
+}>;
+
+export type DeleteUrlMutation = { __typename?: 'Mutation'; deleteURL: boolean };
+
+export const ResultFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'result' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Url' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'key' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'url' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'created_at' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updated_at' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<ResultFragment, unknown>;
 export const CreateOAuthApplicationDocument = {
   kind: 'Document',
   definitions: [
@@ -501,3 +587,166 @@ export const OAuthApplicationDocument = {
   OAuthApplicationQuery,
   OAuthApplicationQueryVariables
 >;
+export const UrlsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'urls' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'urls' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'result' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: { kind: 'Name', value: 'result' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'result' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Url' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'key' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'url' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'created_at' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updated_at' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<UrlsQuery, UrlsQueryVariables>;
+export const UpdateUrlDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'updateUrl' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'key' } },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'String' },
+            },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'url' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'URL' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'updateURL' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'key' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'key' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'url' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'url' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'key' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'url' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'created_at' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updated_at' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<UpdateUrlMutation, UpdateUrlMutationVariables>;
+export const DeleteUrlDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'deleteURL' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'key' } },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'String' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'deleteURL' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'key' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'key' },
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<DeleteUrlMutation, DeleteUrlMutationVariables>;

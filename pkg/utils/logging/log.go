@@ -1,11 +1,13 @@
 package logging
 
 import (
+	"context"
 	"sync"
 
 	"github.com/n-creativesystem/short-url/pkg/utils"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 )
 
 var (
@@ -18,16 +20,20 @@ func Logger() *zap.Logger {
 	return logger
 }
 
-func Default() *zap.SugaredLogger {
+func sugaredLogger() *zap.SugaredLogger {
 	if defaultLogger == nil {
-		if logger == nil {
-			SetFormat("console")
-		}
 		once.Do(func() {
+			if logger == nil {
+				SetFormat("console")
+			}
 			defaultLogger = logger.Sugar()
 		})
 	}
 	return defaultLogger
+}
+
+func Default() *SentryLogger {
+	return &SentryLogger{SugaredLogger: sugaredLogger().WithOptions(zap.AddCallerSkip(1))}
 }
 
 func init() {
@@ -86,4 +92,32 @@ func Close() {
 
 func ParseLogLevel(level string) (zap.AtomicLevel, error) {
 	return zap.ParseAtomicLevel(level)
+}
+
+type contextKey int
+
+const ctxKey contextKey = iota
+
+func SetContext(ctx context.Context) context.Context {
+	var log *SentryLogger
+	span, ok := tracer.SpanFromContext(ctx)
+	if ok {
+		// NOTE: https://github.com/DataDog/dd-trace-go/blob/fbd37ea37336e8122aeccb6213b070041c4061e5/contrib/sirupsen/logrus/logrus.go#L31-L39
+		spanContext := span.Context()
+		log = &SentryLogger{SugaredLogger: sugaredLogger().With(
+			zap.Uint64("dd.trace_id", spanContext.TraceID()),
+			zap.Uint64("dd.span_id", spanContext.SpanID()),
+		)}
+	} else {
+		log = &SentryLogger{SugaredLogger: sugaredLogger()}
+	}
+	return context.WithValue(ctx, ctxKey, log)
+}
+
+func Context(ctx context.Context) *SentryLogger {
+	v, ok := ctx.Value(ctxKey).(*SentryLogger)
+	if ok {
+		return v
+	}
+	return Default()
 }

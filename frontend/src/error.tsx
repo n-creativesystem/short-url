@@ -1,12 +1,12 @@
 import { internalErrorPageVar } from '@/components/hooks/Context';
 import { useReactiveVar } from '@/components/hooks/reactive';
+import Routing, { RouteProps } from '@/lib/routing';
 import { FC, lazy, memo } from 'react';
-import Routing, { RouteProps } from './routing';
 
 const children: RouteProps[] = [
   {
     path: '*',
-    Component: lazy(() => import('./Error/500')),
+    Component: lazy(() => import('@/pages/Error/500')),
   },
 ];
 

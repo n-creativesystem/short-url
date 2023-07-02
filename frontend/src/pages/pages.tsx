@@ -2,10 +2,11 @@ import CsrfTokenProvider from '@/components/Parts/Layout/CsrfToken';
 import UserInfoProvider from '@/components/Parts/Layout/UserInfo';
 import { internalErrorPageVar } from '@/components/hooks/Context';
 import { useReactiveVar } from '@/components/hooks/reactive';
-import Routing, { RouteProps } from '@/lib/routing';
+import Routing from '@/lib/routing';
+import { RouteProps } from '@/lib/routing/types.d';
 import { FC, lazy, memo } from 'react';
 
-const children: RouteProps[] = [
+const routes: RouteProps[] = [
   {
     path: '',
     Component: lazy(() => import('./index')),
@@ -33,11 +34,7 @@ const children: RouteProps[] = [
     path: 'shorts',
     Component: lazy(() => import('./Shorts')),
     auth: true,
-    routes: [
-      {
-        path: 'register',
-      },
-    ],
+    routes: [],
   },
   {
     path: '*',
@@ -53,7 +50,7 @@ const Pages: FC = memo(() => {
   return (
     <CsrfTokenProvider>
       <UserInfoProvider>
-        <Routing children={children} />
+        <Routing children={routes} />
       </UserInfoProvider>
     </CsrfTokenProvider>
   );

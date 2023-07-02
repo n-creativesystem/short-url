@@ -1,0 +1,25 @@
+type Url {
+  key: String!
+  url: URL!
+  created_at: Time!
+  updated_at: Time!
+}
+
+type UrlType {
+  result: [Url!]!
+}
+
+extend type Query {
+  urls: UrlType!
+  url(key: String!): Url!
+}
+
+input CreateUrlInput {
+  url: URL!
+}
+
+extend type Mutation {
+  generateURL(input: CreateUrlInput!): Url!
+  updateURL(key: String!, url: URL!): Url!
+  deleteURL(key: String!): Boolean!
+}

@@ -1,38 +1,43 @@
-export type { GridColDef, GridValueGetterParams } from '@mui/x-data-grid';
+import { DeleteAction } from './Actions';
 import {
-  DataGrid,
-  DataGridProps,
-  GridPaginationInitialState,
-  jaJP,
-} from '@mui/x-data-grid';
-import classNames from 'classnames';
-import { FC } from 'react';
-import styles from './index.module.scss';
+  DataTable as BaseDataTable,
+  GridColDef,
+  GridRenderCellParams,
+} from './DataTable';
 
-const cx = classNames.bind(styles);
+type InternalDataTable = typeof BaseDataTable;
 
-export type Props = {
-  className?: string;
-} & DataGridProps;
+type TDeleteActionColumn = (args: {
+  handler: (param: GridRenderCellParams) => () => Promise<void>;
+  fieldName?: string;
+  width?: number;
+  headerName?: string;
+}) => GridColDef;
 
-export const DataTable: FC<Props> = ({ className, ...props }) => {
-  const pagination: GridPaginationInitialState = {
-    paginationModel: {
-      page: 0,
-      pageSize: 50,
-      ...(props.initialState?.pagination?.paginationModel || {}),
+type DataTableComponent = InternalDataTable & {
+  DeleteAction: typeof DeleteAction;
+  DeleteActionColumn: TDeleteActionColumn;
+};
+
+const DataTable = BaseDataTable as DataTableComponent;
+
+DataTable.DeleteAction = DeleteAction;
+DataTable.DeleteActionColumn = ({
+  handler,
+  fieldName = 'delete-action',
+  headerName = '操作',
+  width = 80,
+}) => {
+  return {
+    field: fieldName,
+    headerName: headerName,
+    width: width,
+    renderCell: (param) => {
+      return <DeleteAction handler={handler(param)} />;
     },
   };
-  return (
-    <div className={cx(styles.container, className)}>
-      <DataGrid
-        {...props}
-        initialState={{
-          pagination: pagination,
-          ...props.initialState,
-        }}
-        localeText={jaJP.components.MuiDataGrid.defaultProps.localeText}
-      />
-    </div>
-  );
 };
+
+export { RegisterButton } from './Actions';
+export type { InternalDataTable, DataTableComponent as Component, GridColDef };
+export { DataTable };

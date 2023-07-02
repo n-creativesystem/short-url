@@ -7,8 +7,9 @@ import (
 
 type Repository interface {
 	Get(ctx context.Context, key string) (*Short, error)
-	Put(ctx context.Context, value Short) error
+	Put(ctx context.Context, value Short) (*ShortWithTimeStamp, error)
 	Del(ctx context.Context, key, author string) (bool, error)
 	Exists(ctx context.Context, key string) (bool, error)
 	FindAll(ctx context.Context, author string) ([]ShortWithTimeStamp, error)
+	FindByKeyAndAuthor(ctx context.Context, key, author string) (*ShortWithTimeStamp, error)
 }

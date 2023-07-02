@@ -1,0 +1,20 @@
+query urls {
+  urls {
+    result {
+      ...result
+    }
+  }
+}
+
+mutation updateUrl($key: String!, $url: URL!) {
+  updateURL(key: $key, url: $url) {
+    key
+    url
+    created_at
+    updated_at
+  }
+}
+
+mutation deleteURL($key: String!) {
+  deleteURL(key: $key)
+}

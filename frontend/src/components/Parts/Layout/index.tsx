@@ -1,4 +1,4 @@
-import { MenuDrawer } from '@/components/Parts/MenuDrawer';
+import { Menu } from '@/components/Parts/MenuDrawer';
 import SubHeader from '@/components/Parts/SubHeader';
 import { useApolloClient } from '@/components/hooks/useApollo';
 import varStyles from '@/styles/variables/index.module.scss';
@@ -9,6 +9,7 @@ import { Outlet } from 'react-router-dom';
 import { useLocationChange } from '../Navigation';
 import { AppBar } from './Appbar';
 import AvatarParts from './Headers/Avatar';
+import { MenuItem } from './Menu';
 
 const Layout: FC = memo(() => {
   useLocationChange((_location) => {
@@ -24,7 +25,9 @@ const Layout: FC = memo(() => {
   return (
     <ApolloProvider client={client}>
       <AppBar title="QuickLink" auth={<AvatarParts />} />
-      <MenuDrawer />
+      <Menu>
+        <MenuItem />
+      </Menu>
       <Box
         component="main"
         sx={{

@@ -12,7 +12,6 @@ import (
 	"github.com/n-creativesystem/short-url/pkg/domain/tx"
 	"github.com/n-creativesystem/short-url/pkg/service"
 	"github.com/n-creativesystem/short-url/pkg/utils"
-	"github.com/n-creativesystem/short-url/pkg/utils/hash"
 	"github.com/n-creativesystem/short-url/pkg/utils/logging"
 	"github.com/skip2/go-qrcode"
 )
@@ -42,9 +41,10 @@ func (impl *serviceImpl) GetURL(ctx context.Context, key string) (string, error)
 	return result.GetURL(), nil
 }
 
-func (impl *serviceImpl) GenerateShortURL(ctx context.Context, url, key, author string) (string, error) {
-	author = hash.Sum([]byte(author))
+func (impl *serviceImpl) GenerateShortURL(ctx context.Context, url, key, author string) (*short.ShortWithTimeStamp, error) {
 	value := short.NewShort(url, key, author)
+	value.New()
+	var result *short.ShortWithTimeStamp
 	err := impl.tx.BeginTx(ctx, func(ctx context.Context) error {
 		if err := value.Valid(); err != nil {
 			return service.NewClientError(err)
@@ -77,17 +77,19 @@ func (impl *serviceImpl) GenerateShortURL(ctx context.Context, url, key, author 
 			return errors.New("The number of URL generation attempts reached, but URL could not be generated.")
 		}
 
-		if err := impl.repo.Put(ctx, *value); err != nil {
+		if v, err := impl.repo.Put(ctx, *value); err != nil {
 			return service.Wrap(err, "Service shortURL: An error occurred during URL generation.")
+		} else {
+			result = v
 		}
 		return nil
 	})
 
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return utils.MustURL(impl.appConfig.BaseURL, value.GetKey()), nil
+	return result, nil
 }
 
 func (impl *serviceImpl) GenerateQRCode(ctx context.Context, key string) (io.Reader, error) {
@@ -110,7 +112,6 @@ func (impl *serviceImpl) GenerateQRCode(ctx context.Context, key string) (io.Rea
 }
 
 func (impl *serviceImpl) Remove(ctx context.Context, key, author string) error {
-	author = hash.Sum([]byte(author))
 	return impl.tx.BeginTx(ctx, func(ctx context.Context) error {
 		if _, err := impl.repo.Del(ctx, key, author); err != nil {
 			if errors.Is(err, repository.ErrRecordNotFound) {
@@ -122,14 +123,48 @@ func (impl *serviceImpl) Remove(ctx context.Context, key, author string) error {
 	})
 }
 
+func (impl *serviceImpl) Update(ctx context.Context, key, author, url string) (*short.ShortWithTimeStamp, error) {
+	v, err := impl.FindByKeyAndAuthor(ctx, key, author)
+	if err != nil {
+		return nil, service.Wrap(err, "Service shortURL: Update failed")
+	}
+	v.Short.SetURL(url)
+	if err := v.Valid(); err != nil {
+		return nil, err
+	}
+	if err = impl.tx.BeginTx(ctx, func(ctx context.Context) error {
+		var err error
+		v, err = impl.repo.Put(ctx, *v.Short)
+		if err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+	return v, nil
+}
+
 func (impl *serviceImpl) FindAll(ctx context.Context, author string) ([]short.ShortWithTimeStamp, error) {
-	author = hash.Sum([]byte(author))
 	if v, err := impl.repo.FindAll(ctx, author); err != nil {
 		if errors.Is(err, repository.ErrRecordNotFound) {
 			return nil, service.ErrNotFound
 		}
 		return nil, service.Wrap(err, "Service shortURL: An error occurred while retrieving data.")
 	} else {
+		short.ShortWithTimeStamps(v).Update()
 		return v, nil
 	}
+}
+
+func (impl *serviceImpl) FindByKeyAndAuthor(ctx context.Context, key, author string) (*short.ShortWithTimeStamp, error) {
+	result, err := impl.repo.FindByKeyAndAuthor(ctx, key, author)
+	if err != nil {
+		if errors.Is(err, repository.ErrRecordNotFound) {
+			return nil, service.ErrNotFound
+		}
+		return nil, service.Wrap(err, "Service shortURL: An error occurred while retrieving the URL.")
+	}
+	result.Update()
+	return result, nil
 }

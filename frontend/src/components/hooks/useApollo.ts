@@ -22,7 +22,11 @@ export const useApolloClient = () => {
   return createClient(token);
 };
 
-const getTypePolicies = () => ({});
+const getTypePolicies = () => ({
+  Url: {
+    keyFields: ['key'],
+  },
+});
 const getCache = () =>
   new InMemoryCache({
     typePolicies: getTypePolicies(),

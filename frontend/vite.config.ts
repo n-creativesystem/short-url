@@ -11,6 +11,7 @@ const config = defineConfig({
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
       '@t': fileURLToPath(new URL('./src/types', import.meta.url)),
+      '@gql': fileURLToPath(new URL('./src/graphql', import.meta.url)),
     },
   },
   server: {

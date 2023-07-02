@@ -1,14 +1,9 @@
-import { Button } from '@/components/Parts/Button';
 import { useRouter } from '@/components/Parts/Navigation';
+import { LoadingContext } from '@/components/hooks/Context';
 import { useOAuthApplicationsQuery } from '@/components/pages/oauth/graphql';
-import classNames from 'classnames';
-import { FC, memo } from 'react';
+import { FC, memo, useCallback } from 'react';
 import Presenter from './Presenter';
 import { useDeleteHandler } from './Table/Actions';
-import styles from './index.module.scss';
-
-const cx = classNames.bind(styles);
-
 type Props = {};
 
 const OAuth2ApplicationsContainer: FC<Props> = memo(({}) => {
@@ -18,26 +13,20 @@ const OAuth2ApplicationsContainer: FC<Props> = memo(({}) => {
       token: '',
     },
   });
-  const onRegisterClick = () => {
-    router.push('/oauth2/app/register');
-  };
 
+  const onRegisterClick = useCallback(() => {
+    router.push('/oauth2/app/register');
+  }, [router]);
   const deleteHandler = useDeleteHandler();
 
-  return loading ? (
-    <></>
-  ) : (
-    <>
-      <div className={cx(styles['register-button'])}>
-        <Button variant="contained" color="primary" onClick={onRegisterClick}>
-          新規作成
-        </Button>
-      </div>
+  return (
+    <LoadingContext.Provider value={loading}>
       <Presenter
         data={data?.oauthApplications?.result || []}
+        registerHandler={onRegisterClick}
         deleteHandler={deleteHandler}
       />
-    </>
+    </LoadingContext.Provider>
   );
 });
 

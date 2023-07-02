@@ -51,6 +51,21 @@ func (mr *MockServiceMockRecorder) FindAll(ctx, author interface{}) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAll", reflect.TypeOf((*MockService)(nil).FindAll), ctx, author)
 }
 
+// FindByKeyAndAuthor mocks base method.
+func (m *MockService) FindByKeyAndAuthor(ctx context.Context, key, author string) (*short.ShortWithTimeStamp, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindByKeyAndAuthor", ctx, key, author)
+	ret0, _ := ret[0].(*short.ShortWithTimeStamp)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindByKeyAndAuthor indicates an expected call of FindByKeyAndAuthor.
+func (mr *MockServiceMockRecorder) FindByKeyAndAuthor(ctx, key, author interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByKeyAndAuthor", reflect.TypeOf((*MockService)(nil).FindByKeyAndAuthor), ctx, key, author)
+}
+
 // GenerateQRCode mocks base method.
 func (m *MockService) GenerateQRCode(ctx context.Context, key string) (io.Reader, error) {
 	m.ctrl.T.Helper()
@@ -67,10 +82,10 @@ func (mr *MockServiceMockRecorder) GenerateQRCode(ctx, key interface{}) *gomock.
 }
 
 // GenerateShortURL mocks base method.
-func (m *MockService) GenerateShortURL(ctx context.Context, url, key, author string) (string, error) {
+func (m *MockService) GenerateShortURL(ctx context.Context, url, key, author string) (*short.ShortWithTimeStamp, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GenerateShortURL", ctx, url, key, author)
-	ret0, _ := ret[0].(string)
+	ret0, _ := ret[0].(*short.ShortWithTimeStamp)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -108,4 +123,19 @@ func (m *MockService) Remove(ctx context.Context, key, author string) error {
 func (mr *MockServiceMockRecorder) Remove(ctx, key, author interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Remove", reflect.TypeOf((*MockService)(nil).Remove), ctx, key, author)
+}
+
+// Update mocks base method.
+func (m *MockService) Update(ctx context.Context, key, author, url string) (*short.ShortWithTimeStamp, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Update", ctx, key, author, url)
+	ret0, _ := ret[0].(*short.ShortWithTimeStamp)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Update indicates an expected call of Update.
+func (mr *MockServiceMockRecorder) Update(ctx, key, author, url interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockService)(nil).Update), ctx, key, author, url)
 }

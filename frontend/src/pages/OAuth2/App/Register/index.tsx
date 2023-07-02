@@ -1,5 +1,5 @@
+import { useOutletContext } from '@/components/hooks/useOutlet';
 import { OAuthAppContainer } from '@/components/pages/oauth/Register';
-import { useOutletContext } from '@/pages/hooks/useOutlet';
 import { FC } from 'react';
 
 const Page: FC = () => {

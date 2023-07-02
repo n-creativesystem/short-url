@@ -80,6 +80,21 @@ func (mr *MockRepositoryMockRecorder) FindAll(ctx, author interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAll", reflect.TypeOf((*MockRepository)(nil).FindAll), ctx, author)
 }
 
+// FindByKeyAndAuthor mocks base method.
+func (m *MockRepository) FindByKeyAndAuthor(ctx context.Context, key, author string) (*short.ShortWithTimeStamp, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindByKeyAndAuthor", ctx, key, author)
+	ret0, _ := ret[0].(*short.ShortWithTimeStamp)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindByKeyAndAuthor indicates an expected call of FindByKeyAndAuthor.
+func (mr *MockRepositoryMockRecorder) FindByKeyAndAuthor(ctx, key, author interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByKeyAndAuthor", reflect.TypeOf((*MockRepository)(nil).FindByKeyAndAuthor), ctx, key, author)
+}
+
 // Get mocks base method.
 func (m *MockRepository) Get(ctx context.Context, key string) (*short.Short, error) {
 	m.ctrl.T.Helper()
@@ -96,11 +111,12 @@ func (mr *MockRepositoryMockRecorder) Get(ctx, key interface{}) *gomock.Call {
 }
 
 // Put mocks base method.
-func (m *MockRepository) Put(ctx context.Context, value short.Short) error {
+func (m *MockRepository) Put(ctx context.Context, value short.Short) (*short.ShortWithTimeStamp, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Put", ctx, value)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(*short.ShortWithTimeStamp)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // Put indicates an expected call of Put.

@@ -3,7 +3,7 @@ package handler
 import (
 	"os"
 
-	"github.com/n-creativesystem/short-url/pkg/utils"
+	"github.com/n-creativesystem/short-url/pkg/domain/config"
 )
 
 type ShortOption interface {
@@ -16,26 +16,20 @@ func (fn shortOptionFn) apply(option *shortOption) {
 	fn(option)
 }
 
-func WithBaseURL(baseURL string) ShortOption {
+func WithAppConfig(cfg *config.Application) ShortOption {
 	return shortOptionFn(func(so *shortOption) {
-		so.baseURL = baseURL
+		so.appConfig = cfg
 	})
 }
 
 func newShortOption() shortOption {
 	return shortOption{
-		baseURL: os.Getenv("SERVICE_URL"),
+		appConfig: &config.Application{
+			BaseURL: os.Getenv("SERVICE_URL"),
+		},
 	}
 }
 
 type shortOption struct {
-	baseURL string
-}
-
-func (so *shortOption) URL(paths ...string) (string, error) {
-	return utils.URL(so.baseURL, paths...)
-}
-
-func (so *shortOption) MustURL(paths ...string) string {
-	return utils.MustURL(so.baseURL, paths...)
+	appConfig *config.Application
 }

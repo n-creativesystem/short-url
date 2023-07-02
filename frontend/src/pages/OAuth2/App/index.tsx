@@ -1,6 +1,6 @@
 import { usePathname } from '@/components/Parts/Navigation';
+import { useOutletContext } from '@/components/hooks/useOutlet';
 import OAuth2ApplicationsContainer from '@/components/pages/oauth';
-import { useOutletContext } from '@/pages/hooks/useOutlet';
 import { FC, memo } from 'react';
 import { Outlet } from 'react-router-dom';
 

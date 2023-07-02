@@ -48,20 +48,29 @@ func (impl *repositoryImpl) Get(ctx context.Context, key string) (*short.Short, 
 	return result.Short, nil
 }
 
-func (impl *repositoryImpl) Put(ctx context.Context, value short.Short) error {
+func (impl *repositoryImpl) Put(ctx context.Context, value short.Short) (*short.ShortWithTimeStamp, error) {
 	svc := infra.GetExecutor(ctx)
-	now := utils.NowString()
-	_, err := svc.PutItem(ctx, &dynamodb.PutItemInput{
+	now := utils.Now()
+	nowString := utils.TimeToString(now)
+	if _, err := svc.PutItem(ctx, &dynamodb.PutItemInput{
 		TableName: aws.String(tableName),
 		Item: map[string]types.AttributeValue{
 			shortColumns.Key:       &types.AttributeValueMemberS{Value: value.GetKey()},
 			shortColumns.URL:       &types.AttributeValueMemberS{Value: value.GetEncryptURL().MustEncrypt()},
 			shortColumns.Author:    &types.AttributeValueMemberS{Value: value.GetAuthor()},
-			shortColumns.CreatedAt: &types.AttributeValueMemberS{Value: now},
-			shortColumns.UpdatedAt: &types.AttributeValueMemberS{Value: now},
+			shortColumns.CreatedAt: &types.AttributeValueMemberS{Value: nowString},
+			shortColumns.UpdatedAt: &types.AttributeValueMemberS{Value: nowString},
 		},
-	})
-	return err
+	}); err != nil {
+		return nil, err
+	} else {
+		model := &short.ShortWithTimeStamp{
+			Short:     &value,
+			CreatedAt: now,
+			UpdatedAt: now,
+		}
+		return model, nil
+	}
 }
 
 func (impl *repositoryImpl) Del(ctx context.Context, key, author string) (bool, error) {
@@ -116,6 +125,27 @@ func (impl *repositoryImpl) FindAll(ctx context.Context, author string) ([]short
 		},
 	}
 	return impl.findAll(ctx, input)
+}
+
+func (impl *repositoryImpl) FindByKeyAndAuthor(ctx context.Context, key, author string) (*short.ShortWithTimeStamp, error) {
+	filter := "#col1 = :key and #col2 = :author"
+	input := dynamodb.ScanInput{
+		TableName:        aws.String(tableName),
+		FilterExpression: &filter,
+		ExpressionAttributeNames: map[string]string{
+			"#col1": "key",
+			"#col2": "author",
+		},
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":key":    &types.AttributeValueMemberS{Value: key},
+			":author": &types.AttributeValueMemberS{Value: author},
+		},
+	}
+	shorts, err := impl.findAll(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+	return &shorts[0], nil
 }
 
 func (impl *repositoryImpl) existsByKeyAndAuthor(ctx context.Context, key, author string) ([]string, error) {

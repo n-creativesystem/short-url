@@ -348,6 +348,16 @@ func UsernameHasSuffix(v string) predicate.Users {
 	return predicate.Users(sql.FieldHasSuffix(FieldUsername, v))
 }
 
+// UsernameIsNil applies the IsNil predicate on the "username" field.
+func UsernameIsNil() predicate.Users {
+	return predicate.Users(sql.FieldIsNull(FieldUsername))
+}
+
+// UsernameNotNil applies the NotNil predicate on the "username" field.
+func UsernameNotNil() predicate.Users {
+	return predicate.Users(sql.FieldNotNull(FieldUsername))
+}
+
 // UsernameEqualFold applies the EqualFold predicate on the "username" field.
 func UsernameEqualFold(v string) predicate.Users {
 	return predicate.Users(sql.FieldEqualFold(FieldUsername, v))
@@ -413,6 +423,16 @@ func PictureHasSuffix(v string) predicate.Users {
 	return predicate.Users(sql.FieldHasSuffix(FieldPicture, v))
 }
 
+// PictureIsNil applies the IsNil predicate on the "picture" field.
+func PictureIsNil() predicate.Users {
+	return predicate.Users(sql.FieldIsNull(FieldPicture))
+}
+
+// PictureNotNil applies the NotNil predicate on the "picture" field.
+func PictureNotNil() predicate.Users {
+	return predicate.Users(sql.FieldNotNull(FieldPicture))
+}
+
 // PictureEqualFold applies the EqualFold predicate on the "picture" field.
 func PictureEqualFold(v string) predicate.Users {
 	return predicate.Users(sql.FieldEqualFold(FieldPicture, v))
@@ -461,6 +481,16 @@ func ClaimsLT(v []byte) predicate.Users {
 // ClaimsLTE applies the LTE predicate on the "claims" field.
 func ClaimsLTE(v []byte) predicate.Users {
 	return predicate.Users(sql.FieldLTE(FieldClaims, v))
+}
+
+// ClaimsIsNil applies the IsNil predicate on the "claims" field.
+func ClaimsIsNil() predicate.Users {
+	return predicate.Users(sql.FieldIsNull(FieldClaims))
+}
+
+// ClaimsNotNil applies the NotNil predicate on the "claims" field.
+func ClaimsNotNil() predicate.Users {
+	return predicate.Users(sql.FieldNotNull(FieldClaims))
 }
 
 // And groups predicates with the AND operator between them.

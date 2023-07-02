@@ -20,9 +20,9 @@ func (Users) Fields() []ent.Field {
 		field.String("profile"),
 		field.String("email").MaxLen(256),
 		field.Bool("email_verified"),
-		field.String("username").MaxLen(256),
-		field.String("picture"),
-		field.Bytes("claims"),
+		field.String("username").MaxLen(256).Optional(),
+		field.String("picture").Optional(),
+		field.Bytes("claims").Optional(),
 	}
 }
 

@@ -87,9 +87,9 @@ var (
 		{Name: "profile", Type: field.TypeString},
 		{Name: "email", Type: field.TypeString, Size: 256},
 		{Name: "email_verified", Type: field.TypeBool},
-		{Name: "username", Type: field.TypeString, Size: 256},
-		{Name: "picture", Type: field.TypeString},
-		{Name: "claims", Type: field.TypeBytes},
+		{Name: "username", Type: field.TypeString, Nullable: true, Size: 256},
+		{Name: "picture", Type: field.TypeString, Nullable: true},
+		{Name: "claims", Type: field.TypeBytes, Nullable: true},
 	}
 	// UsersTable holds the schema information for the "users" table.
 	UsersTable = &schema.Table{

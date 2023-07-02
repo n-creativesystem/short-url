@@ -57,15 +57,49 @@ func (uu *UsersUpdate) SetUsername(s string) *UsersUpdate {
 	return uu
 }
 
+// SetNillableUsername sets the "username" field if the given value is not nil.
+func (uu *UsersUpdate) SetNillableUsername(s *string) *UsersUpdate {
+	if s != nil {
+		uu.SetUsername(*s)
+	}
+	return uu
+}
+
+// ClearUsername clears the value of the "username" field.
+func (uu *UsersUpdate) ClearUsername() *UsersUpdate {
+	uu.mutation.ClearUsername()
+	return uu
+}
+
 // SetPicture sets the "picture" field.
 func (uu *UsersUpdate) SetPicture(s string) *UsersUpdate {
 	uu.mutation.SetPicture(s)
 	return uu
 }
 
+// SetNillablePicture sets the "picture" field if the given value is not nil.
+func (uu *UsersUpdate) SetNillablePicture(s *string) *UsersUpdate {
+	if s != nil {
+		uu.SetPicture(*s)
+	}
+	return uu
+}
+
+// ClearPicture clears the value of the "picture" field.
+func (uu *UsersUpdate) ClearPicture() *UsersUpdate {
+	uu.mutation.ClearPicture()
+	return uu
+}
+
 // SetClaims sets the "claims" field.
 func (uu *UsersUpdate) SetClaims(b []byte) *UsersUpdate {
 	uu.mutation.SetClaims(b)
+	return uu
+}
+
+// ClearClaims clears the value of the "claims" field.
+func (uu *UsersUpdate) ClearClaims() *UsersUpdate {
+	uu.mutation.ClearClaims()
 	return uu
 }
 
@@ -148,11 +182,20 @@ func (uu *UsersUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := uu.mutation.Username(); ok {
 		_spec.SetField(users.FieldUsername, field.TypeString, value)
 	}
+	if uu.mutation.UsernameCleared() {
+		_spec.ClearField(users.FieldUsername, field.TypeString)
+	}
 	if value, ok := uu.mutation.Picture(); ok {
 		_spec.SetField(users.FieldPicture, field.TypeString, value)
 	}
+	if uu.mutation.PictureCleared() {
+		_spec.ClearField(users.FieldPicture, field.TypeString)
+	}
 	if value, ok := uu.mutation.Claims(); ok {
 		_spec.SetField(users.FieldClaims, field.TypeBytes, value)
+	}
+	if uu.mutation.ClaimsCleared() {
+		_spec.ClearField(users.FieldClaims, field.TypeBytes)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, uu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -204,15 +247,49 @@ func (uuo *UsersUpdateOne) SetUsername(s string) *UsersUpdateOne {
 	return uuo
 }
 
+// SetNillableUsername sets the "username" field if the given value is not nil.
+func (uuo *UsersUpdateOne) SetNillableUsername(s *string) *UsersUpdateOne {
+	if s != nil {
+		uuo.SetUsername(*s)
+	}
+	return uuo
+}
+
+// ClearUsername clears the value of the "username" field.
+func (uuo *UsersUpdateOne) ClearUsername() *UsersUpdateOne {
+	uuo.mutation.ClearUsername()
+	return uuo
+}
+
 // SetPicture sets the "picture" field.
 func (uuo *UsersUpdateOne) SetPicture(s string) *UsersUpdateOne {
 	uuo.mutation.SetPicture(s)
 	return uuo
 }
 
+// SetNillablePicture sets the "picture" field if the given value is not nil.
+func (uuo *UsersUpdateOne) SetNillablePicture(s *string) *UsersUpdateOne {
+	if s != nil {
+		uuo.SetPicture(*s)
+	}
+	return uuo
+}
+
+// ClearPicture clears the value of the "picture" field.
+func (uuo *UsersUpdateOne) ClearPicture() *UsersUpdateOne {
+	uuo.mutation.ClearPicture()
+	return uuo
+}
+
 // SetClaims sets the "claims" field.
 func (uuo *UsersUpdateOne) SetClaims(b []byte) *UsersUpdateOne {
 	uuo.mutation.SetClaims(b)
+	return uuo
+}
+
+// ClearClaims clears the value of the "claims" field.
+func (uuo *UsersUpdateOne) ClearClaims() *UsersUpdateOne {
+	uuo.mutation.ClearClaims()
 	return uuo
 }
 
@@ -325,11 +402,20 @@ func (uuo *UsersUpdateOne) sqlSave(ctx context.Context) (_node *Users, err error
 	if value, ok := uuo.mutation.Username(); ok {
 		_spec.SetField(users.FieldUsername, field.TypeString, value)
 	}
+	if uuo.mutation.UsernameCleared() {
+		_spec.ClearField(users.FieldUsername, field.TypeString)
+	}
 	if value, ok := uuo.mutation.Picture(); ok {
 		_spec.SetField(users.FieldPicture, field.TypeString, value)
 	}
+	if uuo.mutation.PictureCleared() {
+		_spec.ClearField(users.FieldPicture, field.TypeString)
+	}
 	if value, ok := uuo.mutation.Claims(); ok {
 		_spec.SetField(users.FieldClaims, field.TypeBytes, value)
+	}
+	if uuo.mutation.ClaimsCleared() {
+		_spec.ClearField(users.FieldClaims, field.TypeBytes)
 	}
 	_node = &Users{config: uuo.config}
 	_spec.Assign = _node.assignValues

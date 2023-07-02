@@ -2308,9 +2308,22 @@ func (m *UsersMutation) OldUsername(ctx context.Context) (v string, err error) {
 	return oldValue.Username, nil
 }
 
+// ClearUsername clears the value of the "username" field.
+func (m *UsersMutation) ClearUsername() {
+	m.username = nil
+	m.clearedFields[users.FieldUsername] = struct{}{}
+}
+
+// UsernameCleared returns if the "username" field was cleared in this mutation.
+func (m *UsersMutation) UsernameCleared() bool {
+	_, ok := m.clearedFields[users.FieldUsername]
+	return ok
+}
+
 // ResetUsername resets all changes to the "username" field.
 func (m *UsersMutation) ResetUsername() {
 	m.username = nil
+	delete(m.clearedFields, users.FieldUsername)
 }
 
 // SetPicture sets the "picture" field.
@@ -2344,9 +2357,22 @@ func (m *UsersMutation) OldPicture(ctx context.Context) (v string, err error) {
 	return oldValue.Picture, nil
 }
 
+// ClearPicture clears the value of the "picture" field.
+func (m *UsersMutation) ClearPicture() {
+	m.picture = nil
+	m.clearedFields[users.FieldPicture] = struct{}{}
+}
+
+// PictureCleared returns if the "picture" field was cleared in this mutation.
+func (m *UsersMutation) PictureCleared() bool {
+	_, ok := m.clearedFields[users.FieldPicture]
+	return ok
+}
+
 // ResetPicture resets all changes to the "picture" field.
 func (m *UsersMutation) ResetPicture() {
 	m.picture = nil
+	delete(m.clearedFields, users.FieldPicture)
 }
 
 // SetClaims sets the "claims" field.
@@ -2380,9 +2406,22 @@ func (m *UsersMutation) OldClaims(ctx context.Context) (v []byte, err error) {
 	return oldValue.Claims, nil
 }
 
+// ClearClaims clears the value of the "claims" field.
+func (m *UsersMutation) ClearClaims() {
+	m.claims = nil
+	m.clearedFields[users.FieldClaims] = struct{}{}
+}
+
+// ClaimsCleared returns if the "claims" field was cleared in this mutation.
+func (m *UsersMutation) ClaimsCleared() bool {
+	_, ok := m.clearedFields[users.FieldClaims]
+	return ok
+}
+
 // ResetClaims resets all changes to the "claims" field.
 func (m *UsersMutation) ResetClaims() {
 	m.claims = nil
+	delete(m.clearedFields, users.FieldClaims)
 }
 
 // Where appends a list predicates to the UsersMutation builder.
@@ -2573,7 +2612,17 @@ func (m *UsersMutation) AddField(name string, value ent.Value) error {
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
 func (m *UsersMutation) ClearedFields() []string {
-	return nil
+	var fields []string
+	if m.FieldCleared(users.FieldUsername) {
+		fields = append(fields, users.FieldUsername)
+	}
+	if m.FieldCleared(users.FieldPicture) {
+		fields = append(fields, users.FieldPicture)
+	}
+	if m.FieldCleared(users.FieldClaims) {
+		fields = append(fields, users.FieldClaims)
+	}
+	return fields
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
@@ -2586,6 +2635,17 @@ func (m *UsersMutation) FieldCleared(name string) bool {
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
 func (m *UsersMutation) ClearField(name string) error {
+	switch name {
+	case users.FieldUsername:
+		m.ClearUsername()
+		return nil
+	case users.FieldPicture:
+		m.ClearPicture()
+		return nil
+	case users.FieldClaims:
+		m.ClearClaims()
+		return nil
+	}
 	return fmt.Errorf("unknown Users nullable field %s", name)
 }
 

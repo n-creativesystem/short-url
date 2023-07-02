@@ -2,15 +2,14 @@ package logging
 
 import (
 	"github.com/pressly/goose/v3"
-	"go.uber.org/zap"
 )
 
-func NewGooseLogger(l *zap.SugaredLogger) *GooseLogger {
-	return &GooseLogger{SugaredLogger: l}
+func NewGooseLogger(l Log) *GooseLogger {
+	return &GooseLogger{Log: l}
 }
 
 type GooseLogger struct {
-	*zap.SugaredLogger
+	Log
 }
 
 var (
@@ -18,13 +17,13 @@ var (
 )
 
 func (l *GooseLogger) Print(v ...interface{}) {
-	l.SugaredLogger.Info(v...)
+	l.Log.Info(v...)
 }
 
 func (l *GooseLogger) Printf(format string, v ...interface{}) {
-	l.SugaredLogger.Infof(format, v...)
+	l.Log.Infof(format, v...)
 }
 
 func (l *GooseLogger) Println(v ...interface{}) {
-	l.SugaredLogger.Infoln(v...)
+	l.Log.Infoln(v...)
 }

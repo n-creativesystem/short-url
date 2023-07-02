@@ -1,6 +1,7 @@
 import { internalErrorPageVar } from '@/components/hooks/Context';
 import { useReactiveVar } from '@/components/hooks/reactive';
-import Routing, { RouteProps } from '@/lib/routing';
+import Routing from '@/lib/routing';
+import type { RouteProps } from '@/lib/routing/types';
 import { FC, lazy, memo } from 'react';
 
 const children: RouteProps[] = [

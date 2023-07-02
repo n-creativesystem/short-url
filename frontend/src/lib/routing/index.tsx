@@ -1,19 +1,8 @@
 import Layout from '@/components/Parts/Layout';
-import { FC, LazyExoticComponent, memo } from 'react';
-import {
-  RouteProps as BaseRouteProps,
-  BrowserRouter,
-  Route,
-  Routes,
-} from 'react-router-dom';
+import { FC, memo } from 'react';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { Auth } from './authGuard';
-
-export type RouteProps = {
-  path: string;
-  auth?: boolean;
-  Component?: LazyExoticComponent<FC>;
-  routes?: RouteProps[];
-} & Omit<BaseRouteProps, 'children' | 'element'>;
+import type { RouteProps } from './types';
 
 type Props = {
   children: RouteProps[];

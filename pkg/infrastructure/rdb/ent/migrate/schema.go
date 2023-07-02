@@ -80,11 +80,36 @@ var (
 		Columns:    ShortsColumns,
 		PrimaryKey: []*schema.Column{ShortsColumns[0]},
 	}
+	// UsersColumns holds the columns for the "users" table.
+	UsersColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID, Unique: true},
+		{Name: "subject", Type: field.TypeString, Size: 256},
+		{Name: "profile", Type: field.TypeString},
+		{Name: "email", Type: field.TypeString, Size: 256},
+		{Name: "email_verified", Type: field.TypeBool},
+		{Name: "username", Type: field.TypeString, Size: 256},
+		{Name: "picture", Type: field.TypeString},
+		{Name: "claims", Type: field.TypeBytes},
+	}
+	// UsersTable holds the schema information for the "users" table.
+	UsersTable = &schema.Table{
+		Name:       "users",
+		Columns:    UsersColumns,
+		PrimaryKey: []*schema.Column{UsersColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "users_email",
+				Unique:  true,
+				Columns: []*schema.Column{UsersColumns[3]},
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		Oauth2ClientTable,
 		Oauth2TokenTable,
 		ShortsTable,
+		UsersTable,
 	}
 )
 

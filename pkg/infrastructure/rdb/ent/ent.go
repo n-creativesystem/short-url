@@ -15,6 +15,7 @@ import (
 	"github.com/n-creativesystem/short-url/pkg/infrastructure/rdb/ent/oauth2client"
 	"github.com/n-creativesystem/short-url/pkg/infrastructure/rdb/ent/oauth2token"
 	"github.com/n-creativesystem/short-url/pkg/infrastructure/rdb/ent/shorts"
+	"github.com/n-creativesystem/short-url/pkg/infrastructure/rdb/ent/users"
 )
 
 // ent aliases to avoid import conflicts in user's code.
@@ -78,6 +79,7 @@ func checkColumn(table, column string) error {
 			oauth2client.Table: oauth2client.ValidColumn,
 			oauth2token.Table:  oauth2token.ValidColumn,
 			shorts.Table:       shorts.ValidColumn,
+			users.Table:        users.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)

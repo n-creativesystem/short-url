@@ -14,3 +14,6 @@ type OAuth2Token func(*sql.Selector)
 
 // Shorts is the predicate function for shorts builders.
 type Shorts func(*sql.Selector)
+
+// Users is the predicate function for users builders.
+type Users func(*sql.Selector)

@@ -9,6 +9,7 @@ import (
 	"github.com/n-creativesystem/short-url/pkg/infrastructure/rdb/ent/oauth2token"
 	"github.com/n-creativesystem/short-url/pkg/infrastructure/rdb/ent/schema"
 	"github.com/n-creativesystem/short-url/pkg/infrastructure/rdb/ent/shorts"
+	"github.com/n-creativesystem/short-url/pkg/infrastructure/rdb/ent/users"
 )
 
 // The init function reads all schema descriptors with runtime code
@@ -160,4 +161,18 @@ func init() {
 			return nil
 		}
 	}()
+	usersFields := schema.Users{}.Fields()
+	_ = usersFields
+	// usersDescSubject is the schema descriptor for Subject field.
+	usersDescSubject := usersFields[1].Descriptor()
+	// users.SubjectValidator is a validator for the "Subject" field. It is called by the builders before save.
+	users.SubjectValidator = usersDescSubject.Validators[0].(func(string) error)
+	// usersDescEmail is the schema descriptor for email field.
+	usersDescEmail := usersFields[3].Descriptor()
+	// users.EmailValidator is a validator for the "email" field. It is called by the builders before save.
+	users.EmailValidator = usersDescEmail.Validators[0].(func(string) error)
+	// usersDescUsername is the schema descriptor for username field.
+	usersDescUsername := usersFields[5].Descriptor()
+	// users.UsernameValidator is a validator for the "username" field. It is called by the builders before save.
+	users.UsernameValidator = usersDescUsername.Validators[0].(func(string) error)
 }

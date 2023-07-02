@@ -13,6 +13,7 @@ import (
 	"github.com/n-creativesystem/short-url/pkg/infrastructure/rdb/ent"
 	"github.com/n-creativesystem/short-url/pkg/infrastructure/rdb/ent/oauth2token"
 	"github.com/n-creativesystem/short-url/pkg/infrastructure/rdb/ent/predicate"
+	"github.com/n-creativesystem/short-url/pkg/utils"
 	"github.com/n-creativesystem/short-url/pkg/utils/logging"
 )
 
@@ -28,7 +29,9 @@ func NewOAuth2TokenWithOption(opts ...TokenOption) domain_oauth2token.Repository
 	impl := &tokenImpl{
 		tokenOption: o,
 	}
-	go impl.gc()
+	if utils.IsAPI() {
+		go impl.gc()
+	}
 	return impl
 }
 

@@ -6,6 +6,40 @@ import (
 	"strings"
 )
 
+type AppMode = int
+
+const (
+	Service AppMode = iota
+	API
+	UI
+)
+
+var appMode AppMode
+
+func RunService() {
+	appMode = Service
+}
+
+func IsService() bool {
+	return appMode == Service
+}
+
+func RunAPI() {
+	appMode = API
+}
+
+func IsAPI() bool {
+	return appMode == API
+}
+
+func RunUI() {
+	appMode = UI
+}
+
+func IsUI() bool {
+	return appMode == UI
+}
+
 func AppEnv() string {
 	return os.Getenv("APP_ENV")
 }

@@ -14,6 +14,7 @@ import (
 	config_infra "github.com/n-creativesystem/short-url/pkg/infrastructure/config"
 	"github.com/n-creativesystem/short-url/pkg/infrastructure/session"
 	"github.com/n-creativesystem/short-url/pkg/interfaces/router"
+	"github.com/n-creativesystem/short-url/pkg/utils"
 	"github.com/n-creativesystem/short-url/pkg/utils/credentials/crypto"
 	"github.com/n-creativesystem/short-url/pkg/utils/logging"
 	"github.com/sethvargo/go-envconfig"
@@ -72,6 +73,7 @@ func apiModeCommand() *cobra.Command {
 				logging.Default().Error(err)
 				return
 			}
+			utils.RunAPI()
 			executeServer(cmd.Context(), port, api)
 		},
 	}
@@ -90,6 +92,7 @@ func webUIModeCommand() *cobra.Command {
 				logging.Default().Error(err)
 				return
 			}
+			utils.RunUI()
 			executeServer(cmd.Context(), port, webUI)
 		},
 	}
@@ -108,6 +111,7 @@ func serviceModeCommand() *cobra.Command {
 				logging.Default().Error(err)
 				return
 			}
+			utils.RunService()
 			executeServer(cmd.Context(), port, urlService)
 		},
 	}

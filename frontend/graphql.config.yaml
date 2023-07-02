@@ -24,7 +24,7 @@ extensions:
         preset: client
         presetConfig:
           fragmentMasking:
-            unmaskFunctionName: getFragmentData
+            fragmentMasking: false
         plugins: []
       src/:
         plugins:

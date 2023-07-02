@@ -1,5 +1,5 @@
+import { useOutletContext } from '@/components/hooks/useOutlet';
 import NotFound from '@/components/pages/notfound';
-import { useOutletContext } from '@/pages/hooks/useOutlet';
 import { FC, memo } from 'react';
 
 const NotFoundPage: FC = memo(() => {

@@ -1,13 +1,12 @@
 import { usePathname } from '@/components/Parts/Navigation';
 import varStyles from '@/styles/variables/index.module.scss';
-import SettingsApplicationsIcon from '@mui/icons-material/SettingsApplications';
 import MuiDrawer from '@mui/material/Drawer';
 import List from '@mui/material/List';
 import MuiListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import { styled } from '@mui/material/styles';
-import React from 'react';
+import React, { FC, ReactNode } from 'react';
 import {
   Link as RouterLink,
   LinkProps as RouterLinkProps,
@@ -41,10 +40,18 @@ const Drawer = styled(MuiDrawer, {
 
 type ListItemButtonProps = {
   selected?: boolean;
+  path?: string;
 } & React.PropsWithChildren<RouterLinkProps>;
 
-const ListItemButton = (props: ListItemButtonProps) => {
-  const { to, children, selected, ...rest } = props;
+const ListItemButton: FC<ListItemButtonProps> = ({
+  to,
+  children,
+  selected,
+  path,
+  ...rest
+}) => {
+  const pathname = usePathname();
+  selected = selected || (path && pathname.startsWith(path)) || false;
   return (
     <MuiListItemButton
       selected={selected}
@@ -57,7 +64,11 @@ const ListItemButton = (props: ListItemButtonProps) => {
   );
 };
 
-export const MenuDrawer = () => {
+type MenuProps = {
+  children?: ReactNode;
+};
+
+const MenuDrawer: FC<MenuProps> = ({ children }) => {
   const pathname = usePathname();
   return (
     <Drawer
@@ -67,29 +78,23 @@ export const MenuDrawer = () => {
       variant="permanent"
       open={true}
     >
-      <List component="nav">
-        {/* <ListItemButton to="/" selected={pathname === '/'}>
-          <ListItemIcon>
-            <HomeIcon />
-          </ListItemIcon>
-          <ListItemText primary="トップページ" />
-        </ListItemButton> */}
-        <ListItemButton
-          to="/oauth2/app"
-          selected={pathname.startsWith('/oauth2/app')}
-        >
-          <ListItemIcon>
-            <SettingsApplicationsIcon />
-          </ListItemIcon>
-          <ListItemText primary="アプリケーション" />
-        </ListItemButton>
-        <ListItemButton to="/shorts" selected={pathname.startsWith('/shorts')}>
-          <ListItemIcon>
-            <SettingsApplicationsIcon />
-          </ListItemIcon>
-          <ListItemText primary="生成済みURL" />
-        </ListItemButton>
-      </List>
+      <List component="nav">{children}</List>
     </Drawer>
   );
 };
+
+type TListItemButton = typeof ListItemButton & {
+  ListItemIcon: typeof ListItemIcon;
+  ListItemText: typeof ListItemText;
+};
+
+type TMenu = typeof MenuDrawer & {
+  ListItemButton: TListItemButton;
+};
+
+const Menu = MenuDrawer as TMenu;
+Menu.ListItemButton = ListItemButton as TListItemButton;
+Menu.ListItemButton.ListItemIcon = ListItemIcon;
+Menu.ListItemButton.ListItemText = ListItemText;
+
+export { Menu };

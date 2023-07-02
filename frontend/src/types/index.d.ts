@@ -13,3 +13,6 @@ type Expand<T> = T extends object
 
 type CustomTime = string & { readonly brand: unique symbol };
 type CustomURL = URL & { readonly brand: unique symbol };
+type TitleProps = {
+  setTitle: (value: string) => void;
+};

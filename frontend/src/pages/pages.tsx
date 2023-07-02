@@ -2,17 +2,17 @@ import CsrfTokenProvider from '@/components/Parts/Layout/CsrfToken';
 import UserInfoProvider from '@/components/Parts/Layout/UserInfo';
 import { internalErrorPageVar } from '@/components/hooks/Context';
 import { useReactiveVar } from '@/components/hooks/reactive';
+import Routing, { RouteProps } from '@/lib/routing';
 import { FC, lazy, memo } from 'react';
-import Routing, { RouteProps } from './routing';
 
 const children: RouteProps[] = [
   {
     path: '',
-    Component: lazy(() => import('./App')),
+    Component: lazy(() => import('./index')),
   },
   {
     path: 'auth',
-    Component: lazy(() => import('./auth')),
+    Component: lazy(() => import('./Auth')),
   },
   {
     path: 'oauth2/app',
@@ -26,6 +26,16 @@ const children: RouteProps[] = [
       {
         path: ':id',
         Component: lazy(() => import('./OAuth2/App/[id]')),
+      },
+    ],
+  },
+  {
+    path: 'shorts',
+    Component: lazy(() => import('./Shorts')),
+    auth: true,
+    routes: [
+      {
+        path: 'register',
       },
     ],
   },

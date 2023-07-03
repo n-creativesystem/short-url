@@ -28,6 +28,8 @@ type webUI struct {
 	IsUI             bool   `env:"IS_UI,default=false"`
 	Cors             cors   `env:",prefix=CORS_"`
 	Csrf             csrf   `env:",prefix=CSRF_"`
+	Domain           string `env:"DOMAIN,default=localhost"`
+	RedirectURI      string `env:"REDIRECT,default=localhost:3000"`
 }
 
 func NewWebUI(ctx context.Context) *config.WebUI {
@@ -49,5 +51,6 @@ func NewWebUI(ctx context.Context) *config.WebUI {
 			CorsAndOriginalHeader: cfg.Csrf.CorsAndOriginalHeader,
 			HeaderName:            cfg.Csrf.HeaderName,
 		},
+		RedirectURI: cfg.RedirectURI,
 	}
 }

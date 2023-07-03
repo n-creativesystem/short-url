@@ -35,6 +35,7 @@ func getDynamoDBInput(ctx context.Context) (*router.RouterInput, func(), error) 
 		oauth2Store,
 		oauth2ClientService,
 		beginner,
+		nil,
 	)
 	return input, func() {}, nil
 }

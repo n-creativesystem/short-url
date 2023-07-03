@@ -3,6 +3,7 @@ package middleware
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"net"
 	"net/http"
 	"time"
@@ -13,6 +14,10 @@ import (
 	. "github.com/n-creativesystem/short-url/pkg/interfaces/middleware/session"
 	"github.com/n-creativesystem/short-url/pkg/interfaces/response"
 	"github.com/n-creativesystem/short-url/pkg/utils/logging"
+)
+
+var (
+	ErrAuthorize = errors.New("Authorize")
 )
 
 func Session(opts ...Option) gin.HandlerFunc {
@@ -71,7 +76,21 @@ func Session(opts ...Option) gin.HandlerFunc {
 	}
 }
 
-func Protected() gin.HandlerFunc {
+func UnauthorizeRedirect(redirect string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Next()
+		if len(c.Errors) > 0 {
+			for _, err := range c.Errors {
+				if errors.Is(err, ErrAuthorize) {
+					c.Redirect(http.StatusFound, redirect)
+					return
+				}
+			}
+		}
+	}
+}
+
+func Protected(repo social.UserRepository) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx := c.Request.Context()
 		sm := GetContext(ctx)
@@ -79,7 +98,15 @@ func Protected() gin.HandlerFunc {
 		user, err := social.Decode(buf)
 		if err != nil {
 			_ = sm.Destroy(ctx)
-			c.AbortWithStatus(http.StatusUnauthorized)
+			_ = c.Error(ErrAuthorize)
+			c.Abort()
+			return
+		}
+		user, err = repo.Login(ctx, user.Email)
+		if err != nil {
+			_ = sm.Destroy(ctx)
+			_ = c.Error(ErrAuthorize)
+			c.Abort()
 			return
 		}
 		SetAuthUser(c, user)

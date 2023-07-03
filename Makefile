@@ -10,9 +10,9 @@ DRIVER?="mysql" # postgres(sqlboiler: psql), mysql
 CREATE_MIGRATION_CMD_EXAMPLE='make migration-file MFILE=something_to_do'
 ## create migration sql file
 .PHONY: migration-file
-migration-file:
+migration-file: run/env
 	@if test -z $${MFILE}; then echo -e "$(CREATE_MIGRATION_CMD_EXAMPLE)" && exit 1; fi
-	go run main.go migrator create $(MFILE) --driver $(DRIVER)
+	@export $$(cat .run.env | grep -v ^#) && go run main.go migrator create $(MFILE) --driver $(DRIVER)
 
 .PHONY: migration-file/mysql
 migration-file/mysql:

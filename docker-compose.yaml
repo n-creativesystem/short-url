@@ -35,19 +35,6 @@ services:
         - localhost
       timeout: 5s
       retries: 10
-  dynamodb:
-    image: amazon/dynamodb-local:1.22.0
-    command: -jar DynamoDBLocal.jar -sharedDb -dbPath . -optimizeDbBeforeStartup
-    ports:
-      - 18000:8000
-  #   depends_on:
-  #     - dynamodb-admin-ui
-  dynamodb-admin-ui:
-    image: aaronshaf/dynamodb-admin
-    environment:
-      DYNAMO_ENDPOINT: http://dynamodb:8000
-    ports:
-      - 18001:8001
   postgres:
     image: postgres:15-alpine
     environment:

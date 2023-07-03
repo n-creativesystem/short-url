@@ -66,8 +66,6 @@ func GetMigrationsDirectory() (string, error) {
 		subDir = "mysql"
 	case config.PostgreSQL:
 		subDir = "postgres"
-	case config.DynamoDB:
-		subDir = "dynamodb"
 	}
 	dir, err := getSubDirectory(filepath.Join("migrations", subDir))
 	if err != nil {

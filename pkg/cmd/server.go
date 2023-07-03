@@ -190,8 +190,6 @@ func getInput(ctx context.Context, appConfig *config.Application) (*router.Route
 	switch config.GetDriver() {
 	case config.MySQL, config.PostgreSQL, config.SQLite:
 		input, closer, err = getRDBInput(ctx)
-	case config.DynamoDB:
-		input, closer, err = getDynamoDBInput(ctx)
 	default:
 		panic(config.ErrNoSupportDriver())
 	}

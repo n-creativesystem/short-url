@@ -15,8 +15,6 @@ func (d Driver) String() string {
 		return "mysql"
 	case PostgreSQL:
 		return "postgres"
-	case DynamoDB:
-		return "dynamodb"
 	case SQLite:
 		return "sqlite3"
 	}
@@ -27,7 +25,6 @@ const (
 	None Driver = iota
 	MySQL
 	PostgreSQL
-	DynamoDB
 	SQLite
 )
 
@@ -52,8 +49,6 @@ func ConvertDriverFromString(value string) Driver {
 		return PostgreSQL
 	case "sqlite", "sqlite3":
 		return SQLite
-	case "dynamo", "dynamodb":
-		return DynamoDB
 	default:
 		panic(driverError(utils.StringerFunc(func() string { return value })))
 	}

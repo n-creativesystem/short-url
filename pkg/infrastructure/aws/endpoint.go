@@ -6,7 +6,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 )
 
@@ -24,7 +23,6 @@ func NewEndpoint() *Endpoint {
 		endpoint: make(map[string]aws.Endpoint),
 		mu:       sync.RWMutex{},
 	}
-	e.DynamoDBEndpoint("")
 	e.KMSEndpoint("")
 	return e
 }
@@ -47,17 +45,6 @@ func (e *Endpoint) ResolveEndpoint(service, region string, options ...interface{
 
 func (e *Endpoint) EndpointResolver() config.LoadOptionsFunc {
 	return config.WithEndpointResolverWithOptions(e)
-}
-
-func (e *Endpoint) DynamoDBEndpoint(endpoint string) {
-	if endpoint == "" {
-		endpoint = os.Getenv("DYNAMODB_ENDPOINT")
-	}
-	if endpoint == "" {
-		// awsのデフォルトを使うために何もしない
-		return
-	}
-	e.AddEndpoint(dynamodb.ServiceID, aws.Endpoint{URL: endpoint})
 }
 
 func (e *Endpoint) KMSEndpoint(endpoint string) {

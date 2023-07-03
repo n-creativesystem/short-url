@@ -5,10 +5,13 @@ package ent
 import (
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/n-creativesystem/short-url/pkg/infrastructure/rdb/ent/oauth2client"
 	"github.com/n-creativesystem/short-url/pkg/infrastructure/rdb/ent/oauth2token"
 	"github.com/n-creativesystem/short-url/pkg/infrastructure/rdb/ent/schema"
 	"github.com/n-creativesystem/short-url/pkg/infrastructure/rdb/ent/shorts"
+	"github.com/n-creativesystem/short-url/pkg/infrastructure/rdb/ent/users"
+	"github.com/n-creativesystem/short-url/pkg/utils/hash"
 )
 
 // The init function reads all schema descriptors with runtime code
@@ -160,4 +163,39 @@ func init() {
 			return nil
 		}
 	}()
+	usersMixin := schema.Users{}.Mixin()
+	usersMixinFields0 := usersMixin[0].Fields()
+	_ = usersMixinFields0
+	usersFields := schema.Users{}.Fields()
+	_ = usersFields
+	// usersDescCreateTime is the schema descriptor for create_time field.
+	usersDescCreateTime := usersMixinFields0[0].Descriptor()
+	// users.DefaultCreateTime holds the default value on creation for the create_time field.
+	users.DefaultCreateTime = usersDescCreateTime.Default.(func() time.Time)
+	// usersDescUpdateTime is the schema descriptor for update_time field.
+	usersDescUpdateTime := usersMixinFields0[1].Descriptor()
+	// users.DefaultUpdateTime holds the default value on creation for the update_time field.
+	users.DefaultUpdateTime = usersDescUpdateTime.Default.(func() time.Time)
+	// users.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	users.UpdateDefaultUpdateTime = usersDescUpdateTime.UpdateDefault.(func() time.Time)
+	// usersDescSubject is the schema descriptor for Subject field.
+	usersDescSubject := usersFields[1].Descriptor()
+	// users.SubjectValidator is a validator for the "Subject" field. It is called by the builders before save.
+	users.SubjectValidator = usersDescSubject.Validators[0].(func(string) error)
+	// usersDescEmail is the schema descriptor for email field.
+	usersDescEmail := usersFields[3].Descriptor()
+	// users.EmailValidator is a validator for the "email" field. It is called by the builders before save.
+	users.EmailValidator = usersDescEmail.Validators[0].(func(string) error)
+	// usersDescEmailHash is the schema descriptor for email_hash field.
+	usersDescEmailHash := usersFields[4].Descriptor()
+	// users.DefaultEmailHash holds the default value on creation for the email_hash field.
+	users.DefaultEmailHash = usersDescEmailHash.Default.(hash.Hash)
+	// usersDescUsername is the schema descriptor for username field.
+	usersDescUsername := usersFields[6].Descriptor()
+	// users.UsernameValidator is a validator for the "username" field. It is called by the builders before save.
+	users.UsernameValidator = usersDescUsername.Validators[0].(func(string) error)
+	// usersDescID is the schema descriptor for id field.
+	usersDescID := usersFields[0].Descriptor()
+	// users.DefaultID holds the default value on creation for the id field.
+	users.DefaultID = usersDescID.Default.(func() uuid.UUID)
 }

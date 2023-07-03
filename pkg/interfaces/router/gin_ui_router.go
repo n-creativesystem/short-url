@@ -23,8 +23,15 @@ import (
 func NewWebUI(input *RouterInput, cfg *config.WebUI) *gin.Engine {
 	router := newGinRouter()
 	route := router.Group(cfg.Prefix)
-	route.Use(cors.New(cfg.Cors.ToCorsConfig()))
-	route.Use(middleware.Session(session.WithSessionStore(cfg.Store)))
+	route.Use(
+		cors.New(cfg.Cors.ToCorsConfig()),
+		middleware.Session(
+			session.WithSessionStore(cfg.Store),
+			session.WithCookieDomain(cfg.Domain),
+		),
+		middleware.UnauthorizeRedirect(cfg.RedirectURI),
+	)
+	protect := middleware.Protected(input.SocialRepo)
 	var csrfMiddleware gin.HandlerFunc
 	if cfg.CSRF.TokenBase {
 		csrfHandler := handler.NewCSRFTokenHandler()
@@ -38,11 +45,11 @@ func NewWebUI(input *RouterInput, cfg *config.WebUI) *gin.Engine {
 	route.GET("/manifest", handler.WebUIManifest(cfg))
 
 	shortService := short.NewService(input.ShortRepository, input.AppConfig, input.Beginner)
-	socialHandler := handler.NewSocialHandler(cfg.Providers, cfg.LoginSuccessURL, cfg.LogoutSuccessURL)
-	socialHandler.Router(route, middleware.Protected())
+	socialHandler := handler.NewSocialHandler(cfg.Providers, cfg.LoginSuccessURL, cfg.LogoutSuccessURL, input.SocialRepo)
+	socialHandler.Router(route, protect)
 	// Graphql handler
 	gqlResolver := graphql.NewResolver(input.OAuth2ClientService, shortService)
-	route.POST("/graphql", middleware.Protected(), csrfMiddleware, graphql.GraphQLHandler(gqlResolver))
+	route.POST("/graphql", protect, csrfMiddleware, graphql.GraphQLHandler(gqlResolver))
 	route.GET("/playground", graphql.GraphQLPlayGroundHandler("/api/graphql"))
 
 	if cfg.IsUI {

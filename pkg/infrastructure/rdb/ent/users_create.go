@@ -6,11 +6,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 	"github.com/n-creativesystem/short-url/pkg/infrastructure/rdb/ent/users"
+	"github.com/n-creativesystem/short-url/pkg/utils/credentials"
+	"github.com/n-creativesystem/short-url/pkg/utils/hash"
 )
 
 // UsersCreate is the builder for creating a Users entity.
@@ -18,6 +21,34 @@ type UsersCreate struct {
 	config
 	mutation *UsersMutation
 	hooks    []Hook
+}
+
+// SetCreateTime sets the "create_time" field.
+func (uc *UsersCreate) SetCreateTime(t time.Time) *UsersCreate {
+	uc.mutation.SetCreateTime(t)
+	return uc
+}
+
+// SetNillableCreateTime sets the "create_time" field if the given value is not nil.
+func (uc *UsersCreate) SetNillableCreateTime(t *time.Time) *UsersCreate {
+	if t != nil {
+		uc.SetCreateTime(*t)
+	}
+	return uc
+}
+
+// SetUpdateTime sets the "update_time" field.
+func (uc *UsersCreate) SetUpdateTime(t time.Time) *UsersCreate {
+	uc.mutation.SetUpdateTime(t)
+	return uc
+}
+
+// SetNillableUpdateTime sets the "update_time" field if the given value is not nil.
+func (uc *UsersCreate) SetNillableUpdateTime(t *time.Time) *UsersCreate {
+	if t != nil {
+		uc.SetUpdateTime(*t)
+	}
+	return uc
 }
 
 // SetSubject sets the "Subject" field.
@@ -33,8 +64,22 @@ func (uc *UsersCreate) SetProfile(s string) *UsersCreate {
 }
 
 // SetEmail sets the "email" field.
-func (uc *UsersCreate) SetEmail(s string) *UsersCreate {
-	uc.mutation.SetEmail(s)
+func (uc *UsersCreate) SetEmail(cs credentials.EncryptString) *UsersCreate {
+	uc.mutation.SetEmail(cs)
+	return uc
+}
+
+// SetEmailHash sets the "email_hash" field.
+func (uc *UsersCreate) SetEmailHash(h hash.Hash) *UsersCreate {
+	uc.mutation.SetEmailHash(h)
+	return uc
+}
+
+// SetNillableEmailHash sets the "email_hash" field if the given value is not nil.
+func (uc *UsersCreate) SetNillableEmailHash(h *hash.Hash) *UsersCreate {
+	if h != nil {
+		uc.SetEmailHash(*h)
+	}
 	return uc
 }
 
@@ -45,15 +90,15 @@ func (uc *UsersCreate) SetEmailVerified(b bool) *UsersCreate {
 }
 
 // SetUsername sets the "username" field.
-func (uc *UsersCreate) SetUsername(s string) *UsersCreate {
-	uc.mutation.SetUsername(s)
+func (uc *UsersCreate) SetUsername(cs credentials.EncryptString) *UsersCreate {
+	uc.mutation.SetUsername(cs)
 	return uc
 }
 
 // SetNillableUsername sets the "username" field if the given value is not nil.
-func (uc *UsersCreate) SetNillableUsername(s *string) *UsersCreate {
-	if s != nil {
-		uc.SetUsername(*s)
+func (uc *UsersCreate) SetNillableUsername(cs *credentials.EncryptString) *UsersCreate {
+	if cs != nil {
+		uc.SetUsername(*cs)
 	}
 	return uc
 }
@@ -73,14 +118,30 @@ func (uc *UsersCreate) SetNillablePicture(s *string) *UsersCreate {
 }
 
 // SetClaims sets the "claims" field.
-func (uc *UsersCreate) SetClaims(b []byte) *UsersCreate {
-	uc.mutation.SetClaims(b)
+func (uc *UsersCreate) SetClaims(cs credentials.EncryptString) *UsersCreate {
+	uc.mutation.SetClaims(cs)
+	return uc
+}
+
+// SetNillableClaims sets the "claims" field if the given value is not nil.
+func (uc *UsersCreate) SetNillableClaims(cs *credentials.EncryptString) *UsersCreate {
+	if cs != nil {
+		uc.SetClaims(*cs)
+	}
 	return uc
 }
 
 // SetID sets the "id" field.
 func (uc *UsersCreate) SetID(u uuid.UUID) *UsersCreate {
 	uc.mutation.SetID(u)
+	return uc
+}
+
+// SetNillableID sets the "id" field if the given value is not nil.
+func (uc *UsersCreate) SetNillableID(u *uuid.UUID) *UsersCreate {
+	if u != nil {
+		uc.SetID(*u)
+	}
 	return uc
 }
 
@@ -91,6 +152,7 @@ func (uc *UsersCreate) Mutation() *UsersMutation {
 
 // Save creates the Users in the database.
 func (uc *UsersCreate) Save(ctx context.Context) (*Users, error) {
+	uc.defaults()
 	return withHooks(ctx, uc.sqlSave, uc.mutation, uc.hooks)
 }
 
@@ -116,8 +178,34 @@ func (uc *UsersCreate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (uc *UsersCreate) defaults() {
+	if _, ok := uc.mutation.CreateTime(); !ok {
+		v := users.DefaultCreateTime()
+		uc.mutation.SetCreateTime(v)
+	}
+	if _, ok := uc.mutation.UpdateTime(); !ok {
+		v := users.DefaultUpdateTime()
+		uc.mutation.SetUpdateTime(v)
+	}
+	if _, ok := uc.mutation.EmailHash(); !ok {
+		v := users.DefaultEmailHash
+		uc.mutation.SetEmailHash(v)
+	}
+	if _, ok := uc.mutation.ID(); !ok {
+		v := users.DefaultID()
+		uc.mutation.SetID(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (uc *UsersCreate) check() error {
+	if _, ok := uc.mutation.CreateTime(); !ok {
+		return &ValidationError{Name: "create_time", err: errors.New(`ent: missing required field "Users.create_time"`)}
+	}
+	if _, ok := uc.mutation.UpdateTime(); !ok {
+		return &ValidationError{Name: "update_time", err: errors.New(`ent: missing required field "Users.update_time"`)}
+	}
 	if _, ok := uc.mutation.Subject(); !ok {
 		return &ValidationError{Name: "Subject", err: errors.New(`ent: missing required field "Users.Subject"`)}
 	}
@@ -133,15 +221,18 @@ func (uc *UsersCreate) check() error {
 		return &ValidationError{Name: "email", err: errors.New(`ent: missing required field "Users.email"`)}
 	}
 	if v, ok := uc.mutation.Email(); ok {
-		if err := users.EmailValidator(v); err != nil {
+		if err := users.EmailValidator(v.String()); err != nil {
 			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "Users.email": %w`, err)}
 		}
+	}
+	if _, ok := uc.mutation.EmailHash(); !ok {
+		return &ValidationError{Name: "email_hash", err: errors.New(`ent: missing required field "Users.email_hash"`)}
 	}
 	if _, ok := uc.mutation.EmailVerified(); !ok {
 		return &ValidationError{Name: "email_verified", err: errors.New(`ent: missing required field "Users.email_verified"`)}
 	}
 	if v, ok := uc.mutation.Username(); ok {
-		if err := users.UsernameValidator(v); err != nil {
+		if err := users.UsernameValidator(v.String()); err != nil {
 			return &ValidationError{Name: "username", err: fmt.Errorf(`ent: validator failed for field "Users.username": %w`, err)}
 		}
 	}
@@ -180,6 +271,14 @@ func (uc *UsersCreate) createSpec() (*Users, *sqlgraph.CreateSpec) {
 		_node.ID = id
 		_spec.ID.Value = &id
 	}
+	if value, ok := uc.mutation.CreateTime(); ok {
+		_spec.SetField(users.FieldCreateTime, field.TypeTime, value)
+		_node.CreateTime = value
+	}
+	if value, ok := uc.mutation.UpdateTime(); ok {
+		_spec.SetField(users.FieldUpdateTime, field.TypeTime, value)
+		_node.UpdateTime = value
+	}
 	if value, ok := uc.mutation.Subject(); ok {
 		_spec.SetField(users.FieldSubject, field.TypeString, value)
 		_node.Subject = value
@@ -191,6 +290,10 @@ func (uc *UsersCreate) createSpec() (*Users, *sqlgraph.CreateSpec) {
 	if value, ok := uc.mutation.Email(); ok {
 		_spec.SetField(users.FieldEmail, field.TypeString, value)
 		_node.Email = value
+	}
+	if value, ok := uc.mutation.EmailHash(); ok {
+		_spec.SetField(users.FieldEmailHash, field.TypeOther, value)
+		_node.EmailHash = value
 	}
 	if value, ok := uc.mutation.EmailVerified(); ok {
 		_spec.SetField(users.FieldEmailVerified, field.TypeBool, value)
@@ -225,6 +328,7 @@ func (ucb *UsersCreateBulk) Save(ctx context.Context) ([]*Users, error) {
 	for i := range ucb.builders {
 		func(i int, root context.Context) {
 			builder := ucb.builders[i]
+			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*UsersMutation)
 				if !ok {

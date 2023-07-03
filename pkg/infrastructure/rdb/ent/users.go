@@ -5,11 +5,14 @@ package ent
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
 	"github.com/n-creativesystem/short-url/pkg/infrastructure/rdb/ent/users"
+	"github.com/n-creativesystem/short-url/pkg/utils/credentials"
+	"github.com/n-creativesystem/short-url/pkg/utils/hash"
 )
 
 // Users is the model entity for the Users schema.
@@ -17,20 +20,26 @@ type Users struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID uuid.UUID `json:"id,omitempty"`
+	// CreateTime holds the value of the "create_time" field.
+	CreateTime time.Time `json:"create_time,omitempty"`
+	// UpdateTime holds the value of the "update_time" field.
+	UpdateTime time.Time `json:"update_time,omitempty"`
 	// Subject holds the value of the "Subject" field.
 	Subject string `json:"Subject,omitempty"`
 	// Profile holds the value of the "profile" field.
 	Profile string `json:"profile,omitempty"`
 	// Email holds the value of the "email" field.
-	Email string `json:"email,omitempty"`
+	Email credentials.EncryptString `json:"email,omitempty"`
+	// EmailHash holds the value of the "email_hash" field.
+	EmailHash hash.Hash `json:"email_hash,omitempty"`
 	// EmailVerified holds the value of the "email_verified" field.
 	EmailVerified bool `json:"email_verified,omitempty"`
 	// Username holds the value of the "username" field.
-	Username string `json:"username,omitempty"`
+	Username credentials.EncryptString `json:"username,omitempty"`
 	// Picture holds the value of the "picture" field.
 	Picture string `json:"picture,omitempty"`
 	// Claims holds the value of the "claims" field.
-	Claims       []byte `json:"claims,omitempty"`
+	Claims       credentials.EncryptString `json:"claims,omitempty"`
 	selectValues sql.SelectValues
 }
 
@@ -39,12 +48,16 @@ func (*Users) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case users.FieldClaims:
-			values[i] = new([]byte)
+		case users.FieldEmail, users.FieldUsername, users.FieldClaims:
+			values[i] = new(credentials.EncryptString)
+		case users.FieldEmailHash:
+			values[i] = new(hash.Hash)
 		case users.FieldEmailVerified:
 			values[i] = new(sql.NullBool)
-		case users.FieldSubject, users.FieldProfile, users.FieldEmail, users.FieldUsername, users.FieldPicture:
+		case users.FieldSubject, users.FieldProfile, users.FieldPicture:
 			values[i] = new(sql.NullString)
+		case users.FieldCreateTime, users.FieldUpdateTime:
+			values[i] = new(sql.NullTime)
 		case users.FieldID:
 			values[i] = new(uuid.UUID)
 		default:
@@ -68,6 +81,18 @@ func (u *Users) assignValues(columns []string, values []any) error {
 			} else if value != nil {
 				u.ID = *value
 			}
+		case users.FieldCreateTime:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field create_time", values[i])
+			} else if value.Valid {
+				u.CreateTime = value.Time
+			}
+		case users.FieldUpdateTime:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field update_time", values[i])
+			} else if value.Valid {
+				u.UpdateTime = value.Time
+			}
 		case users.FieldSubject:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field Subject", values[i])
@@ -81,10 +106,16 @@ func (u *Users) assignValues(columns []string, values []any) error {
 				u.Profile = value.String
 			}
 		case users.FieldEmail:
-			if value, ok := values[i].(*sql.NullString); !ok {
+			if value, ok := values[i].(*credentials.EncryptString); !ok {
 				return fmt.Errorf("unexpected type %T for field email", values[i])
-			} else if value.Valid {
-				u.Email = value.String
+			} else if value != nil {
+				u.Email = *value
+			}
+		case users.FieldEmailHash:
+			if value, ok := values[i].(*hash.Hash); !ok {
+				return fmt.Errorf("unexpected type %T for field email_hash", values[i])
+			} else if value != nil {
+				u.EmailHash = *value
 			}
 		case users.FieldEmailVerified:
 			if value, ok := values[i].(*sql.NullBool); !ok {
@@ -93,10 +124,10 @@ func (u *Users) assignValues(columns []string, values []any) error {
 				u.EmailVerified = value.Bool
 			}
 		case users.FieldUsername:
-			if value, ok := values[i].(*sql.NullString); !ok {
+			if value, ok := values[i].(*credentials.EncryptString); !ok {
 				return fmt.Errorf("unexpected type %T for field username", values[i])
-			} else if value.Valid {
-				u.Username = value.String
+			} else if value != nil {
+				u.Username = *value
 			}
 		case users.FieldPicture:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -105,7 +136,7 @@ func (u *Users) assignValues(columns []string, values []any) error {
 				u.Picture = value.String
 			}
 		case users.FieldClaims:
-			if value, ok := values[i].(*[]byte); !ok {
+			if value, ok := values[i].(*credentials.EncryptString); !ok {
 				return fmt.Errorf("unexpected type %T for field claims", values[i])
 			} else if value != nil {
 				u.Claims = *value
@@ -146,6 +177,12 @@ func (u *Users) String() string {
 	var builder strings.Builder
 	builder.WriteString("Users(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", u.ID))
+	builder.WriteString("create_time=")
+	builder.WriteString(u.CreateTime.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("update_time=")
+	builder.WriteString(u.UpdateTime.Format(time.ANSIC))
+	builder.WriteString(", ")
 	builder.WriteString("Subject=")
 	builder.WriteString(u.Subject)
 	builder.WriteString(", ")
@@ -153,13 +190,16 @@ func (u *Users) String() string {
 	builder.WriteString(u.Profile)
 	builder.WriteString(", ")
 	builder.WriteString("email=")
-	builder.WriteString(u.Email)
+	builder.WriteString(fmt.Sprintf("%v", u.Email))
+	builder.WriteString(", ")
+	builder.WriteString("email_hash=")
+	builder.WriteString(fmt.Sprintf("%v", u.EmailHash))
 	builder.WriteString(", ")
 	builder.WriteString("email_verified=")
 	builder.WriteString(fmt.Sprintf("%v", u.EmailVerified))
 	builder.WriteString(", ")
 	builder.WriteString("username=")
-	builder.WriteString(u.Username)
+	builder.WriteString(fmt.Sprintf("%v", u.Username))
 	builder.WriteString(", ")
 	builder.WriteString("picture=")
 	builder.WriteString(u.Picture)

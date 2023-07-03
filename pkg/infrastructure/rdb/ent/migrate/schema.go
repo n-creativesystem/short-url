@@ -83,9 +83,12 @@ var (
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID, Unique: true},
+		{Name: "create_time", Type: field.TypeTime},
+		{Name: "update_time", Type: field.TypeTime},
 		{Name: "subject", Type: field.TypeString, Size: 256},
 		{Name: "profile", Type: field.TypeString},
 		{Name: "email", Type: field.TypeString, Size: 256},
+		{Name: "email_hash", Type: field.TypeOther, SchemaType: map[string]string{"mysql": "text", "postgres": "text", "sqlite3": "text"}},
 		{Name: "email_verified", Type: field.TypeBool},
 		{Name: "username", Type: field.TypeString, Nullable: true, Size: 256},
 		{Name: "picture", Type: field.TypeString, Nullable: true},
@@ -100,7 +103,7 @@ var (
 			{
 				Name:    "users_email",
 				Unique:  true,
-				Columns: []*schema.Column{UsersColumns[3]},
+				Columns: []*schema.Column{UsersColumns[5]},
 			},
 		},
 	}

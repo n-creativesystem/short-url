@@ -18,6 +18,7 @@ import (
 	"github.com/n-creativesystem/short-url/pkg/infrastructure/rdb/ent/shorts"
 	"github.com/n-creativesystem/short-url/pkg/infrastructure/rdb/ent/users"
 	"github.com/n-creativesystem/short-url/pkg/utils/credentials"
+	"github.com/n-creativesystem/short-url/pkg/utils/hash"
 )
 
 const (
@@ -2016,13 +2017,16 @@ type UsersMutation struct {
 	op             Op
 	typ            string
 	id             *uuid.UUID
+	create_time    *time.Time
+	update_time    *time.Time
 	_Subject       *string
 	profile        *string
-	email          *string
+	email          *credentials.EncryptString
+	email_hash     *hash.Hash
 	email_verified *bool
-	username       *string
+	username       *credentials.EncryptString
 	picture        *string
-	claims         *[]byte
+	claims         *credentials.EncryptString
 	clearedFields  map[string]struct{}
 	done           bool
 	oldValue       func(context.Context) (*Users, error)
@@ -2133,6 +2137,78 @@ func (m *UsersMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
 	}
 }
 
+// SetCreateTime sets the "create_time" field.
+func (m *UsersMutation) SetCreateTime(t time.Time) {
+	m.create_time = &t
+}
+
+// CreateTime returns the value of the "create_time" field in the mutation.
+func (m *UsersMutation) CreateTime() (r time.Time, exists bool) {
+	v := m.create_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreateTime returns the old "create_time" field's value of the Users entity.
+// If the Users object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsersMutation) OldCreateTime(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreateTime is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreateTime requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreateTime: %w", err)
+	}
+	return oldValue.CreateTime, nil
+}
+
+// ResetCreateTime resets all changes to the "create_time" field.
+func (m *UsersMutation) ResetCreateTime() {
+	m.create_time = nil
+}
+
+// SetUpdateTime sets the "update_time" field.
+func (m *UsersMutation) SetUpdateTime(t time.Time) {
+	m.update_time = &t
+}
+
+// UpdateTime returns the value of the "update_time" field in the mutation.
+func (m *UsersMutation) UpdateTime() (r time.Time, exists bool) {
+	v := m.update_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdateTime returns the old "update_time" field's value of the Users entity.
+// If the Users object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsersMutation) OldUpdateTime(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdateTime is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdateTime requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdateTime: %w", err)
+	}
+	return oldValue.UpdateTime, nil
+}
+
+// ResetUpdateTime resets all changes to the "update_time" field.
+func (m *UsersMutation) ResetUpdateTime() {
+	m.update_time = nil
+}
+
 // SetSubject sets the "Subject" field.
 func (m *UsersMutation) SetSubject(s string) {
 	m._Subject = &s
@@ -2206,12 +2282,12 @@ func (m *UsersMutation) ResetProfile() {
 }
 
 // SetEmail sets the "email" field.
-func (m *UsersMutation) SetEmail(s string) {
-	m.email = &s
+func (m *UsersMutation) SetEmail(cs credentials.EncryptString) {
+	m.email = &cs
 }
 
 // Email returns the value of the "email" field in the mutation.
-func (m *UsersMutation) Email() (r string, exists bool) {
+func (m *UsersMutation) Email() (r credentials.EncryptString, exists bool) {
 	v := m.email
 	if v == nil {
 		return
@@ -2222,7 +2298,7 @@ func (m *UsersMutation) Email() (r string, exists bool) {
 // OldEmail returns the old "email" field's value of the Users entity.
 // If the Users object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *UsersMutation) OldEmail(ctx context.Context) (v string, err error) {
+func (m *UsersMutation) OldEmail(ctx context.Context) (v credentials.EncryptString, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldEmail is only allowed on UpdateOne operations")
 	}
@@ -2239,6 +2315,42 @@ func (m *UsersMutation) OldEmail(ctx context.Context) (v string, err error) {
 // ResetEmail resets all changes to the "email" field.
 func (m *UsersMutation) ResetEmail() {
 	m.email = nil
+}
+
+// SetEmailHash sets the "email_hash" field.
+func (m *UsersMutation) SetEmailHash(h hash.Hash) {
+	m.email_hash = &h
+}
+
+// EmailHash returns the value of the "email_hash" field in the mutation.
+func (m *UsersMutation) EmailHash() (r hash.Hash, exists bool) {
+	v := m.email_hash
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEmailHash returns the old "email_hash" field's value of the Users entity.
+// If the Users object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsersMutation) OldEmailHash(ctx context.Context) (v hash.Hash, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEmailHash is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEmailHash requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEmailHash: %w", err)
+	}
+	return oldValue.EmailHash, nil
+}
+
+// ResetEmailHash resets all changes to the "email_hash" field.
+func (m *UsersMutation) ResetEmailHash() {
+	m.email_hash = nil
 }
 
 // SetEmailVerified sets the "email_verified" field.
@@ -2278,12 +2390,12 @@ func (m *UsersMutation) ResetEmailVerified() {
 }
 
 // SetUsername sets the "username" field.
-func (m *UsersMutation) SetUsername(s string) {
-	m.username = &s
+func (m *UsersMutation) SetUsername(cs credentials.EncryptString) {
+	m.username = &cs
 }
 
 // Username returns the value of the "username" field in the mutation.
-func (m *UsersMutation) Username() (r string, exists bool) {
+func (m *UsersMutation) Username() (r credentials.EncryptString, exists bool) {
 	v := m.username
 	if v == nil {
 		return
@@ -2294,7 +2406,7 @@ func (m *UsersMutation) Username() (r string, exists bool) {
 // OldUsername returns the old "username" field's value of the Users entity.
 // If the Users object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *UsersMutation) OldUsername(ctx context.Context) (v string, err error) {
+func (m *UsersMutation) OldUsername(ctx context.Context) (v credentials.EncryptString, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldUsername is only allowed on UpdateOne operations")
 	}
@@ -2376,12 +2488,12 @@ func (m *UsersMutation) ResetPicture() {
 }
 
 // SetClaims sets the "claims" field.
-func (m *UsersMutation) SetClaims(b []byte) {
-	m.claims = &b
+func (m *UsersMutation) SetClaims(cs credentials.EncryptString) {
+	m.claims = &cs
 }
 
 // Claims returns the value of the "claims" field in the mutation.
-func (m *UsersMutation) Claims() (r []byte, exists bool) {
+func (m *UsersMutation) Claims() (r credentials.EncryptString, exists bool) {
 	v := m.claims
 	if v == nil {
 		return
@@ -2392,7 +2504,7 @@ func (m *UsersMutation) Claims() (r []byte, exists bool) {
 // OldClaims returns the old "claims" field's value of the Users entity.
 // If the Users object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *UsersMutation) OldClaims(ctx context.Context) (v []byte, err error) {
+func (m *UsersMutation) OldClaims(ctx context.Context) (v credentials.EncryptString, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldClaims is only allowed on UpdateOne operations")
 	}
@@ -2458,7 +2570,13 @@ func (m *UsersMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UsersMutation) Fields() []string {
-	fields := make([]string, 0, 7)
+	fields := make([]string, 0, 10)
+	if m.create_time != nil {
+		fields = append(fields, users.FieldCreateTime)
+	}
+	if m.update_time != nil {
+		fields = append(fields, users.FieldUpdateTime)
+	}
 	if m._Subject != nil {
 		fields = append(fields, users.FieldSubject)
 	}
@@ -2467,6 +2585,9 @@ func (m *UsersMutation) Fields() []string {
 	}
 	if m.email != nil {
 		fields = append(fields, users.FieldEmail)
+	}
+	if m.email_hash != nil {
+		fields = append(fields, users.FieldEmailHash)
 	}
 	if m.email_verified != nil {
 		fields = append(fields, users.FieldEmailVerified)
@@ -2488,12 +2609,18 @@ func (m *UsersMutation) Fields() []string {
 // schema.
 func (m *UsersMutation) Field(name string) (ent.Value, bool) {
 	switch name {
+	case users.FieldCreateTime:
+		return m.CreateTime()
+	case users.FieldUpdateTime:
+		return m.UpdateTime()
 	case users.FieldSubject:
 		return m.Subject()
 	case users.FieldProfile:
 		return m.Profile()
 	case users.FieldEmail:
 		return m.Email()
+	case users.FieldEmailHash:
+		return m.EmailHash()
 	case users.FieldEmailVerified:
 		return m.EmailVerified()
 	case users.FieldUsername:
@@ -2511,12 +2638,18 @@ func (m *UsersMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *UsersMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
+	case users.FieldCreateTime:
+		return m.OldCreateTime(ctx)
+	case users.FieldUpdateTime:
+		return m.OldUpdateTime(ctx)
 	case users.FieldSubject:
 		return m.OldSubject(ctx)
 	case users.FieldProfile:
 		return m.OldProfile(ctx)
 	case users.FieldEmail:
 		return m.OldEmail(ctx)
+	case users.FieldEmailHash:
+		return m.OldEmailHash(ctx)
 	case users.FieldEmailVerified:
 		return m.OldEmailVerified(ctx)
 	case users.FieldUsername:
@@ -2534,6 +2667,20 @@ func (m *UsersMutation) OldField(ctx context.Context, name string) (ent.Value, e
 // type.
 func (m *UsersMutation) SetField(name string, value ent.Value) error {
 	switch name {
+	case users.FieldCreateTime:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreateTime(v)
+		return nil
+	case users.FieldUpdateTime:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdateTime(v)
+		return nil
 	case users.FieldSubject:
 		v, ok := value.(string)
 		if !ok {
@@ -2549,11 +2696,18 @@ func (m *UsersMutation) SetField(name string, value ent.Value) error {
 		m.SetProfile(v)
 		return nil
 	case users.FieldEmail:
-		v, ok := value.(string)
+		v, ok := value.(credentials.EncryptString)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetEmail(v)
+		return nil
+	case users.FieldEmailHash:
+		v, ok := value.(hash.Hash)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEmailHash(v)
 		return nil
 	case users.FieldEmailVerified:
 		v, ok := value.(bool)
@@ -2563,7 +2717,7 @@ func (m *UsersMutation) SetField(name string, value ent.Value) error {
 		m.SetEmailVerified(v)
 		return nil
 	case users.FieldUsername:
-		v, ok := value.(string)
+		v, ok := value.(credentials.EncryptString)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -2577,7 +2731,7 @@ func (m *UsersMutation) SetField(name string, value ent.Value) error {
 		m.SetPicture(v)
 		return nil
 	case users.FieldClaims:
-		v, ok := value.([]byte)
+		v, ok := value.(credentials.EncryptString)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -2653,6 +2807,12 @@ func (m *UsersMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *UsersMutation) ResetField(name string) error {
 	switch name {
+	case users.FieldCreateTime:
+		m.ResetCreateTime()
+		return nil
+	case users.FieldUpdateTime:
+		m.ResetUpdateTime()
+		return nil
 	case users.FieldSubject:
 		m.ResetSubject()
 		return nil
@@ -2661,6 +2821,9 @@ func (m *UsersMutation) ResetField(name string) error {
 		return nil
 	case users.FieldEmail:
 		m.ResetEmail()
+		return nil
+	case users.FieldEmailHash:
+		m.ResetEmailHash()
 		return nil
 	case users.FieldEmailVerified:
 		m.ResetEmailVerified()

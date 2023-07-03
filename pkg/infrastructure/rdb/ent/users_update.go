@@ -6,12 +6,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/n-creativesystem/short-url/pkg/infrastructure/rdb/ent/predicate"
 	"github.com/n-creativesystem/short-url/pkg/infrastructure/rdb/ent/users"
+	"github.com/n-creativesystem/short-url/pkg/utils/credentials"
+	"github.com/n-creativesystem/short-url/pkg/utils/hash"
 )
 
 // UsersUpdate is the builder for updating Users entities.
@@ -24,6 +27,12 @@ type UsersUpdate struct {
 // Where appends a list predicates to the UsersUpdate builder.
 func (uu *UsersUpdate) Where(ps ...predicate.Users) *UsersUpdate {
 	uu.mutation.Where(ps...)
+	return uu
+}
+
+// SetUpdateTime sets the "update_time" field.
+func (uu *UsersUpdate) SetUpdateTime(t time.Time) *UsersUpdate {
+	uu.mutation.SetUpdateTime(t)
 	return uu
 }
 
@@ -40,8 +49,22 @@ func (uu *UsersUpdate) SetProfile(s string) *UsersUpdate {
 }
 
 // SetEmail sets the "email" field.
-func (uu *UsersUpdate) SetEmail(s string) *UsersUpdate {
-	uu.mutation.SetEmail(s)
+func (uu *UsersUpdate) SetEmail(cs credentials.EncryptString) *UsersUpdate {
+	uu.mutation.SetEmail(cs)
+	return uu
+}
+
+// SetEmailHash sets the "email_hash" field.
+func (uu *UsersUpdate) SetEmailHash(h hash.Hash) *UsersUpdate {
+	uu.mutation.SetEmailHash(h)
+	return uu
+}
+
+// SetNillableEmailHash sets the "email_hash" field if the given value is not nil.
+func (uu *UsersUpdate) SetNillableEmailHash(h *hash.Hash) *UsersUpdate {
+	if h != nil {
+		uu.SetEmailHash(*h)
+	}
 	return uu
 }
 
@@ -52,15 +75,15 @@ func (uu *UsersUpdate) SetEmailVerified(b bool) *UsersUpdate {
 }
 
 // SetUsername sets the "username" field.
-func (uu *UsersUpdate) SetUsername(s string) *UsersUpdate {
-	uu.mutation.SetUsername(s)
+func (uu *UsersUpdate) SetUsername(cs credentials.EncryptString) *UsersUpdate {
+	uu.mutation.SetUsername(cs)
 	return uu
 }
 
 // SetNillableUsername sets the "username" field if the given value is not nil.
-func (uu *UsersUpdate) SetNillableUsername(s *string) *UsersUpdate {
-	if s != nil {
-		uu.SetUsername(*s)
+func (uu *UsersUpdate) SetNillableUsername(cs *credentials.EncryptString) *UsersUpdate {
+	if cs != nil {
+		uu.SetUsername(*cs)
 	}
 	return uu
 }
@@ -92,8 +115,16 @@ func (uu *UsersUpdate) ClearPicture() *UsersUpdate {
 }
 
 // SetClaims sets the "claims" field.
-func (uu *UsersUpdate) SetClaims(b []byte) *UsersUpdate {
-	uu.mutation.SetClaims(b)
+func (uu *UsersUpdate) SetClaims(cs credentials.EncryptString) *UsersUpdate {
+	uu.mutation.SetClaims(cs)
+	return uu
+}
+
+// SetNillableClaims sets the "claims" field if the given value is not nil.
+func (uu *UsersUpdate) SetNillableClaims(cs *credentials.EncryptString) *UsersUpdate {
+	if cs != nil {
+		uu.SetClaims(*cs)
+	}
 	return uu
 }
 
@@ -110,6 +141,7 @@ func (uu *UsersUpdate) Mutation() *UsersMutation {
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (uu *UsersUpdate) Save(ctx context.Context) (int, error) {
+	uu.defaults()
 	return withHooks(ctx, uu.sqlSave, uu.mutation, uu.hooks)
 }
 
@@ -135,6 +167,14 @@ func (uu *UsersUpdate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (uu *UsersUpdate) defaults() {
+	if _, ok := uu.mutation.UpdateTime(); !ok {
+		v := users.UpdateDefaultUpdateTime()
+		uu.mutation.SetUpdateTime(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (uu *UsersUpdate) check() error {
 	if v, ok := uu.mutation.Subject(); ok {
@@ -143,12 +183,12 @@ func (uu *UsersUpdate) check() error {
 		}
 	}
 	if v, ok := uu.mutation.Email(); ok {
-		if err := users.EmailValidator(v); err != nil {
+		if err := users.EmailValidator(v.String()); err != nil {
 			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "Users.email": %w`, err)}
 		}
 	}
 	if v, ok := uu.mutation.Username(); ok {
-		if err := users.UsernameValidator(v); err != nil {
+		if err := users.UsernameValidator(v.String()); err != nil {
 			return &ValidationError{Name: "username", err: fmt.Errorf(`ent: validator failed for field "Users.username": %w`, err)}
 		}
 	}
@@ -167,6 +207,9 @@ func (uu *UsersUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
+	if value, ok := uu.mutation.UpdateTime(); ok {
+		_spec.SetField(users.FieldUpdateTime, field.TypeTime, value)
+	}
 	if value, ok := uu.mutation.Subject(); ok {
 		_spec.SetField(users.FieldSubject, field.TypeString, value)
 	}
@@ -175,6 +218,9 @@ func (uu *UsersUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := uu.mutation.Email(); ok {
 		_spec.SetField(users.FieldEmail, field.TypeString, value)
+	}
+	if value, ok := uu.mutation.EmailHash(); ok {
+		_spec.SetField(users.FieldEmailHash, field.TypeOther, value)
 	}
 	if value, ok := uu.mutation.EmailVerified(); ok {
 		_spec.SetField(users.FieldEmailVerified, field.TypeBool, value)
@@ -217,6 +263,12 @@ type UsersUpdateOne struct {
 	mutation *UsersMutation
 }
 
+// SetUpdateTime sets the "update_time" field.
+func (uuo *UsersUpdateOne) SetUpdateTime(t time.Time) *UsersUpdateOne {
+	uuo.mutation.SetUpdateTime(t)
+	return uuo
+}
+
 // SetSubject sets the "Subject" field.
 func (uuo *UsersUpdateOne) SetSubject(s string) *UsersUpdateOne {
 	uuo.mutation.SetSubject(s)
@@ -230,8 +282,22 @@ func (uuo *UsersUpdateOne) SetProfile(s string) *UsersUpdateOne {
 }
 
 // SetEmail sets the "email" field.
-func (uuo *UsersUpdateOne) SetEmail(s string) *UsersUpdateOne {
-	uuo.mutation.SetEmail(s)
+func (uuo *UsersUpdateOne) SetEmail(cs credentials.EncryptString) *UsersUpdateOne {
+	uuo.mutation.SetEmail(cs)
+	return uuo
+}
+
+// SetEmailHash sets the "email_hash" field.
+func (uuo *UsersUpdateOne) SetEmailHash(h hash.Hash) *UsersUpdateOne {
+	uuo.mutation.SetEmailHash(h)
+	return uuo
+}
+
+// SetNillableEmailHash sets the "email_hash" field if the given value is not nil.
+func (uuo *UsersUpdateOne) SetNillableEmailHash(h *hash.Hash) *UsersUpdateOne {
+	if h != nil {
+		uuo.SetEmailHash(*h)
+	}
 	return uuo
 }
 
@@ -242,15 +308,15 @@ func (uuo *UsersUpdateOne) SetEmailVerified(b bool) *UsersUpdateOne {
 }
 
 // SetUsername sets the "username" field.
-func (uuo *UsersUpdateOne) SetUsername(s string) *UsersUpdateOne {
-	uuo.mutation.SetUsername(s)
+func (uuo *UsersUpdateOne) SetUsername(cs credentials.EncryptString) *UsersUpdateOne {
+	uuo.mutation.SetUsername(cs)
 	return uuo
 }
 
 // SetNillableUsername sets the "username" field if the given value is not nil.
-func (uuo *UsersUpdateOne) SetNillableUsername(s *string) *UsersUpdateOne {
-	if s != nil {
-		uuo.SetUsername(*s)
+func (uuo *UsersUpdateOne) SetNillableUsername(cs *credentials.EncryptString) *UsersUpdateOne {
+	if cs != nil {
+		uuo.SetUsername(*cs)
 	}
 	return uuo
 }
@@ -282,8 +348,16 @@ func (uuo *UsersUpdateOne) ClearPicture() *UsersUpdateOne {
 }
 
 // SetClaims sets the "claims" field.
-func (uuo *UsersUpdateOne) SetClaims(b []byte) *UsersUpdateOne {
-	uuo.mutation.SetClaims(b)
+func (uuo *UsersUpdateOne) SetClaims(cs credentials.EncryptString) *UsersUpdateOne {
+	uuo.mutation.SetClaims(cs)
+	return uuo
+}
+
+// SetNillableClaims sets the "claims" field if the given value is not nil.
+func (uuo *UsersUpdateOne) SetNillableClaims(cs *credentials.EncryptString) *UsersUpdateOne {
+	if cs != nil {
+		uuo.SetClaims(*cs)
+	}
 	return uuo
 }
 
@@ -313,6 +387,7 @@ func (uuo *UsersUpdateOne) Select(field string, fields ...string) *UsersUpdateOn
 
 // Save executes the query and returns the updated Users entity.
 func (uuo *UsersUpdateOne) Save(ctx context.Context) (*Users, error) {
+	uuo.defaults()
 	return withHooks(ctx, uuo.sqlSave, uuo.mutation, uuo.hooks)
 }
 
@@ -338,6 +413,14 @@ func (uuo *UsersUpdateOne) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (uuo *UsersUpdateOne) defaults() {
+	if _, ok := uuo.mutation.UpdateTime(); !ok {
+		v := users.UpdateDefaultUpdateTime()
+		uuo.mutation.SetUpdateTime(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (uuo *UsersUpdateOne) check() error {
 	if v, ok := uuo.mutation.Subject(); ok {
@@ -346,12 +429,12 @@ func (uuo *UsersUpdateOne) check() error {
 		}
 	}
 	if v, ok := uuo.mutation.Email(); ok {
-		if err := users.EmailValidator(v); err != nil {
+		if err := users.EmailValidator(v.String()); err != nil {
 			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "Users.email": %w`, err)}
 		}
 	}
 	if v, ok := uuo.mutation.Username(); ok {
-		if err := users.UsernameValidator(v); err != nil {
+		if err := users.UsernameValidator(v.String()); err != nil {
 			return &ValidationError{Name: "username", err: fmt.Errorf(`ent: validator failed for field "Users.username": %w`, err)}
 		}
 	}
@@ -387,6 +470,9 @@ func (uuo *UsersUpdateOne) sqlSave(ctx context.Context) (_node *Users, err error
 			}
 		}
 	}
+	if value, ok := uuo.mutation.UpdateTime(); ok {
+		_spec.SetField(users.FieldUpdateTime, field.TypeTime, value)
+	}
 	if value, ok := uuo.mutation.Subject(); ok {
 		_spec.SetField(users.FieldSubject, field.TypeString, value)
 	}
@@ -395,6 +481,9 @@ func (uuo *UsersUpdateOne) sqlSave(ctx context.Context) (_node *Users, err error
 	}
 	if value, ok := uuo.mutation.Email(); ok {
 		_spec.SetField(users.FieldEmail, field.TypeString, value)
+	}
+	if value, ok := uuo.mutation.EmailHash(); ok {
+		_spec.SetField(users.FieldEmailHash, field.TypeOther, value)
 	}
 	if value, ok := uuo.mutation.EmailVerified(); ok {
 		_spec.SetField(users.FieldEmailVerified, field.TypeBool, value)

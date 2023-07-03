@@ -91,4 +91,6 @@ type WebUI struct {
 	CSRF             Csrf
 	Store            scs.Store
 	Providers        map[string]*social.Config
+	Domain           string
+	RedirectURI      string
 }

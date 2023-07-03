@@ -7,6 +7,7 @@ import (
 	"github.com/n-creativesystem/short-url/pkg/infrastructure/rdb"
 	"github.com/n-creativesystem/short-url/pkg/infrastructure/rdb/oauth2"
 	short_infra "github.com/n-creativesystem/short-url/pkg/infrastructure/rdb/short"
+	"github.com/n-creativesystem/short-url/pkg/infrastructure/rdb/user"
 	"github.com/n-creativesystem/short-url/pkg/interfaces/router"
 	oauth2client "github.com/n-creativesystem/short-url/pkg/service/oauth2_client"
 	"github.com/n-creativesystem/short-url/pkg/utils/logging"
@@ -24,6 +25,7 @@ func getRDBInput(ctx context.Context) (*router.RouterInput, func(), error) {
 	if err != nil {
 		return nil, nil, err
 	}
+	socialRepository := user.NewRepository()
 	shortRepository := short_infra.NewRepository()
 	oauth2ClientRepository := oauth2.NewOAuthClient()
 	oauth2ClientService := oauth2client.NewService(oauth2ClientRepository, beginner)
@@ -34,6 +36,7 @@ func getRDBInput(ctx context.Context) (*router.RouterInput, func(), error) {
 		oauth2Store,
 		oauth2ClientService,
 		beginner,
+		socialRepository,
 	)
 	return input, func() { _ = db.Close() }, nil
 }

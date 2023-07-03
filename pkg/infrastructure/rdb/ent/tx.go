@@ -18,6 +18,8 @@ type Tx struct {
 	OAuth2Token *OAuth2TokenClient
 	// Shorts is the client for interacting with the Shorts builders.
 	Shorts *ShortsClient
+	// Users is the client for interacting with the Users builders.
+	Users *UsersClient
 
 	// lazily loaded.
 	client     *Client
@@ -152,6 +154,7 @@ func (tx *Tx) init() {
 	tx.OAuth2Client = NewOAuth2ClientClient(tx.config)
 	tx.OAuth2Token = NewOAuth2TokenClient(tx.config)
 	tx.Shorts = NewShortsClient(tx.config)
+	tx.Users = NewUsersClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

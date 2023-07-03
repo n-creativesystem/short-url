@@ -8,6 +8,7 @@ import (
 	"github.com/go-oauth2/oauth2/v4"
 	"github.com/n-creativesystem/short-url/pkg/domain/config"
 	domain_short "github.com/n-creativesystem/short-url/pkg/domain/short"
+	"github.com/n-creativesystem/short-url/pkg/domain/social"
 	"github.com/n-creativesystem/short-url/pkg/domain/tx"
 	"github.com/n-creativesystem/short-url/pkg/infrastructure/interfaces"
 	"github.com/n-creativesystem/short-url/pkg/interfaces/middleware"
@@ -21,6 +22,7 @@ type RouterInput struct {
 	ShortRepository     domain_short.Repository
 	Beginner            tx.ContextBeginner
 	AppConfig           *config.Application
+	SocialRepo          social.UserRepository
 
 	SessionStore scs.Store
 }
@@ -30,12 +32,14 @@ func NewRouterInput(
 	oauth2Store oauth2.TokenStore,
 	oauth2ClientService oauth2client.Service,
 	beginner tx.ContextBeginner,
+	socialRepo social.UserRepository,
 ) *RouterInput {
 	return &RouterInput{
 		ShortRepository:     shortRepository,
 		OAuth2Token:         oauth2Store,
 		OAuth2ClientService: oauth2ClientService,
 		Beginner:            beginner,
+		SocialRepo:          socialRepo,
 	}
 }
 

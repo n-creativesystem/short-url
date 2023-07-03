@@ -2,7 +2,6 @@ package handler
 
 import (
 	"context"
-	"crypto/subtle"
 	"errors"
 	"fmt"
 	"net/http"
@@ -13,12 +12,14 @@ import (
 	"github.com/n-creativesystem/short-url/pkg/domain/social"
 	"github.com/n-creativesystem/short-url/pkg/interfaces/middleware/session"
 	"github.com/n-creativesystem/short-url/pkg/interfaces/response"
+	"github.com/n-creativesystem/short-url/pkg/utils/compare"
 	"github.com/n-creativesystem/short-url/pkg/utils/logging"
 	"golang.org/x/oauth2"
 )
 
 type Social struct {
-	cfg *social.Config
+	cfg        *social.Config
+	socialRepo social.UserRepository
 }
 
 func (s *Social) Authorization(ctx context.Context, socialId string) string {
@@ -34,17 +35,11 @@ func (s *Social) Authorization(ctx context.Context, socialId string) string {
 type CallbackResult struct {
 	Code int
 	Err  error
-	User *social.User
 }
 
 func (c *CallbackResult) setError(code int, err error) *CallbackResult {
 	c.Code = code
 	c.Err = err
-	return c
-}
-
-func (c *CallbackResult) setUser(u *oidc.UserInfo) *CallbackResult {
-	c.User = &social.User{UserInfo: u}
 	return c
 }
 
@@ -55,7 +50,7 @@ func (s *Social) Callback(r *http.Request) *CallbackResult {
 	state := r.URL.Query().Get("state")
 	sessionState := sm.PopString(ctx, "state")
 	sessionNonce := sm.PopString(ctx, "nonce")
-	if subtle.ConstantTimeCompare([]byte(state), []byte(sessionState)) != 1 {
+	if !compare.ConstantTimeCompare(state, sessionState) {
 		return result.setError(http.StatusBadRequest, errors.New("state validation failed"))
 	}
 	code := r.URL.Query().Get("code")
@@ -79,7 +74,7 @@ func (s *Social) Callback(r *http.Request) *CallbackResult {
 		logging.Default().Errorf("Verify id_token: %v", err)
 		return result.setError(http.StatusInternalServerError, err)
 	}
-	if subtle.ConstantTimeCompare([]byte(idToken.Nonce), []byte(sessionNonce)) != 1 {
+	if !compare.ConstantTimeCompare(idToken.Nonce, sessionNonce) {
 		err := errors.New("nonce validation failed")
 		logging.Default().Error(err)
 		return result.setError(http.StatusInternalServerError, err)
@@ -89,25 +84,38 @@ func (s *Social) Callback(r *http.Request) *CallbackResult {
 		logging.Default().Error(err)
 		return result.setError(http.StatusInternalServerError, errors.New("Failed to request of user info"))
 	}
-	result = result.setUser(u)
-	result.User.ParseClaims(s.cfg.ClaimKeys)
-
-	sm.Put(ctx, "loginUser", string(result.User.Encode()))
+	user := &social.User{UserInfo: u}
+	if err := user.ParseClaims(s.cfg.ClaimKeys); err != nil {
+		logging.Context(ctx).Warn(err)
+	}
+	user, err = s.socialRepo.Register(ctx, user)
+	if err != nil {
+		logging.Context(ctx).Error(err)
+		return result.setError(http.StatusInternalServerError, errors.New("Failed to register user"))
+	}
+	sm.Put(ctx, "loginUser", string(user.Encode()))
 	return result
 }
 
 type SocialHandler struct {
-	providers        map[string]*social.Config
+	providers        map[string]Social
 	LoginSuccessURL  string
 	LogoutSuccessURL string
 }
 
-func NewSocialHandler(config map[string]*social.Config, loginSuccessURL, logoutSuccessURL string) *SocialHandler {
+func NewSocialHandler(config map[string]*social.Config, loginSuccessURL, logoutSuccessURL string, socialRepo social.UserRepository) *SocialHandler {
 	if loginSuccessURL == "" {
 		loginSuccessURL = "/"
 	}
+	p := map[string]Social{}
+	for key, cfg := range config {
+		p[key] = Social{
+			cfg:        cfg,
+			socialRepo: socialRepo,
+		}
+	}
 	return &SocialHandler{
-		providers:        config,
+		providers:        p,
 		LoginSuccessURL:  loginSuccessURL,
 		LogoutSuccessURL: logoutSuccessURL,
 	}
@@ -124,10 +132,7 @@ func NewSocialHandler(config map[string]*social.Config, loginSuccessURL, logoutS
 // @Router /auth/{provider}/authorize [get]
 // @ID SocialLoginAuthorize
 func (h *SocialHandler) Authorization(socialId string) gin.HandlerFunc {
-	config := h.providers[socialId]
-	social := Social{
-		cfg: config,
-	}
+	social := h.providers[socialId]
 	return func(c *gin.Context) {
 		ctx := c.Request.Context()
 		authURL := social.Authorization(ctx, socialId)
@@ -149,10 +154,7 @@ func (h *SocialHandler) Authorization(socialId string) gin.HandlerFunc {
 // @Router /auth/{provider}/callback [get]
 // @ID SocialLoginCallback
 func (h *SocialHandler) Callback(socialId string) gin.HandlerFunc {
-	config := h.providers[socialId]
-	social := Social{
-		cfg: config,
-	}
+	social := h.providers[socialId]
 	return func(c *gin.Context) {
 		result := social.Callback(c.Request)
 		if result.Err != nil {

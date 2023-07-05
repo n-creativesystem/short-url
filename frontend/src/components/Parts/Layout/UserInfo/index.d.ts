@@ -1,16 +1,16 @@
 export type UserInfo = {
-  sub: string;
-  profile: string;
-  email: string;
-  emailVerified: boolean;
-  userName: string;
-  picture: string;
+  email?: string | undefined;
+  email_verified?: boolean | undefined;
+  picture?: string | undefined;
+  profile?: string | undefined;
+  sub?: string | undefined;
+  username?: string | undefined;
 };
 
 export type UserInfoContext = {
   loading: boolean;
   error?: Error;
-  userInfo?: BaseUserInfo;
+  userInfo?: UserInfo;
 };
 
 export type FetchResponse<T> = {

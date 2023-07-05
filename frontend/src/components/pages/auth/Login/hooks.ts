@@ -1,5 +1,5 @@
 import { errorModalVar } from '@/components/hooks/Context';
-import { useFetchByOpenAPI } from '@/components/hooks/useFetchOpenAPI';
+import { openApiClient } from '@/components/hooks/useFetch';
 import { useEffect, useState } from 'react';
 import { GetOAuthButton } from './index.d';
 
@@ -8,33 +8,33 @@ export const useAuthLogin = (label: string) => async () => {
 };
 
 export const useEnabledAuth: () => GetOAuthButton = (): GetOAuthButton => {
-  const { data, isLoading, error, hasError } = useFetchByOpenAPI<
-    '/auth/enabled',
-    'get'
-  >({
-    url: '/auth/enabled',
-    method: 'get',
-  });
   const [state, setState] = useState<GetOAuthButton>({
     buttons: [],
-    isLoading: isLoading,
+    isLoading: true,
   });
 
   useEffect(() => {
-    if (hasError) {
-      console.error(error);
-      errorModalVar({
-        open: true,
-        title: 'ログイン',
-        description: 'ログインボタン取得に失敗しました。',
-      });
-      setState((prev) => ({ ...prev, isLoading: false }));
-    } else {
-      setState({
-        buttons: data?.socials || [],
-        isLoading: isLoading,
-      });
-    }
-  }, [data, isLoading, error, hasError]);
+    const innerValue: GetOAuthButton = {
+      buttons: [],
+      isLoading: true,
+    };
+    const fetch = async () => {
+      try {
+        const data = await openApiClient.auth.enabled.$get();
+        innerValue.buttons = data?.socials ?? [];
+      } catch (error) {
+        console.error(error);
+        errorModalVar({
+          open: true,
+          title: 'ログイン',
+          description: 'ログインボタン取得に失敗しました。',
+        });
+      } finally {
+        innerValue.isLoading = false;
+      }
+      setState(innerValue);
+    };
+    fetch();
+  }, []);
   return state;
 };

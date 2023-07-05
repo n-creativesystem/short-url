@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any*/
 
+import openapi from '@/openapi/$api';
+import aspida from '@aspida/axios';
 import axios, { AxiosError, AxiosResponse, Method } from 'axios';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
@@ -36,6 +38,8 @@ export const axiosInstance = axios.create({
   },
   withCredentials: true,
 });
+
+export const openApiClient = openapi(aspida(axiosInstance));
 
 type FetchResponse<T> = {
   data?: T | null;

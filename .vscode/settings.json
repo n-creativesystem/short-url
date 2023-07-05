@@ -34,10 +34,12 @@
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "cSpell.words": [
+    "aspida",
     "ciphertext",
     "envconfig",
     "filekms",
     "Lookuper",
+    "openapi",
     "qrcode",
     "Secretbox",
     "sharedtest",

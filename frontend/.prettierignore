@@ -1,7 +1,6 @@
 *.md
 *.mdx
 package.json
-yarn.lock
+package-lock.json
 **/node_modules
-scripts/genAntdCss.tsx
-src/utils/$path.ts
+frontend/src/openapi

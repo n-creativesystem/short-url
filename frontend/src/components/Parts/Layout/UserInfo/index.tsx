@@ -1,4 +1,4 @@
-import { useFetchByOpenAPI } from '@/components/hooks/useFetchOpenAPI';
+import { openApiClient } from '@/components/hooks/useFetch';
 import {
   FC,
   ReactNode,
@@ -28,28 +28,27 @@ type Props = {
 
 const UserInfoProvider: FC<Props> = ({ children }) => {
   const [value, setValue] = useState<TUserInfoContext>({ loading: true });
-  const { data, hasError, isLoading, error } = useFetchByOpenAPI<
-    '/auth/userinfo',
-    'get'
-  >({
-    url: '/auth/userinfo',
-    method: 'get',
-  });
   useEffect(() => {
-    const value: TUserInfoContext = {
-      loading: isLoading,
+    const innerValue: TUserInfoContext = {
+      loading: true,
     };
-    if (hasError || error) {
-      value.error = error;
-    }
-    if (data) {
-      value.userInfo = {
-        ...data,
-        emailVerified: data.email_verified,
-      };
-    }
-    setValue(value);
-  }, [data, hasError, isLoading]);
+    const fetch = async () => {
+      try {
+        const data = await openApiClient.auth.userinfo.$get();
+        if (data) {
+          innerValue.userInfo = {
+            ...data,
+          };
+        }
+      } catch (error) {
+        innerValue.error = error as Error;
+      } finally {
+        innerValue.loading = false;
+      }
+      setValue(innerValue);
+    };
+    fetch();
+  }, []);
   return (
     <UserInfoContext.Provider value={value}>
       {children}

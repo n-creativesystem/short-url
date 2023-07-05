@@ -23,9 +23,15 @@
     "paths": {
       "@/*": ["./src/*"],
       "@t/*": ["./src/types/*"],
-      "@gql/*": ["./src/graphql/*"]
+      "@gql/*": ["./src/graphql/*"],
+      "@openapi/*": ["./src/openapi/*"]
     },
-    "typeRoots": ["node_modules/@types", "src/types", "src/types/graphql"],
+    "typeRoots": [
+      "node_modules/@types",
+      "src/types",
+      "src/types/graphql",
+      "./src/openapi/@types"
+    ],
     "noErrorTruncation": true,
     "types": ["vitest/globals"]
   },

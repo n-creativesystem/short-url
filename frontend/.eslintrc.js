@@ -4,11 +4,9 @@ module.exports = {
     es2021: true,
   },
   extends: [
-    // @see https://github.com/vercel/next.js/blob/canary/packages/eslint-config-next/index.js
     'eslint:recommended',
     'plugin:@typescript-eslint/recommended',
     'plugin:react-hooks/recommended',
-    'plugin:@typescript-eslint/recommended',
     'plugin:prettier/recommended',
   ],
   plugins: ['@typescript-eslint', 'react-refresh'],
@@ -50,8 +48,6 @@ module.exports = {
     ],
     // 厳密等価演算子を強制
     eqeqeq: 2,
-    // imgタグの利用を許可する
-    '@next/next/no-img-element': 'off',
     'no-console': 'warn',
     // e.g. prop={'foo'} -> prop='foo'
     'react/jsx-curly-brace-presence': 'warn',

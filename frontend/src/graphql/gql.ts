@@ -21,9 +21,7 @@ const documents = {
     types.UpdateOAuthApplicationDocument,
   'query OAuthApplications($token: String) {\n  oauthApplications(token: $token) {\n    result {\n      id\n      name\n      secret\n      domain\n    }\n    _metadata {\n      prev\n      self\n      next\n      count\n    }\n  }\n}\n\nquery OAuthApplication($id: String!) {\n  oauthApplication(id: $id) {\n    id\n    name\n    secret\n    domain\n  }\n}':
     types.OAuthApplicationsDocument,
-  'fragment result on Url {\n  key\n  url\n  created_at\n  updated_at\n}':
-    types.ResultFragmentDoc,
-  'query urls {\n  urls {\n    result {\n      ...result\n    }\n  }\n}\n\nmutation updateUrl($key: String!, $url: URL!) {\n  updateURL(key: $key, url: $url) {\n    key\n    url\n    created_at\n    updated_at\n  }\n}\n\nmutation deleteURL($key: String!) {\n  deleteURL(key: $key)\n}':
+  'query urls {\n  urls {\n    result {\n      key\n      url\n      created_at\n      updated_at\n    }\n  }\n}\n\nmutation updateUrl($key: String!, $url: URL!) {\n  updateURL(key: $key, url: $url) {\n    key\n    url\n    created_at\n    updated_at\n  }\n}\n\nmutation deleteURL($key: String!) {\n  deleteURL(key: $key)\n}':
     types.UrlsDocument,
 };
 
@@ -69,14 +67,8 @@ export function graphql(
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(
-  source: 'fragment result on Url {\n  key\n  url\n  created_at\n  updated_at\n}'
-): (typeof documents)['fragment result on Url {\n  key\n  url\n  created_at\n  updated_at\n}'];
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
-export function graphql(
-  source: 'query urls {\n  urls {\n    result {\n      ...result\n    }\n  }\n}\n\nmutation updateUrl($key: String!, $url: URL!) {\n  updateURL(key: $key, url: $url) {\n    key\n    url\n    created_at\n    updated_at\n  }\n}\n\nmutation deleteURL($key: String!) {\n  deleteURL(key: $key)\n}'
-): (typeof documents)['query urls {\n  urls {\n    result {\n      ...result\n    }\n  }\n}\n\nmutation updateUrl($key: String!, $url: URL!) {\n  updateURL(key: $key, url: $url) {\n    key\n    url\n    created_at\n    updated_at\n  }\n}\n\nmutation deleteURL($key: String!) {\n  deleteURL(key: $key)\n}'];
+  source: 'query urls {\n  urls {\n    result {\n      key\n      url\n      created_at\n      updated_at\n    }\n  }\n}\n\nmutation updateUrl($key: String!, $url: URL!) {\n  updateURL(key: $key, url: $url) {\n    key\n    url\n    created_at\n    updated_at\n  }\n}\n\nmutation deleteURL($key: String!) {\n  deleteURL(key: $key)\n}'
+): (typeof documents)['query urls {\n  urls {\n    result {\n      key\n      url\n      created_at\n      updated_at\n    }\n  }\n}\n\nmutation updateUrl($key: String!, $url: URL!) {\n  updateURL(key: $key, url: $url) {\n    key\n    url\n    created_at\n    updated_at\n  }\n}\n\nmutation deleteURL($key: String!) {\n  deleteURL(key: $key)\n}'];
 
 export function graphql(source: string) {
   return (documents as any)[source] ?? {};

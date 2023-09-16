@@ -1,13 +1,17 @@
 FROM node:18.17.1-bullseye AS frontend
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
+
 WORKDIR /workspace
 
-COPY frontend/yarn.lock frontend/package.json ./
+COPY frontend/pnpm-lock.yaml frontend/package.json ./
 
-RUN yarn --frozen-lockfile
+RUN pnpm i --frozen-lockfile
 
 COPY frontend ./
 
-RUN yarn build
+RUN pnpm build
 
 FROM --platform=$BUILDPLATFORM golang:1.20.6-bullseye as backend
 

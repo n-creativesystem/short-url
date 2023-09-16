@@ -1,9 +1,9 @@
 import { RegisterButton } from '@/components/Parts/Table';
 import { FC, memo } from 'react';
 import { Table } from './Table';
-import { ResultFragment } from './graphql/fragment';
+import { Url } from './graphql';
 type Props = {
-  data: Array<ResultFragment>;
+  data: Array<Url>;
   registerHandler: () => void;
   deleteHandler: (key: string) => () => Promise<void>;
 };

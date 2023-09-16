@@ -1,2 +1,5 @@
 scripts/genAntdCss.tsx
 src/utils/$path.ts
+.eslintrc.js
+src/**/graphql/**
+src/openapi

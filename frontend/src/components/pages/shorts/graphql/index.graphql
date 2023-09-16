@@ -1,7 +1,10 @@
 query urls {
   urls {
     result {
-      ...result
+      key
+      url
+      created_at
+      updated_at
     }
   }
 }

@@ -13,15 +13,6 @@ const UserInfoContext = createContext<TUserInfoContext | null | undefined>(
   undefined
 );
 
-type responseUserInfo = {
-  sub: string;
-  profile: string;
-  email: string;
-  email_verified: boolean;
-  userName: string;
-  picture: string;
-};
-
 type Props = {
   children: ReactNode;
 };

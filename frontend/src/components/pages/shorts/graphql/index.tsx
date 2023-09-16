@@ -1,7 +1,6 @@
 import * as Types from '../../../../types/graphql';
 
 import { gql } from '@apollo/client';
-import { ResultFragmentDoc } from './fragment';
 import * as Apollo from '@apollo/client';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
@@ -167,11 +166,13 @@ export const UrlsDocument = gql`
   query urls {
     urls {
       result {
-        ...result
+        key
+        url
+        created_at
+        updated_at
       }
     }
   }
-  ${ResultFragmentDoc}
 `;
 
 /**

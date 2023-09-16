@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
+    "preinstall": "npx only-allow pnpm",
     "dev": "vite",
     "build": "tsc && vite build",
     "build:dev": "rm -rf \"../pkg/infrastructure/router/static/app\" && IS_DEV=true IS_BUILD=true yarn build && mv dist \"../pkg/infrastructure/router/static/app\"",

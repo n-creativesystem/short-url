@@ -68,14 +68,9 @@ RUN groupadd -r -g $GROUP_ID ${GROUP_NAME} \
 COPY --from=node /usr/local/include/ /usr/local/include/
 COPY --from=node /usr/local/lib/ /usr/local/lib/
 COPY --from=node /usr/local/bin/ /usr/local/bin/
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack disable && corepack enable
-
-RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor > /usr/share/keyrings/yarn-archive-keyring.gpg \
-    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/yarn-archive-keyring.gpg] https://dl.yarnpkg.com/debian/ stable main" > /etc/apt/sources.list.d/yarn.list \
-    && apt-get update \
-    && apt-get -y install --no-install-recommends yarn \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
 
 USER $USER_NAME
 

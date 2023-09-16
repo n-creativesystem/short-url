@@ -48,7 +48,7 @@ services:
     ports:
       - 15432:5432
   redis:
-    image: redis:7.0.12-alpine
+    image: redis:7.2.1-alpine
     volumes:
       - redis:/data
   localstack:

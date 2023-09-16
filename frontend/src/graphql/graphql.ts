@@ -210,25 +210,19 @@ export type OAuthApplicationQuery = {
   };
 };
 
-export type ResultFragment = {
-  __typename?: 'Url';
-  key: string;
-  url: any;
-  created_at: any;
-  updated_at: any;
-} & { ' $fragmentName'?: 'ResultFragment' };
-
 export type UrlsQueryVariables = Exact<{ [key: string]: never }>;
 
 export type UrlsQuery = {
   __typename?: 'Query';
   urls: {
     __typename?: 'UrlType';
-    result: Array<
-      { __typename?: 'Url' } & {
-        ' $fragmentRefs'?: { ResultFragment: ResultFragment };
-      }
-    >;
+    result: Array<{
+      __typename?: 'Url';
+      key: string;
+      url: any;
+      created_at: any;
+      updated_at: any;
+    }>;
   };
 };
 
@@ -254,28 +248,6 @@ export type DeleteUrlMutationVariables = Exact<{
 
 export type DeleteUrlMutation = { __typename?: 'Mutation'; deleteURL: boolean };
 
-export const ResultFragmentDoc = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'result' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'Url' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'key' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'url' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'created_at' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'updated_at' } },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<ResultFragment, unknown>;
 export const CreateOAuthApplicationDocument = {
   kind: 'Document',
   definitions: [
@@ -609,9 +581,15 @@ export const UrlsDocument = {
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'key' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'url' } },
                       {
-                        kind: 'FragmentSpread',
-                        name: { kind: 'Name', value: 'result' },
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'created_at' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'updated_at' },
                       },
                     ],
                   },
@@ -619,23 +597,6 @@ export const UrlsDocument = {
               ],
             },
           },
-        ],
-      },
-    },
-    {
-      kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'result' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'Url' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'key' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'url' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'created_at' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'updated_at' } },
         ],
       },
     },

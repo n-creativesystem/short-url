@@ -1,9 +1,9 @@
 import { Link } from '@/components/Parts/Navigation';
 import { DataTable, GridColDef } from '@/components/Parts/Table';
-import { ResultFragment } from '@/components/pages/shorts/graphql/fragment';
 import { FC, memo } from 'react';
+import { Url } from '../graphql';
 
-type DataType = Omit<ResultFragment, '__typename'>;
+type DataType = Omit<Url, '__typename'>;
 
 type Props = {
   data: DataType[];

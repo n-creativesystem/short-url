@@ -30,12 +30,13 @@
       "node_modules/@types",
       "src/types",
       "src/types/graphql",
-      "./src/openapi/@types"
+      "./src/openapi/@types",
+      "node_modules"
     ],
     "noErrorTruncation": true,
-    "types": ["vitest/globals"]
+    "types": ["vitest/globals.d.ts"]
   },
-  "include": ["src"],
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
   "references": [{ "path": "./tsconfig.node.json" }],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "src/**/graphql/**/*.ts", "src/openapi/**/*.ts"]
 }

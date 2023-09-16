@@ -49,18 +49,18 @@ module.exports = {
     // 厳密等価演算子を強制
     eqeqeq: 2,
     'no-console': 'warn',
-    // e.g. prop={'foo'} -> prop='foo'
-    'react/jsx-curly-brace-presence': 'warn',
-    // e.g. opened={true} -> opened
-    'react/jsx-boolean-value': 'warn',
-    // e.g. <Foo></Foo> -> <Foo />
-    'react/self-closing-comp': [
-      'warn',
-      {
-        component: true,
-        html: true,
-      },
-    ],
+    // // e.g. prop={'foo'} -> prop='foo'
+    // 'react/jsx-curly-brace-presence': 'warn',
+    // // e.g. opened={true} -> opened
+    // 'react/jsx-boolean-value': 'warn',
+    // // e.g. <Foo></Foo> -> <Foo />
+    // 'react/self-closing-comp': [
+    //   'warn',
+    //   {
+    //     component: true,
+    //     html: true,
+    //   },
+    // ],
     'react-refresh/only-export-components': 'warn',
   },
   overrides: [

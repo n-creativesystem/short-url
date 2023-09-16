@@ -69,7 +69,6 @@ type MenuProps = {
 };
 
 const MenuDrawer: FC<MenuProps> = ({ children }) => {
-  const pathname = usePathname();
   return (
     <Drawer
       sx={{

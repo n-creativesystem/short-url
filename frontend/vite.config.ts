@@ -2,8 +2,6 @@ import react from '@vitejs/plugin-react';
 import { fileURLToPath, URL } from 'node:url';
 import { defineConfig } from 'vite';
 
-const { IS_DEV = false, IS_BUILD = false } = process?.env;
-
 // https://vitejs.dev/config/
 const config = defineConfig({
   plugins: [react()],

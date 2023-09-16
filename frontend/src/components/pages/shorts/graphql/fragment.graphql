@@ -1,6 +1,0 @@
-fragment result on Url {
-  key
-  url
-  created_at
-  updated_at
-}

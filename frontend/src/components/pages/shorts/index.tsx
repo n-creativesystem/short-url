@@ -7,7 +7,7 @@ import { useDeleteHandler } from './hooks';
 
 export type Props = {};
 
-export const Container: FC<Props> = memo(({}) => {
+export const Container: FC<Props> = memo(() => {
   const router = useRouter();
   const { data, loading } = useUrlsQuery({});
   const onRegisterClick = useCallback(() => {

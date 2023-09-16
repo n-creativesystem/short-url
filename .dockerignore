@@ -12,3 +12,4 @@ db/*
 !db/**/*.go
 schema
 tools
+.pnpm-store

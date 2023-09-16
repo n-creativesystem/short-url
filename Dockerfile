@@ -1,4 +1,4 @@
-FROM node:18.16.1-bullseye AS frontend
+FROM node:18.17.1-bullseye AS frontend
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable

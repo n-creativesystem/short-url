@@ -22,34 +22,34 @@
       "matchManagers": ["npm"],
       "matchDepTypes": ["devDependencies"],
       "matchUpdateTypes": ["minor"],
-      "addLabels": ["yarn", "minor", "dev only"],
-      "groupName": "yarn dev dependencies(minor)",
+      "addLabels": ["pnpm", "minor", "dev only"],
+      "groupName": "pnpm dev dependencies(minor)",
       "stabilityDays": 3
     },
     {
       "matchManagers": ["npm"],
       "matchDepTypes": ["devDependencies"],
       "matchUpdateTypes": ["patch"],
-      "addLabels": ["yarn", "patch", "dev only"],
-      "groupName": "yarn dev dependencies(patch)",
+      "addLabels": ["pnpm", "patch", "dev only"],
+      "groupName": "pnpm dev dependencies(patch)",
       "stabilityDays": 3
     },
     {
       "matchManagers": ["npm"],
       "matchDepTypes": ["dependencies"],
       "matchUpdateTypes": ["minor"],
-      "addLabels": ["yarn", "minor"],
-      "groupName": "yarn dependencies(minor)",
-      "groupSlug": "yarn-dev",
+      "addLabels": ["pnpm", "minor"],
+      "groupName": "pnpm dependencies(minor)",
+      "groupSlug": "pnpm-dev",
       "stabilityDays": 3
     },
     {
       "matchManagers": ["npm"],
       "matchDepTypes": ["dependencies"],
       "matchUpdateTypes": ["patch"],
-      "addLabels": ["yarn", "patch"],
-      "groupName": "yarn dependencies(patch)",
-      "groupSlug": "yarn-dev",
+      "addLabels": ["pnpm", "patch"],
+      "groupName": "pnpm dependencies(patch)",
+      "groupSlug": "pnpm-dev",
       "stabilityDays": 3
     }
   ]

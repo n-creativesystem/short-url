@@ -7,6 +7,8 @@ services:
     volumes:
       - ./:/src/
       - node_modules:/src/frontend/node_modules
+      - ~/.gitconfig:/.gitconfig
+      - ~/.ssh/:/home/user/.ssh/
     tty: true
     networks:
       - default

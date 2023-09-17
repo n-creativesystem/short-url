@@ -1,6 +1,8 @@
 package router
 
 import (
+	"net/http"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
@@ -28,6 +30,7 @@ func NewWebUI(input *RouterInput, cfg *config.WebUI) *gin.Engine {
 		middleware.Session(
 			session.WithSessionStore(cfg.Store),
 			session.WithCookieDomain(cfg.Domain),
+			session.WithCookieSameSite(http.SameSiteLaxMode),
 		),
 		middleware.UnauthorizeRedirect(cfg.RedirectURI),
 	)

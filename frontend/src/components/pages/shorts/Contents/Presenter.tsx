@@ -30,7 +30,7 @@ export const Presenter: FC<Props> = memo(({ data, onClick: onClickInput }) => {
     (data) => {
       return onClickInput({ ...data });
     },
-    [data]
+    [onClickInput]
   );
 
   const validationRules = {

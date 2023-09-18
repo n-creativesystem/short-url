@@ -27,6 +27,8 @@ func NewService(repo oauth2client.Repository, beginner tx.ContextBeginner) Servi
 }
 
 func (impl *serviceImpl) GetByID(ctx context.Context, clientId string) (oauth2.ClientInfo, error) {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	if v, err := impl.repo.GetByID(ctx, clientId); err != nil {
 		if errors.Is(err, repository.ErrRecordNotFound) {
 			return nil, service.ErrNotFound
@@ -38,6 +40,8 @@ func (impl *serviceImpl) GetByID(ctx context.Context, clientId string) (oauth2.C
 }
 
 func (impl *serviceImpl) FindAll(ctx context.Context, user string) ([]oauth2client.Client, error) {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	if v, err := impl.repo.Find(ctx, user); err == nil {
 		return v, nil
 	} else {
@@ -46,6 +50,8 @@ func (impl *serviceImpl) FindAll(ctx context.Context, user string) ([]oauth2clie
 }
 
 func (impl *serviceImpl) FindByID(ctx context.Context, id, user string) (*oauth2client.Client, error) {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	if v, err := impl.repo.FindByID(ctx, id, user); err == nil {
 		return v, nil
 	} else {
@@ -54,6 +60,8 @@ func (impl *serviceImpl) FindByID(ctx context.Context, id, user string) (*oauth2
 }
 
 func (impl *serviceImpl) RegisterClient(ctx context.Context, user, appName string) (RegisterResult, error) {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	var result RegisterResult
 	clientId, err := utils.GenerateRandomString(20)
 	if err != nil {
@@ -75,10 +83,14 @@ func (impl *serviceImpl) RegisterClient(ctx context.Context, user, appName strin
 }
 
 func (impl *serviceImpl) UpdateClient(ctx context.Context, id, user, appName string) error {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	return impl.repo.Update(ctx, id, user, appName)
 }
 
 func (impl *serviceImpl) DeleteClient(ctx context.Context, user, clientId string) error {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	info, err := impl.repo.GetByID(ctx, clientId)
 	if err != nil {
 		return service.Wrap(err, "Service oauth2_client")

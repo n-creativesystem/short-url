@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 	"math"
@@ -9,6 +10,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	pkgErr "github.com/n-creativesystem/short-url/pkg/utils/errors"
+	"github.com/n-creativesystem/short-url/pkg/utils/logging/handler"
 )
 
 func Logger(notLogged ...string) gin.HandlerFunc {
@@ -59,6 +62,9 @@ func Logger(notLogged ...string) gin.HandlerFunc {
 		)
 		ctx := c.Request.Context()
 		if len(c.Errors) > 0 {
+			if IsIgnoreError(c.Errors) {
+				entry = entry.With(handler.IgnoreTracing)
+			}
 			entry.With("err", c.Errors).ErrorContext(ctx, c.Errors.ByType(gin.ErrorTypePrivate).String())
 		} else {
 			msg := "Request"
@@ -71,4 +77,14 @@ func Logger(notLogged ...string) gin.HandlerFunc {
 			}
 		}
 	}
+}
+
+func IsIgnoreError(ginErrs []*gin.Error) bool {
+	var ignoreErr *pkgErr.IgnoreError
+	for _, err := range ginErrs {
+		if errors.As(err, &ignoreErr) {
+			return true
+		}
+	}
+	return false
 }

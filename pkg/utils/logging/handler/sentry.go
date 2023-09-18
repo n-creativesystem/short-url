@@ -28,5 +28,5 @@ func NewSentryHandler() slog.Handler {
 	option := slogsentry.Option{
 		Level: getSentryLevel(),
 	}
-	return option.NewSentryHandler()
+	return NewErrorTracking(NewAsyncHandler(option.NewSentryHandler()))
 }

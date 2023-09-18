@@ -1,11 +1,10 @@
 package tracking
 
 import (
+	"context"
 	"log/slog"
 	"os"
-	"strings"
 
-	"github.com/n-creativesystem/short-url/pkg/infrastructure/tracking/datadog"
 	"github.com/n-creativesystem/short-url/pkg/infrastructure/tracking/rollbar"
 	"github.com/n-creativesystem/short-url/pkg/infrastructure/tracking/sentry"
 	"github.com/n-creativesystem/short-url/pkg/utils"
@@ -14,8 +13,8 @@ import (
 )
 
 func Init() func() {
-	closer := make([]func(), 0, 10)
-	closeFn := func(closer []func()) func() {
+	cleanUps := make([]func(), 0, 10)
+	cleanUpFn := func(closer []func()) func() {
 		return func() {
 			for _, fn := range closer {
 				fn()
@@ -35,19 +34,17 @@ func Init() func() {
 	}
 	if rollbar.IsEnable() {
 		client := rollbar.ErrorTracking()
-		closer = append(closer, func() { _ = client.Close() })
+		cleanUps = append(cleanUps, func() { _ = client.Close() })
 		loggingHandler = append(loggingHandler, handler.NewRollbarHandler(client))
 	}
 	// APM tracking
-	switch strings.ToLower(os.Getenv("APM_TRACING")) {
-	case "SENTRY":
-		sentry.APM()
-	case "DATADOG":
-		closeFn := datadog.APM()
-		closer = append(closer, closeFn)
-		loggingHandler = append(loggingHandler, handler.NewDatadogHandler())
+	_, cleanup, err := NewTracerProvider(context.Background(), os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT"))
+	if err != nil {
+		slog.With(logging.WithErr(err)).Error("OTEL setup.")
+	} else {
+		cleanUps = append(cleanUps, cleanup)
 	}
 
 	logging.NewLogger(loggingHandler...)
-	return closeFn(closer)
+	return cleanUpFn(cleanUps)
 }

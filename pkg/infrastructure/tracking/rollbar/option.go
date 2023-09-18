@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/n-creativesystem/short-url/pkg/utils"
+	"github.com/n-creativesystem/short-url/pkg/utils/apps"
 	"github.com/rollbar/rollbar-go"
 )
 
@@ -24,9 +25,9 @@ type optionFn func(opt *option)
 func defaultOption() option {
 	return option{
 		token:       os.Getenv("ROLLBAR_TOKEN"),
-		environment: os.Getenv("TRACKING_ENV"),
+		environment: apps.TrackingEnvironment(),
 		codeVersion: utils.Getenv("CODE_VERSION", "v1"),
-		serverRoot:  utils.Getenv("SERVER_ROOT", "github.com/n-creativesystem/short-url"),
+		serverRoot:  apps.ServerRoot(),
 	}
 }
 

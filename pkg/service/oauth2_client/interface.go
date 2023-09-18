@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-oauth2/oauth2/v4"
 	oauth2client "github.com/n-creativesystem/short-url/pkg/domain/oauth2_client"
+	"github.com/n-creativesystem/short-url/pkg/infrastructure/tracking"
 )
 
 type RegisterResult struct {
@@ -21,3 +22,7 @@ type Service interface {
 	UpdateClient(ctx context.Context, id, user, appName string) error
 	DeleteClient(ctx context.Context, user, clientId string) error
 }
+
+var (
+	tracer = tracking.Tracer("oauth2client")
+)

@@ -1,0 +1,39 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+
+exporters:
+  logging:
+
+  sentry:
+    dsn: ${env:SENTRY_DNS}
+    environment: local
+    insecure_skip_verify: true
+
+  datadog:
+    api:
+      site: ${env:DD_SITE}
+      key: ${env:DD_API_KEY}
+
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 5
+
+extensions:
+  health_check:
+
+service:
+  extensions:
+    - health_check
+  pipelines:
+    traces:
+      receivers:
+        - otlp
+      processors:
+        - batch
+      exporters:
+        - sentry
+        - datadog
+        - logging

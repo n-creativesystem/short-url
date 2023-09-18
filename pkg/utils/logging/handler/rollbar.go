@@ -30,5 +30,5 @@ func NewRollbarHandler(client *rollbar.Client) slog.Handler {
 		Level:  getRollbarLevel(),
 		Client: client,
 	}
-	return option.NewRollbarHandler()
+	return NewErrorTracking(NewAsyncHandler(option.NewRollbarHandler()))
 }

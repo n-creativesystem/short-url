@@ -12,9 +12,13 @@ import (
 	"github.com/n-creativesystem/short-url/pkg/domain/social"
 	"github.com/n-creativesystem/short-url/pkg/domain/tx"
 	"github.com/n-creativesystem/short-url/pkg/infrastructure/interfaces"
+	"github.com/n-creativesystem/short-url/pkg/infrastructure/tracking/rollbar"
+	"github.com/n-creativesystem/short-url/pkg/infrastructure/tracking/sentry"
 	"github.com/n-creativesystem/short-url/pkg/interfaces/middleware"
 	oauth2client "github.com/n-creativesystem/short-url/pkg/service/oauth2_client"
+	"github.com/n-creativesystem/short-url/pkg/utils/apps"
 	"github.com/n-creativesystem/short-url/pkg/utils/logging"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 )
 
 type RouterInput struct {
@@ -46,6 +50,16 @@ func NewRouterInput(
 
 func newGinRouter() *gin.Engine {
 	route := gin.New()
+	route.Use(
+		otelgin.Middleware(apps.ServiceName()),
+	)
+	if sentry.IsEnable() {
+		sentry.GinMiddleware(route, sentry.WithRePanic(true))
+	}
+	if rollbar.IsEnable() {
+		rollbar.GinMiddleware(route)
+	}
+	
 	route.Use(middleware.Logger("/healthz"), gin.Recovery())
 	route.GET("/healthz", func(c *gin.Context) {
 		ctx := c.Request.Context()

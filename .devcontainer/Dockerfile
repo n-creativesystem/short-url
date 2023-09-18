@@ -33,7 +33,7 @@ RUN apt-get update \
   && go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.30.0 \
   && go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.3.0 \
   && go install github.com/stormcat24/protodep@v0.1.7 \
-  && go install github.com/go-delve/delve/cmd/dlv@v1.20.2
+  && go install github.com/go-delve/delve/cmd/dlv@v1.21.0
 
 # aws cliのインストール
 ARG TARGETPLATFORM

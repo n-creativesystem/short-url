@@ -2,9 +2,9 @@ package oauth2
 
 import (
 	"context"
+	"log/slog"
 	"time"
 
-	"github.com/friendsofgo/errors"
 	"github.com/go-oauth2/oauth2/v4"
 	oauth2client "github.com/n-creativesystem/short-url/pkg/domain/oauth2_client"
 	domain_oauth2token "github.com/n-creativesystem/short-url/pkg/domain/oauth2_token"
@@ -17,11 +17,11 @@ import (
 	"github.com/n-creativesystem/short-url/pkg/utils/logging"
 )
 
-func NewOAuth2Token(gcInterval int, repo oauth2client.Repository) domain_oauth2token.Repository {
-	return NewOAuth2TokenWithOption(WithGCTimeInterval(gcInterval), WithOAuth2Client(repo))
+func NewOAuth2Token(ctx context.Context, gcInterval int, repo oauth2client.Repository) domain_oauth2token.Repository {
+	return NewOAuth2TokenWithOption(ctx, WithGCTimeInterval(gcInterval), WithOAuth2Client(repo))
 }
 
-func NewOAuth2TokenWithOption(opts ...TokenOption) domain_oauth2token.Repository {
+func NewOAuth2TokenWithOption(ctx context.Context, opts ...TokenOption) domain_oauth2token.Repository {
 	o := &tokenOption{}
 	for _, opt := range opts {
 		opt.apply(o)
@@ -30,7 +30,7 @@ func NewOAuth2TokenWithOption(opts ...TokenOption) domain_oauth2token.Repository
 		tokenOption: o,
 	}
 	if utils.IsAPI() {
-		go impl.gc()
+		go impl.gc(ctx)
 	}
 	return impl
 }
@@ -57,19 +57,19 @@ func (impl *tokenImpl) Close() {
 	impl.ticker.Stop()
 }
 
-func (impl *tokenImpl) gc() {
+func (impl *tokenImpl) gc(ctx context.Context) {
 	for range impl.ticker.C {
-		impl.clean()
+		impl.clean(ctx)
 	}
 }
 
-func (impl *tokenImpl) clean() {
-	impl.error(impl.clear())
+func (impl *tokenImpl) clean(ctx context.Context) {
+	impl.error(ctx, impl.clear())
 }
 
-func (impl *tokenImpl) error(err error) {
+func (impl *tokenImpl) error(ctx context.Context, err error) {
 	if err != nil {
-		logging.Default().Error(errors.Wrap(err, "[OAUTH2-TOKEN]"))
+		slog.With(logging.WithErr(err)).ErrorContext(ctx, "OAUTH2-TOKEN")
 	}
 }
 

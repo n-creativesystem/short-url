@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
+	"log/slog"
 	"net"
 	"net/http"
 	"time"
@@ -33,7 +34,8 @@ func Session(opts ...Option) gin.HandlerFunc {
 
 		ctx, err := s.Load(r.Context(), token)
 		if err != nil {
-			logging.Default().Errorf("Session middleware: %v", err)
+			msg := "Session check failed."
+			slog.With(logging.WithErr(err)).ErrorContext(ctx, msg)
 			c.AbortWithStatusJSON(http.StatusInternalServerError, response.NewErrorsWithMessage(http.StatusText(http.StatusInternalServerError)))
 			return
 		}
@@ -52,13 +54,15 @@ func Session(opts ...Option) gin.HandlerFunc {
 		case scs.Modified:
 			_, _, err := s.Commit(ctx)
 			if err != nil {
-				logging.Default().Errorf("Session middleware: %v", err)
+				msg := "Session check failed."
+				slog.With(logging.WithErr(err)).ErrorContext(ctx, msg)
 				c.AbortWithStatusJSON(http.StatusInternalServerError, response.NewErrorsWithMessage(http.StatusText(http.StatusInternalServerError)))
 				return
 			}
 			token, expiry, err := s.Commit(ctx)
 			if err != nil {
-				logging.Default().Errorf("Session middleware: %v", err)
+				msg := "Session check failed."
+				slog.With(logging.WithErr(err)).ErrorContext(ctx, msg)
 				c.AbortWithStatusJSON(http.StatusInternalServerError, response.NewErrorsWithMessage(http.StatusText(http.StatusInternalServerError)))
 				return
 			}
@@ -145,5 +149,5 @@ func (bw *bufferedResponseWriter) Push(target string, opts *http.PushOptions) er
 }
 
 func (bw *bufferedResponseWriter) WriteHeaderNow() {
-	logging.Default().Debug("WriteHeaderNow")
+	slog.Debug("WriteHeaderNow")
 }

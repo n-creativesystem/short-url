@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"log/slog"
 	"net/http"
 	"strings"
 	"time"
@@ -51,11 +52,11 @@ func NewOAuthHandler(service oauth2client.Service, tokenStore oauth2.TokenStore,
 	srv.SetAllowedGrantType(oauth2.ClientCredentials, oauth2.Refreshing)
 	srv.SetClientInfoHandler(clientInfoHandler())
 	srv.SetInternalErrorHandler(func(err error) *oauth2_errors.Response {
-		logging.Default().Errorf("Internal error: %v", err)
+		slog.With(logging.WithErr(err)).Error("OAuth2 Internal error")
 		return nil
 	})
 	srv.SetResponseErrorHandler(func(re *oauth2_errors.Response) {
-		logging.Default().Errorf("Response Error: %v", re.Error)
+		slog.With("err", re.Error).Error("OAuth2 Response Error")
 		re.StatusCode = http.StatusBadRequest
 	})
 	srv.ResponseTokenHandler = responseToken

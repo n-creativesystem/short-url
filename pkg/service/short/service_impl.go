@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"log/slog"
 
 	"github.com/n-creativesystem/short-url/pkg/domain/config"
 	"github.com/n-creativesystem/short-url/pkg/domain/repository"
@@ -105,8 +106,9 @@ func (impl *serviceImpl) GenerateQRCode(ctx context.Context, key string) (io.Rea
 	}
 	png, err := qrcode.Encode(utils.MustURL(impl.appConfig.BaseURL, key), qrcode.Medium, 256)
 	if err != nil {
-		logging.Default().Error(err)
-		return nil, errors.New("Service shortURL: QR Code generation failed.")
+		msg := "Service shortURL: QR Code generation failed."
+		slog.With(logging.WithErr(err)).ErrorContext(ctx, msg)
+		return nil, errors.New(msg)
 	}
 	return bytes.NewReader(png), nil
 }

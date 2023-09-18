@@ -1,6 +1,7 @@
 package router
 
 import (
+	"log/slog"
 	"net/http"
 
 	"github.com/alexedwards/scs/v2"
@@ -47,9 +48,11 @@ func newGinRouter() *gin.Engine {
 	route := gin.New()
 	route.Use(middleware.Logger("/healthz"), gin.Recovery())
 	route.GET("/healthz", func(c *gin.Context) {
+		ctx := c.Request.Context()
 		db := interfaces.GetPing(interfaces.RDB)
-		if err := db.PingContext(c.Request.Context()); err != nil {
-			logging.Default().Error(err)
+		if err := db.PingContext(ctx); err != nil {
+			msg := "Health check failed."
+			slog.With(logging.WithErr(err)).ErrorContext(ctx, msg)
 			c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]string{"status": "ng"})
 		} else {
 			c.JSON(http.StatusOK, map[string]string{"status": "ok"})

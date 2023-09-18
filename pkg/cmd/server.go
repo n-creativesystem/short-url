@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"os/signal"
 	"syscall"
@@ -70,7 +71,7 @@ func apiModeCommand() *cobra.Command {
 			pFlags := cmd.Flags()
 			port, err := pFlags.GetInt("port")
 			if err != nil {
-				logging.Default().Error(err)
+				slog.With(logging.WithErr(err)).ErrorContext(cmd.Context(), "Get port number.")
 				return
 			}
 			utils.RunAPI()
@@ -89,7 +90,7 @@ func webUIModeCommand() *cobra.Command {
 			pFlags := cmd.Flags()
 			port, err := pFlags.GetInt("port")
 			if err != nil {
-				logging.Default().Error(err)
+				slog.With(logging.WithErr(err)).ErrorContext(cmd.Context(), "Get port number.")
 				return
 			}
 			utils.RunUI()
@@ -108,7 +109,7 @@ func serviceModeCommand() *cobra.Command {
 			pFlags := cmd.Flags()
 			port, err := pFlags.GetInt("port")
 			if err != nil {
-				logging.Default().Error(err)
+				slog.With(logging.WithErr(err)).ErrorContext(cmd.Context(), "Get port number.")
 				return
 			}
 			utils.RunService()
@@ -125,12 +126,12 @@ func executeServer(ctx context.Context, port int, mode serverMode) {
 	appConfigRepo := config_infra.NewApplication()
 	appConfig, err := appConfigRepo.Get(ctx, config.WithEnvConfigLookuper(envconfig.OsLookuper()))
 	if err != nil {
-		logging.Default().Error(err)
+		slog.With(logging.WithErr(err)).ErrorContext(ctx, err.Error())
 		return
 	}
 	input, closer, err := getInput(ctx, appConfig)
 	if err != nil {
-		logging.Default().Error(err)
+		slog.With(logging.WithErr(err)).ErrorContext(ctx, err.Error())
 		return
 	}
 	defer closer()
@@ -145,12 +146,12 @@ func executeServer(ctx context.Context, port int, mode serverMode) {
 		repo := config_infra.NewSocialConfig()
 		mpConfig, err := repo.GetProviders(ctx)
 		if err != nil {
-			logging.Default().Error(err)
+			slog.With(logging.WithErr(err)).ErrorContext(ctx, err.Error())
 			return
 		}
 		sessionStore, err := session.New(ctx, sessionCfg)
 		if err != nil {
-			logging.Default().Error(err)
+			slog.With(logging.WithErr(err)).ErrorContext(ctx, err.Error())
 			return
 		}
 		cfg := config_infra.NewWebUI(ctx)
@@ -158,7 +159,7 @@ func executeServer(ctx context.Context, port int, mode serverMode) {
 		cfg.Providers = mpConfig
 		handler = router.NewWebUI(input, cfg)
 	default:
-		logging.Default().Error("An unexpected server mode is specified.")
+		slog.ErrorContext(ctx, "An unexpected server mode is specified.")
 		return
 	}
 	srv := &http.Server{
@@ -167,18 +168,18 @@ func executeServer(ctx context.Context, port int, mode serverMode) {
 	}
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			logging.Default().Errorf("listen: %s", err)
+			slog.With(logging.WithErr(err)).ErrorContext(ctx, fmt.Sprintf("listen: %s", err))
 		}
 	}()
-	logging.Default().Infof("Start server :%d", port)
+	slog.Info(fmt.Sprintf("Start server :%d", port))
 	<-ctx.Done()
-	logging.Default().Info("Shutdown server...")
+	slog.Info("Shutdown server...")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
-		logging.Default().Errorf("Server shutdown error: %s", err)
+		slog.With(logging.WithErr(err)).Error(fmt.Sprintf("Server shutdown error: %s", err))
 	}
-	logging.Default().Info("Server exiting")
+	slog.Info("Server exiting")
 }
 
 func getInput(ctx context.Context, appConfig *config.Application) (*router.RouterInput, func(), error) {

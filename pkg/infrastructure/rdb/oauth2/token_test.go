@@ -25,7 +25,7 @@ func TestOAuth2Token(t *testing.T) {
 			client := tests.GetTestDBAndMigrate("shorturl_by_oauth2_token")
 			rdb.SetClient(client)
 			ctx := context.Background()
-			tokenStore := NewOAuth2TokenWithOption(WithGCTimeInterval(1))
+			tokenStore := NewOAuth2TokenWithOption(context.Background(), WithGCTimeInterval(1))
 			oauth2.TestOAuth2Token(t, ctx, tokenStore)
 		})
 	}

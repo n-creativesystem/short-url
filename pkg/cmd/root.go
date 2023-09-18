@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"github.com/n-creativesystem/short-url/pkg/cmd/flags"
-	"github.com/n-creativesystem/short-url/pkg/utils/logging"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -29,9 +28,6 @@ func rootCommand() *cobra.Command {
 		SilenceErrors:    true,
 		SilenceUsage:     true,
 		PersistentPreRun: rootPersistentExecute,
-		PersistentPostRun: func(cmd *cobra.Command, args []string) {
-			defer logging.Close()
-		},
 	}
 	rootArg.setFlag(cmd.PersistentFlags())
 	cmd.AddCommand(serverCommand())
@@ -41,9 +37,9 @@ func rootCommand() *cobra.Command {
 }
 
 func rootPersistentExecute(cmd *cobra.Command, args []string) {
-	if rootArg.debug {
-		logging.DebugMode()
-	} else {
-		logging.SetFormat(rootArg.output.String())
-	}
+	// if rootArg.debug {
+	// 	logging.DebugMode()
+	// } else {
+	// 	logging.SetFormat(rootArg.output.String())
+	// }
 }

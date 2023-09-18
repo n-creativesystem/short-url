@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"time"
@@ -51,7 +52,7 @@ func Migration(ctx context.Context, args []string, migratorArgs MigratorArgs) er
 
 	defer func() {
 		if err := client.db.Close(); err != nil {
-			logging.Default().Errorf("migrator: failed to close DB: %v\n", err)
+			slog.With(logging.WithErr(err)).ErrorContext(ctx, "migrator: failed to close DB")
 		}
 	}()
 
@@ -90,7 +91,7 @@ func MigrationWithDB(ctx context.Context, client *Client, args []string, migrato
 			goose.SetTableName(migratorArgs.Table)
 		}
 
-		goose.SetLogger(logging.NewGooseLogger(logging.Default()))
+		goose.SetLogger(logging.NewGooseLogger())
 		if err := goose.RunWithOptions(command, client.db, migratorArgs.Dir, arguments, gooseOpts...); err != nil {
 			return err
 		}

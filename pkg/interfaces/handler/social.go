@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"sort"
 
@@ -56,13 +57,13 @@ func (s *Social) Callback(r *http.Request) *CallbackResult {
 	code := r.URL.Query().Get("code")
 	oauth2Token, err := s.cfg.Oauth2Config.Exchange(ctx, code)
 	if err != nil {
-		logging.Default().Error("Exchange token: %v", err)
+		slog.With(logging.WithErr(err)).ErrorContext(ctx, fmt.Sprintf("Exchange token: %v", err))
 		return result.setError(http.StatusUnauthorized, errors.New("Failed to exchange token"))
 	}
 	rawIdToken, ok := oauth2Token.Extra("id_token").(string)
 	if !ok {
 		err := errors.New("Mission id_token")
-		logging.Default().Error(err)
+		slog.With(logging.WithErr(err)).ErrorContext(ctx, fmt.Sprintf("Extra id_token: %v", err))
 		return result.setError(http.StatusInternalServerError, err)
 	}
 	oidcConfig := &oidc.Config{
@@ -71,26 +72,26 @@ func (s *Social) Callback(r *http.Request) *CallbackResult {
 	verify := s.cfg.Provider.Verifier(oidcConfig)
 	idToken, err := verify.Verify(ctx, rawIdToken)
 	if err != nil {
-		logging.Default().Errorf("Verify id_token: %v", err)
+		slog.With(logging.WithErr(err)).ErrorContext(ctx, fmt.Sprintf("Verify id_token: %v", err))
 		return result.setError(http.StatusInternalServerError, err)
 	}
 	if !compare.ConstantTimeCompare(idToken.Nonce, sessionNonce) {
 		err := errors.New("nonce validation failed")
-		logging.Default().Error(err)
+		slog.With(logging.WithErr(err)).ErrorContext(ctx, "nonce validation failed")
 		return result.setError(http.StatusInternalServerError, err)
 	}
 	u, err := s.cfg.Provider.UserInfo(ctx, oauth2.StaticTokenSource(oauth2Token))
 	if err != nil {
-		logging.Default().Error(err)
+		slog.With(logging.WithErr(err)).ErrorContext(ctx, "Failed to request of user info")
 		return result.setError(http.StatusInternalServerError, errors.New("Failed to request of user info"))
 	}
 	user := &social.User{UserInfo: u}
 	if err := user.ParseClaims(s.cfg.ClaimKeys); err != nil {
-		logging.Context(ctx).Warn(err)
+		slog.With(logging.WithErr(err)).WarnContext(ctx, err.Error())
 	}
 	user, err = s.socialRepo.Register(ctx, user)
 	if err != nil {
-		logging.Context(ctx).Error(err)
+		slog.With(logging.WithErr(err)).ErrorContext(ctx, "Failed to register user")
 		return result.setError(http.StatusInternalServerError, errors.New("Failed to register user"))
 	}
 	sm.Put(ctx, "loginUser", string(user.Encode()))

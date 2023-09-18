@@ -6,7 +6,6 @@ import (
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/n-creativesystem/short-url/pkg/utils"
-	"github.com/n-creativesystem/short-url/pkg/utils/logging"
 	"github.com/spf13/viper"
 	"golang.org/x/oauth2"
 )
@@ -46,7 +45,6 @@ func Decode(value string) (*User, error) {
 func (user *User) ParseClaims(cfg ClaimKeys) error {
 	mapClaim := make(map[string]interface{})
 	if err := user.UserInfo.Claims(&mapClaim); err != nil {
-		logging.Default().Warn(err)
 		return err
 	}
 	buf := new(bytes.Buffer)

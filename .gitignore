@@ -14,7 +14,7 @@ casbin-server
 
 .idea/
 *.iml
-__debug_bin
+__debug_bin*
 .DS_Store
 cover/*
 !cover/.gitkeep

@@ -5,7 +5,6 @@ import (
 	"sync"
 
 	"github.com/google/tink/go/tink"
-	"github.com/n-creativesystem/short-url/pkg/utils/logging"
 )
 
 var (
@@ -26,8 +25,7 @@ func Encrypt(plaintext string) (string, error) {
 func MustEncrypt(plaintext string) string {
 	v, err := Encrypt(plaintext)
 	if err != nil {
-		logging.Default().Warn(err)
-		return ""
+		panic(err)
 	}
 	return v
 }
@@ -49,8 +47,7 @@ func Decrypt(ciphertext string) (string, error) {
 func MustDecrypt(ciphertext string) string {
 	v, err := Decrypt(ciphertext)
 	if err != nil {
-		logging.Default().Warn(err)
-		return ""
+		panic(err)
 	}
 	return string(v)
 }

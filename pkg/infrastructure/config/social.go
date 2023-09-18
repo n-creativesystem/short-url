@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	domain_social "github.com/n-creativesystem/short-url/pkg/domain/social"
-	"github.com/n-creativesystem/short-url/pkg/utils/logging"
 	"github.com/sethvargo/go-envconfig"
 
 	. "github.com/n-creativesystem/short-url/pkg/infrastructure/config/social"
@@ -48,7 +47,7 @@ func (cfg *socialEnvConfigImpl) GetProviders(ctx context.Context) (map[string]*d
 	mp := make(map[string]*domain_social.Config, len(cfg.Providers))
 	for _, provider := range cfg.Providers {
 		if c, err := cfg.GetProvider(ctx, provider); err != nil {
-			logging.Default().Warn(err)
+			return nil, err
 		} else {
 			mp[provider] = c
 		}

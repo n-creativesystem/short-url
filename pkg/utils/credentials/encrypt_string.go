@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/n-creativesystem/short-url/pkg/utils/credentials/crypto"
-	"github.com/n-creativesystem/short-url/pkg/utils/logging"
 )
 
 type EncryptStringer interface {
@@ -32,8 +31,7 @@ func NewEncryptString(value string) EncryptString {
 func NewEncryptStringWithMustDecrypt(value string) EncryptString {
 	v, err := crypto.Decrypt(value)
 	if err != nil {
-		logging.Default().Warn(err)
-		v = ""
+		panic(err)
 	}
 	return EncryptString{
 		MaskedString: NewMaskedString(v),
@@ -87,8 +85,7 @@ func (m *EncryptString) Scan(src interface{}) error {
 func (m EncryptString) MustEncrypt() string {
 	v, err := m.encrypt()
 	if err != nil {
-		logging.Default().Warn(err)
-		return ""
+		panic(err)
 	}
 	return v
 }

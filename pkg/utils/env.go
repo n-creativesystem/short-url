@@ -4,6 +4,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 type AppMode = int
@@ -14,10 +15,25 @@ const (
 	UI
 )
 
-var appMode AppMode
+var (
+	appMode     AppMode
+	initAppMode sync.Once
+
+	appEnv     string
+	initAppEnv sync.Once
+
+	isCI     bool
+	initIsCI sync.Once
+)
+
+func setAppMode(mode AppMode) {
+	initAppMode.Do(func() {
+		appMode = mode
+	})
+}
 
 func RunService() {
-	appMode = Service
+	setAppMode(Service)
 }
 
 func IsService() bool {
@@ -25,7 +41,7 @@ func IsService() bool {
 }
 
 func RunAPI() {
-	appMode = API
+	setAppMode(API)
 }
 
 func IsAPI() bool {
@@ -33,7 +49,7 @@ func IsAPI() bool {
 }
 
 func RunUI() {
-	appMode = UI
+	setAppMode(UI)
 }
 
 func IsUI() bool {
@@ -41,7 +57,10 @@ func IsUI() bool {
 }
 
 func AppEnv() string {
-	return os.Getenv("APP_ENV")
+	initAppEnv.Do(func() {
+		appEnv = os.Getenv("APP_ENV")
+	})
+	return appEnv
 }
 
 func IsProduction() bool {
@@ -61,8 +80,11 @@ func IsTest() bool {
 }
 
 func IsCI() bool {
-	v, _ := strconv.ParseBool(os.Getenv("CI"))
-	return v
+	initIsCI.Do(func() {
+		v, _ := strconv.ParseBool(os.Getenv("CI"))
+		isCI = v
+	})
+	return isCI
 }
 
 func IsCIorTest() bool {
@@ -71,4 +93,17 @@ func IsCIorTest() bool {
 
 func IsDevOrCIorTest() bool {
 	return IsDev() || IsCI() || IsTest()
+}
+
+func Getenv(key, default_ string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return default_
+}
+
+func GetBoolEnv(key string) bool {
+	e := os.Getenv(key)
+	b, err := strconv.ParseBool(e)
+	return err == nil && b
 }

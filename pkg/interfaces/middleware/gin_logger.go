@@ -1,14 +1,17 @@
 package middleware
 
 import (
+	"errors"
 	"fmt"
+	"log/slog"
 	"math"
 	"net/http"
 	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/n-creativesystem/short-url/pkg/utils/logging"
+	pkgErr "github.com/n-creativesystem/short-url/pkg/utils/errors"
+	"github.com/n-creativesystem/short-url/pkg/utils/logging/handler"
 )
 
 func Logger(notLogged ...string) gin.HandlerFunc {
@@ -45,7 +48,7 @@ func Logger(notLogged ...string) gin.HandlerFunc {
 		if dataLength < 0 {
 			dataLength = 0
 		}
-		entry := logging.Default().With(
+		entry := slog.With(
 			"hostname", hostname,
 			"statusCode", statusCode,
 			"latency", fmt.Sprintf("%dms", latency),
@@ -57,18 +60,31 @@ func Logger(notLogged ...string) gin.HandlerFunc {
 			"userAgent", clientUserAgent,
 			"time", time.Now().Format(timeFormat),
 		)
-
+		ctx := c.Request.Context()
 		if len(c.Errors) > 0 {
-			entry.Error(c.Errors.ByType(gin.ErrorTypePrivate).String())
+			if IsIgnoreError(c.Errors) {
+				entry = entry.With(handler.IgnoreTracing)
+			}
+			entry.With("err", c.Errors).ErrorContext(ctx, c.Errors.ByType(gin.ErrorTypePrivate).String())
 		} else {
 			msg := "Request"
 			if statusCode >= http.StatusInternalServerError {
-				entry.Error(msg)
+				entry.ErrorContext(ctx, msg)
 			} else if statusCode >= http.StatusBadRequest {
-				entry.Warn(msg)
+				entry.WarnContext(ctx, msg)
 			} else {
-				entry.Info(msg)
+				entry.InfoContext(ctx, msg)
 			}
 		}
 	}
+}
+
+func IsIgnoreError(ginErrs []*gin.Error) bool {
+	var ignoreErr *pkgErr.IgnoreError
+	for _, err := range ginErrs {
+		if errors.As(err, &ignoreErr) {
+			return true
+		}
+	}
+	return false
 }

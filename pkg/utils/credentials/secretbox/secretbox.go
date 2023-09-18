@@ -7,7 +7,6 @@ import (
 	"os"
 	"sync"
 
-	"github.com/n-creativesystem/short-url/pkg/utils/logging"
 	"golang.org/x/crypto/nacl/secretbox"
 )
 
@@ -99,8 +98,7 @@ func Decrypt(cipherText string) (string, error) {
 func MustEncrypt(plainText string) string {
 	v, err := secretBox.Encrypt(plainText)
 	if err != nil {
-		logging.Default().Error(err)
-		return plainText
+		panic(err)
 	}
 	return v
 }
@@ -108,8 +106,7 @@ func MustEncrypt(plainText string) string {
 func MustDecrypt(cipherText string) string {
 	v, err := secretBox.Decrypt(cipherText)
 	if err != nil {
-		logging.Default().Error(err)
-		return cipherText
+		panic(err)
 	}
 	return v
 }

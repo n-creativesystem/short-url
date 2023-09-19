@@ -32,6 +32,10 @@ func Logger(notLogged ...string) gin.HandlerFunc {
 	}
 
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
+		ctx, span := tracer.Start(ctx, "LoggerMiddleware")
+		defer span.End()
+		*c.Request = *c.Request.WithContext(ctx)
 		path := c.Request.URL.Path
 		if _, ok := skip[path]; ok {
 			return
@@ -60,7 +64,6 @@ func Logger(notLogged ...string) gin.HandlerFunc {
 			"userAgent", clientUserAgent,
 			"time", time.Now().Format(timeFormat),
 		)
-		ctx := c.Request.Context()
 		if len(c.Errors) > 0 {
 			if IsIgnoreError(c.Errors) {
 				entry = entry.With(handler.IgnoreTracing)

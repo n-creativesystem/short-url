@@ -6,6 +6,7 @@ import (
 	"io"
 
 	"github.com/n-creativesystem/short-url/pkg/domain/short"
+	"github.com/n-creativesystem/short-url/pkg/infrastructure/tracking"
 )
 
 type Service interface {
@@ -17,3 +18,7 @@ type Service interface {
 	FindAll(ctx context.Context, author string) ([]short.ShortWithTimeStamp, error)
 	FindByKeyAndAuthor(ctx context.Context, key, author string) (*short.ShortWithTimeStamp, error)
 }
+
+var (
+	tracer = tracking.Tracer("short_service")
+)

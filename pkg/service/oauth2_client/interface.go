@@ -24,5 +24,5 @@ type Service interface {
 }
 
 var (
-	tracer = tracking.Tracer("oauth2client")
+	tracer = tracking.Tracer("oauth2_client_service")
 )

@@ -24,6 +24,8 @@ type Social struct {
 }
 
 func (s *Social) Authorization(ctx context.Context, socialId string) string {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	state := randomString(32)
 	nonce := randomString(32)
 	authURL := s.cfg.Oauth2Config.AuthCodeURL(state, oidc.Nonce(nonce))
@@ -45,8 +47,11 @@ func (c *CallbackResult) setError(code int, err error) *CallbackResult {
 }
 
 func (s *Social) Callback(r *http.Request) *CallbackResult {
-	result := &CallbackResult{}
 	ctx := r.Context()
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
+	*r = *r.WithContext(ctx)
+	result := &CallbackResult{}
 	sm := session.GetContext(ctx)
 	state := r.URL.Query().Get("state")
 	sessionState := sm.PopString(ctx, "state")
@@ -136,6 +141,9 @@ func (h *SocialHandler) Authorization(socialId string) gin.HandlerFunc {
 	social := h.providers[socialId]
 	return func(c *gin.Context) {
 		ctx := c.Request.Context()
+		ctx, span := tracer.Start(ctx, "")
+		defer span.End()
+		*c.Request = *c.Request.WithContext(ctx)
 		authURL := social.Authorization(ctx, socialId)
 		c.Redirect(http.StatusFound, authURL)
 	}
@@ -157,6 +165,10 @@ func (h *SocialHandler) Authorization(socialId string) gin.HandlerFunc {
 func (h *SocialHandler) Callback(socialId string) gin.HandlerFunc {
 	social := h.providers[socialId]
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
+		ctx, span := tracer.Start(ctx, "")
+		defer span.End()
+		*c.Request = *c.Request.WithContext(ctx)
 		result := social.Callback(c.Request)
 		if result.Err != nil {
 			c.AbortWithStatusJSON(result.Code, response.NewErrors(result.Err))
@@ -178,6 +190,10 @@ func (h *SocialHandler) Callback(socialId string) gin.HandlerFunc {
 // @ID SocialLoginUserInfo
 func (h *SocialHandler) UserInfo() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
+		ctx, span := tracer.Start(ctx, "")
+		defer span.End()
+		*c.Request = *c.Request.WithContext(ctx)
 		user, ok := session.GetAuthUserWithGinContext(c)
 		if !ok {
 			return
@@ -204,6 +220,9 @@ func (h *SocialHandler) UserInfo() gin.HandlerFunc {
 func (h *SocialHandler) Logout() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx := c.Request.Context()
+		ctx, span := tracer.Start(ctx, "")
+		defer span.End()
+		*c.Request = *c.Request.WithContext(ctx)
 		sm := session.GetContext(ctx)
 		_ = sm.Destroy(ctx)
 		c.Redirect(http.StatusFound, h.LogoutSuccessURL)
@@ -226,6 +245,10 @@ func (h *SocialHandler) GetEnabledSocialLogin() gin.HandlerFunc {
 	}
 	sort.Strings(providers)
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
+		ctx, span := tracer.Start(ctx, "")
+		defer span.End()
+		*c.Request = *c.Request.WithContext(ctx)
 		response := &response.EnabledSocialLogin{
 			Socials: providers,
 		}

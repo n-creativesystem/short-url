@@ -32,6 +32,8 @@ func NewService(repo short.Repository, appConfig *config.Application, tx tx.Cont
 }
 
 func (impl *serviceImpl) GetURL(ctx context.Context, key string) (string, error) {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	result, err := impl.repo.Get(ctx, key)
 	if err != nil {
 		if errors.Is(err, repository.ErrRecordNotFound) {
@@ -43,6 +45,8 @@ func (impl *serviceImpl) GetURL(ctx context.Context, key string) (string, error)
 }
 
 func (impl *serviceImpl) GenerateShortURL(ctx context.Context, url, key, author string) (*short.ShortWithTimeStamp, error) {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	value := short.NewShort(url, key, author)
 	value.New()
 	var result *short.ShortWithTimeStamp
@@ -94,6 +98,8 @@ func (impl *serviceImpl) GenerateShortURL(ctx context.Context, url, key, author 
 }
 
 func (impl *serviceImpl) GenerateQRCode(ctx context.Context, key string) (io.Reader, error) {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	exists, err := impl.repo.Exists(ctx, key)
 	if err != nil {
 		if errors.Is(err, repository.ErrRecordNotFound) {
@@ -114,6 +120,8 @@ func (impl *serviceImpl) GenerateQRCode(ctx context.Context, key string) (io.Rea
 }
 
 func (impl *serviceImpl) Remove(ctx context.Context, key, author string) error {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	return impl.tx.BeginTx(ctx, func(ctx context.Context) error {
 		if _, err := impl.repo.Del(ctx, key, author); err != nil {
 			if errors.Is(err, repository.ErrRecordNotFound) {
@@ -126,6 +134,8 @@ func (impl *serviceImpl) Remove(ctx context.Context, key, author string) error {
 }
 
 func (impl *serviceImpl) Update(ctx context.Context, key, author, url string) (*short.ShortWithTimeStamp, error) {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	v, err := impl.FindByKeyAndAuthor(ctx, key, author)
 	if err != nil {
 		return nil, service.Wrap(err, "Service shortURL: Update failed")
@@ -148,6 +158,8 @@ func (impl *serviceImpl) Update(ctx context.Context, key, author, url string) (*
 }
 
 func (impl *serviceImpl) FindAll(ctx context.Context, author string) ([]short.ShortWithTimeStamp, error) {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	if v, err := impl.repo.FindAll(ctx, author); err != nil {
 		if errors.Is(err, repository.ErrRecordNotFound) {
 			return nil, service.ErrNotFound
@@ -160,6 +172,8 @@ func (impl *serviceImpl) FindAll(ctx context.Context, author string) ([]short.Sh
 }
 
 func (impl *serviceImpl) FindByKeyAndAuthor(ctx context.Context, key, author string) (*short.ShortWithTimeStamp, error) {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	result, err := impl.repo.FindByKeyAndAuthor(ctx, key, author)
 	if err != nil {
 		if errors.Is(err, repository.ErrRecordNotFound) {

@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/n-creativesystem/short-url/pkg/infrastructure/config"
+	"github.com/redis/go-redis/extra/redisotel/v9"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -36,7 +37,8 @@ func New(ctx context.Context, cfg *config.Redis) (Cmdable, error) {
 			return nil, err
 		}
 	}
-
+	_ = redisotel.InstrumentTracing(c)
+	_ = redisotel.InstrumentMetrics(c)
 	if err := c.Ping(ctx).Err(); err != nil {
 		return nil, err
 	}
@@ -90,6 +92,6 @@ func parseRedisURLs(urls []string) ([]string, *redis.Options, error) {
 }
 
 type Cmdable interface {
-	redis.Cmdable
+	redis.UniversalClient
 	Close() error
 }

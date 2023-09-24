@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"sort"
 
@@ -24,6 +23,8 @@ type Social struct {
 }
 
 func (s *Social) Authorization(ctx context.Context, socialId string) string {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	state := randomString(32)
 	nonce := randomString(32)
 	authURL := s.cfg.Oauth2Config.AuthCodeURL(state, oidc.Nonce(nonce))
@@ -45,8 +46,11 @@ func (c *CallbackResult) setError(code int, err error) *CallbackResult {
 }
 
 func (s *Social) Callback(r *http.Request) *CallbackResult {
-	result := &CallbackResult{}
 	ctx := r.Context()
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
+	*r = *r.WithContext(ctx)
+	result := &CallbackResult{}
 	sm := session.GetContext(ctx)
 	state := r.URL.Query().Get("state")
 	sessionState := sm.PopString(ctx, "state")
@@ -57,13 +61,13 @@ func (s *Social) Callback(r *http.Request) *CallbackResult {
 	code := r.URL.Query().Get("code")
 	oauth2Token, err := s.cfg.Oauth2Config.Exchange(ctx, code)
 	if err != nil {
-		slog.With(logging.WithErr(err)).ErrorContext(ctx, fmt.Sprintf("Exchange token: %v", err))
+		logging.FromContext(ctx).With(logging.WithErr(err)).ErrorContext(ctx, fmt.Sprintf("Exchange token: %v", err))
 		return result.setError(http.StatusUnauthorized, errors.New("Failed to exchange token"))
 	}
 	rawIdToken, ok := oauth2Token.Extra("id_token").(string)
 	if !ok {
 		err := errors.New("Mission id_token")
-		slog.With(logging.WithErr(err)).ErrorContext(ctx, fmt.Sprintf("Extra id_token: %v", err))
+		logging.FromContext(ctx).With(logging.WithErr(err)).ErrorContext(ctx, fmt.Sprintf("Extra id_token: %v", err))
 		return result.setError(http.StatusInternalServerError, err)
 	}
 	oidcConfig := &oidc.Config{
@@ -72,26 +76,26 @@ func (s *Social) Callback(r *http.Request) *CallbackResult {
 	verify := s.cfg.Provider.Verifier(oidcConfig)
 	idToken, err := verify.Verify(ctx, rawIdToken)
 	if err != nil {
-		slog.With(logging.WithErr(err)).ErrorContext(ctx, fmt.Sprintf("Verify id_token: %v", err))
+		logging.FromContext(ctx).With(logging.WithErr(err)).ErrorContext(ctx, fmt.Sprintf("Verify id_token: %v", err))
 		return result.setError(http.StatusInternalServerError, err)
 	}
 	if !compare.ConstantTimeCompare(idToken.Nonce, sessionNonce) {
 		err := errors.New("nonce validation failed")
-		slog.With(logging.WithErr(err)).ErrorContext(ctx, "nonce validation failed")
+		logging.FromContext(ctx).With(logging.WithErr(err)).ErrorContext(ctx, "nonce validation failed")
 		return result.setError(http.StatusInternalServerError, err)
 	}
 	u, err := s.cfg.Provider.UserInfo(ctx, oauth2.StaticTokenSource(oauth2Token))
 	if err != nil {
-		slog.With(logging.WithErr(err)).ErrorContext(ctx, "Failed to request of user info")
+		logging.FromContext(ctx).With(logging.WithErr(err)).ErrorContext(ctx, "Failed to request of user info")
 		return result.setError(http.StatusInternalServerError, errors.New("Failed to request of user info"))
 	}
 	user := &social.User{UserInfo: u}
 	if err := user.ParseClaims(s.cfg.ClaimKeys); err != nil {
-		slog.With(logging.WithErr(err)).WarnContext(ctx, err.Error())
+		logging.FromContext(ctx).With(logging.WithErr(err)).WarnContext(ctx, err.Error())
 	}
 	user, err = s.socialRepo.Register(ctx, user)
 	if err != nil {
-		slog.With(logging.WithErr(err)).ErrorContext(ctx, "Failed to register user")
+		logging.FromContext(ctx).With(logging.WithErr(err)).ErrorContext(ctx, "Failed to register user")
 		return result.setError(http.StatusInternalServerError, errors.New("Failed to register user"))
 	}
 	sm.Put(ctx, "loginUser", string(user.Encode()))
@@ -136,6 +140,9 @@ func (h *SocialHandler) Authorization(socialId string) gin.HandlerFunc {
 	social := h.providers[socialId]
 	return func(c *gin.Context) {
 		ctx := c.Request.Context()
+		ctx, span := tracer.Start(ctx, "")
+		defer span.End()
+		*c.Request = *c.Request.WithContext(ctx)
 		authURL := social.Authorization(ctx, socialId)
 		c.Redirect(http.StatusFound, authURL)
 	}
@@ -157,6 +164,10 @@ func (h *SocialHandler) Authorization(socialId string) gin.HandlerFunc {
 func (h *SocialHandler) Callback(socialId string) gin.HandlerFunc {
 	social := h.providers[socialId]
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
+		ctx, span := tracer.Start(ctx, "")
+		defer span.End()
+		*c.Request = *c.Request.WithContext(ctx)
 		result := social.Callback(c.Request)
 		if result.Err != nil {
 			c.AbortWithStatusJSON(result.Code, response.NewErrors(result.Err))
@@ -178,6 +189,10 @@ func (h *SocialHandler) Callback(socialId string) gin.HandlerFunc {
 // @ID SocialLoginUserInfo
 func (h *SocialHandler) UserInfo() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
+		ctx, span := tracer.Start(ctx, "")
+		defer span.End()
+		*c.Request = *c.Request.WithContext(ctx)
 		user, ok := session.GetAuthUserWithGinContext(c)
 		if !ok {
 			return
@@ -204,6 +219,9 @@ func (h *SocialHandler) UserInfo() gin.HandlerFunc {
 func (h *SocialHandler) Logout() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx := c.Request.Context()
+		ctx, span := tracer.Start(ctx, "")
+		defer span.End()
+		*c.Request = *c.Request.WithContext(ctx)
 		sm := session.GetContext(ctx)
 		_ = sm.Destroy(ctx)
 		c.Redirect(http.StatusFound, h.LogoutSuccessURL)
@@ -226,6 +244,10 @@ func (h *SocialHandler) GetEnabledSocialLogin() gin.HandlerFunc {
 	}
 	sort.Strings(providers)
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
+		ctx, span := tracer.Start(ctx, "")
+		defer span.End()
+		*c.Request = *c.Request.WithContext(ctx)
 		response := &response.EnabledSocialLogin{
 			Socials: providers,
 		}

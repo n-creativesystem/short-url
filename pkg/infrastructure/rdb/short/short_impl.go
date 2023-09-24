@@ -14,6 +14,8 @@ import (
 type shortImpl struct{}
 
 func (d *shortImpl) Get(ctx context.Context, key string) (*short.Short, error) {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	if v, err := d.findOne(ctx, shorts.KeyEQ(key)); err != nil {
 		return nil, err
 	} else {
@@ -22,6 +24,8 @@ func (d *shortImpl) Get(ctx context.Context, key string) (*short.Short, error) {
 }
 
 func (d *shortImpl) Put(ctx context.Context, value short.Short) (*short.ShortWithTimeStamp, error) {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	db := rdb.GetExecutor(ctx)
 	if value.IsNew() {
 		model := db.Shorts.Create()
@@ -49,17 +53,23 @@ func (d *shortImpl) Put(ctx context.Context, value short.Short) (*short.ShortWit
 }
 
 func (d *shortImpl) Del(ctx context.Context, key, author string) (bool, error) {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	db := rdb.GetExecutor(ctx)
 	result, err := db.Shorts.Delete().Where(shorts.And(shorts.KeyEQ(key), shorts.AuthorEQ(author))).Exec(ctx)
 	return result > 0, err
 }
 
 func (d *shortImpl) Exists(ctx context.Context, key string) (bool, error) {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	db := rdb.GetExecutor(ctx)
 	return db.Shorts.Query().Where(shorts.KeyEQ(key)).Exist(ctx)
 }
 
 func (d *shortImpl) FindAll(ctx context.Context, author string) ([]short.ShortWithTimeStamp, error) {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	db := rdb.GetExecutor(ctx)
 	values, err := db.Shorts.Query().Where(shorts.AuthorEQ(author)).All(ctx)
 	if err != nil {
@@ -77,6 +87,8 @@ func (d *shortImpl) FindAll(ctx context.Context, author string) ([]short.ShortWi
 }
 
 func (d *shortImpl) FindByKeyAndAuthor(ctx context.Context, key, author string) (*short.ShortWithTimeStamp, error) {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	db := rdb.GetExecutor(ctx)
 	ps := []predicate.Shorts{
 		shorts.KeyEQ(key),
@@ -93,6 +105,8 @@ func (d *shortImpl) FindByKeyAndAuthor(ctx context.Context, key, author string) 
 }
 
 func (d *shortImpl) findOne(ctx context.Context, ps ...predicate.Shorts) (*short.ShortWithTimeStamp, error) {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	db := rdb.GetExecutor(ctx)
 	v, err := db.Shorts.Query().Where(ps...).First(ctx)
 	if err != nil {

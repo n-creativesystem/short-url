@@ -71,6 +71,10 @@ func NewCSRFTokenHandler(opts ...CSRFTokenOption) *CSRFTokenHandler {
 // @ID GetCSRFToken
 func (h *CSRFTokenHandler) GetToken() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
+		ctx, span := tracer.Start(ctx, "")
+		defer span.End()
+		*c.Request = *c.Request.WithContext(ctx)
 		var resp response.CsrfToken
 		token, maskToken := csrf.GenerateToken()
 		cookie := &http.Cookie{
@@ -94,6 +98,10 @@ func (h *CSRFTokenHandler) Middleware() gin.HandlerFunc {
 		mpIgnoreMethod[v] = struct{}{}
 	}
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
+		ctx, span := tracer.Start(ctx, "")
+		defer span.End()
+		*c.Request = *c.Request.WithContext(ctx)
 		r := c.Request
 		if _, ok := mpIgnoreMethod[r.Method]; ok {
 			c.Next()

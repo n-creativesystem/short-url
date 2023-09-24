@@ -19,10 +19,14 @@ func NewOAuthClient() domain_oauth2client.Repository {
 type oauth2ClientImpl struct{}
 
 func (s *oauth2ClientImpl) GetByID(ctx context.Context, id string) (oauth2.ClientInfo, error) {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	return s.findOne(ctx, id)
 }
 
 func (s *oauth2ClientImpl) Create(ctx context.Context, client *domain_oauth2client.Client) error {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	db := rdb.GetExecutor(ctx)
 	entity := db.OAuth2Client.Create()
 	entity.SetID(client.GetID())
@@ -36,6 +40,8 @@ func (s *oauth2ClientImpl) Create(ctx context.Context, client *domain_oauth2clie
 }
 
 func (s *oauth2ClientImpl) Delete(ctx context.Context, user, id string) error {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	db := rdb.GetExecutor(ctx)
 	result, err := db.OAuth2Client.Delete().Where(
 		oauth2client.And(oauth2client.IDEQ(id), oauth2client.UserIDEQ(user)),
@@ -53,6 +59,8 @@ func (s *oauth2ClientImpl) Delete(ctx context.Context, user, id string) error {
 }
 
 func (s *oauth2ClientImpl) Find(ctx context.Context, user string) ([]domain_oauth2client.Client, error) {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	db := rdb.GetExecutor(ctx)
 	value, err := db.OAuth2Client.Query().Where(oauth2client.UserIDEQ(user)).All(ctx)
 	if err != nil {
@@ -74,6 +82,8 @@ func (s *oauth2ClientImpl) Find(ctx context.Context, user string) ([]domain_oaut
 }
 
 func (s *oauth2ClientImpl) FindByID(ctx context.Context, id, user string) (*domain_oauth2client.Client, error) {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	if id == "" {
 		return nil, repository.ErrRecordNotFound
 	}
@@ -81,6 +91,8 @@ func (s *oauth2ClientImpl) FindByID(ctx context.Context, id, user string) (*doma
 }
 
 func (s *oauth2ClientImpl) Update(ctx context.Context, id, user, appName string) error {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	if id == "" {
 		return repository.ErrRecordNotFound
 	}
@@ -92,6 +104,8 @@ func (s *oauth2ClientImpl) Update(ctx context.Context, id, user, appName string)
 }
 
 func (s *oauth2ClientImpl) findOne(ctx context.Context, id string, ps ...predicate.OAuth2Client) (*domain_oauth2client.Client, error) {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	if id == "" {
 		return nil, repository.ErrRecordNotFound
 	}

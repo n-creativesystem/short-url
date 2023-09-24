@@ -37,6 +37,20 @@ type OAuthHandler struct {
 	oauth2Store oauth2.TokenStore
 }
 
+func NewConfig() *server.Config {
+	return &server.Config{
+		TokenType:            "Bearer",
+		AllowedResponseTypes: []oauth2.ResponseType{oauth2.Code, oauth2.Token},
+		AllowedGrantTypes: []oauth2.GrantType{
+			oauth2.ClientCredentials,
+			oauth2.Refreshing,
+		},
+		AllowedCodeChallengeMethods: []oauth2.CodeChallengeMethod{
+			oauth2.CodeChallengePlain,
+			oauth2.CodeChallengeS256,
+		},
+	}
+}
 func NewOAuthHandler(service oauth2client.Service, tokenStore oauth2.TokenStore, appConfig *config.Application) *OAuthHandler {
 	manager := manage.NewDefaultManager()
 	twoWeekHour := (24 * time.Hour) * 14 // 14日
@@ -47,7 +61,7 @@ func NewOAuthHandler(service oauth2client.Service, tokenStore oauth2.TokenStore,
 
 	manager.MapTokenStorage(tokenStore)
 	manager.MapClientStorage(service)
-	srv := server.NewDefaultServer(manager)
+	srv := server.NewServer(NewConfig(), manager)
 	srv.SetAllowedResponseType(oauth2.Token)
 	srv.SetAllowedGrantType(oauth2.ClientCredentials, oauth2.Refreshing)
 	srv.SetClientInfoHandler(clientInfoHandler())
@@ -81,6 +95,9 @@ func (h *OAuthHandler) Router(route gin.IRouter) {
 
 func (h *OAuthHandler) RegisterApplication(c *gin.Context) {
 	ctx := c.Request.Context()
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
+	*c.Request = *c.Request.WithContext(ctx)
 	forwarded := "anonymous"
 	if h.appConfig != nil && h.appConfig.ForwardedName != "" {
 		v := c.GetHeader(h.appConfig.ForwardedName)
@@ -113,6 +130,10 @@ func (h *OAuthHandler) RegisterApplication(c *gin.Context) {
 
 func (h *OAuthHandler) ValidationBearerToken() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
+		ctx, span := tracer.Start(ctx, "")
+		defer span.End()
+		*c.Request = *c.Request.WithContext(ctx)
 		r := c.Request
 		info, err := h.srv.ValidationBearerToken(r)
 		if err != nil {
@@ -143,6 +164,10 @@ func (h *OAuthHandler) ValidationBearerToken() gin.HandlerFunc {
 // @Router /oauth2/token [post]
 // @ID OAuthTokenRequest
 func (h *OAuthHandler) TokenRequest(c *gin.Context) {
+	ctx := c.Request.Context()
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
+	*c.Request = *c.Request.WithContext(ctx)
 	_ = h.srv.HandleTokenRequest(c.Writer, c.Request)
 }
 
@@ -162,6 +187,9 @@ func (h *OAuthHandler) TokenRequest(c *gin.Context) {
 // @ID RevokeOAuthToken
 func (h *OAuthHandler) RevokeTokenRequest(c *gin.Context) {
 	ctx := c.Request.Context()
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
+	*c.Request = *c.Request.WithContext(ctx)
 	errFn := func() {
 		data, _, header := h.srv.GetErrorData(oauth2_errors.ErrInvalidRequest)
 		body := failureBody(data)
@@ -231,13 +259,16 @@ func (h *OAuthHandler) RevokeTokenRequest(c *gin.Context) {
 // @Security OAuth2Application
 // @ID OAuthApplicationList
 func (h *OAuthHandler) OAuthApplications(c *gin.Context) {
+	ctx := c.Request.Context()
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
+	*c.Request = *c.Request.WithContext(ctx)
 	token, ok := getContext[oauth2.TokenInfo](c, accessInfo)
 	if !ok {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, response.NewErrorsWithMessage(http.StatusText(http.StatusUnauthorized)))
 		return
 	}
 	var result response.OAuth2Applications
-	ctx := c.Request.Context()
 	values, err := h.service.FindAll(ctx, token.GetUserID())
 	if err != nil {
 		if errors.Is(err, service.ErrNotFound) {

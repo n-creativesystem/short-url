@@ -3,7 +3,9 @@ package trace
 import (
 	"context"
 	"runtime"
+	"strings"
 
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -16,16 +18,21 @@ func Tracer(t trace.Tracer) trace.Tracer {
 }
 
 func (t *tracer) Start(ctx context.Context, spanName string, opts ...trace.SpanStartOption) (context.Context, trace.Span) {
+	funcName := getFuncName(1)
 	if spanName == "" {
-		spanName = getFuncName(1)
+		spanName = funcName
 	}
-	return t.Tracer.Start(ctx, spanName, opts...)
+	ctx, span := t.Tracer.Start(ctx, spanName, opts...)
+	span.SetAttributes(attribute.String("method", funcName))
+	return ctx, span
 }
 
 func getFuncName(skip int) string {
 	pt, _, _, ok := runtime.Caller(skip + 1)
 	if !ok {
-		return "unknown func"
+		return "unknown_func"
 	}
-	return runtime.FuncForPC(pt).Name()
+	funcName := runtime.FuncForPC(pt).Name()
+	parts := strings.Split(funcName, ".")
+	return parts[len(parts)-1]
 }

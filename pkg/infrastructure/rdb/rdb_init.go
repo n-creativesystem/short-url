@@ -7,6 +7,7 @@ import (
 	entsql "entgo.io/ent/dialect/sql"
 	"github.com/n-creativesystem/short-url/pkg/domain/config"
 	"github.com/n-creativesystem/short-url/pkg/infrastructure/rdb/ent"
+	"github.com/uptrace/opentelemetry-go-extra/otelsql"
 )
 
 type Client struct {
@@ -19,7 +20,7 @@ func NewDB(cfg config.DBConfig) (*Client, error) {
 	if err != nil {
 		return nil, fmt.Errorf("rdb: failed to build connection string: %v\n", err)
 	}
-	db, err := sql.Open(cfg.SQLDriver(), dsn)
+	db, err := otelsql.Open(cfg.SQLDriver(), dsn)
 	if err != nil {
 		return nil, err
 	}

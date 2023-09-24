@@ -2,18 +2,18 @@ version: '3.7'
 services:
   otel-collector:
     image: otel/opentelemetry-collector-contrib:latest
-    command: ['--config=/etc/collector-config.yaml', '']
+    command:
+      - --config=/etc/collector-config.yaml
+      - ''
     volumes:
       - ./tools/otel/collector-config.yaml:/etc/collector-config.yaml
     networks:
       - default
     env_file:
       - ./.container.env
-  datadog-agent:
-    image: datadog/agent:7
+  otel-jaeger:
+    image: jaegertracing/all-in-one
+    ports:
+      - "16686:16686"
     environment:
-      DD_APM_ENABLED: true
-      DD_HOSTNAME: 'localhost-agent'
-      DD_OTLP_CONFIG_RECEIVER_PROTOCOLS_GRPC_ENDPOINT: 0.0.0.0:4317
-    env_file:
-      - ./.container.env
+      COLLECTOR_OTLP_ENABLED: true

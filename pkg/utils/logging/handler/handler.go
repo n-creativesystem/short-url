@@ -2,13 +2,14 @@ package handler
 
 import (
 	"context"
+	"io"
 	"log/slog"
 	"slices"
 
 	"go.uber.org/multierr"
 )
 
-func NewHandler(handlers ...slog.Handler) slog.Handler {
+func NewHandler(handlers ...slog.Handler) Handle {
 	return &handler{
 		handlers: handlers,
 	}
@@ -38,6 +39,8 @@ func (h *handler) Enabled(ctx context.Context, level slog.Level) bool {
 
 func (h *handler) Handle(ctx context.Context, record slog.Record) error {
 	var err error
+	attrs := spanVendorConnector(ctx)
+	record.AddAttrs(attrs...)
 	h.handler(func(h slog.Handler) {
 		if h.Enabled(ctx, record.Level) {
 			if e := h.Handle(ctx, record); e != nil {
@@ -62,4 +65,13 @@ func (h *handler) WithGroup(name string) slog.Handler {
 		handlers = append(handlers, h.WithGroup(name))
 	})
 	return NewHandler(handlers...)
+}
+
+func (h *handler) Close() error {
+	h.handler(func(h slog.Handler) {
+		if v, ok := h.(io.Closer); ok {
+			_ = v.Close()
+		}
+	})
+	return nil
 }

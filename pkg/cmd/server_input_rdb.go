@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"log/slog"
 
 	config_infra "github.com/n-creativesystem/short-url/pkg/infrastructure/config"
 	"github.com/n-creativesystem/short-url/pkg/infrastructure/rdb"
@@ -18,7 +17,7 @@ func getRDBInput(ctx context.Context) (*router.RouterInput, func(), error) {
 	cfg := config_infra.NewDBConfig()
 	db, err := rdb.NewDB(cfg)
 	if err != nil {
-		slog.With(logging.WithErr(err)).ErrorContext(ctx, "Setup rdb")
+		logging.FromContext(ctx).With(logging.WithErr(err)).ErrorContext(ctx, "Setup rdb")
 		return nil, nil, err
 	}
 	rdb.SetClient(db.Client)

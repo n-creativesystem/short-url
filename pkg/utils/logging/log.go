@@ -6,6 +6,6 @@ import (
 	"github.com/n-creativesystem/short-url/pkg/utils/logging/handler"
 )
 
-func NewLogger(handlers ...slog.Handler) slog.Handler {
+func NewLogger(handlers ...slog.Handler) handler.Handle {
 	return handler.NewHandler(handlers...)
 }

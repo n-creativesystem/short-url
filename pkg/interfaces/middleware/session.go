@@ -25,6 +25,10 @@ var (
 func Session(opts ...Option) gin.HandlerFunc {
 	s := GetSessionManager(opts...)
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
+		ctx, span := tracer.Start(ctx, "SessionMiddleware")
+		defer span.End()
+		*c.Request = *c.Request.WithContext(ctx)
 		w := c.Writer
 		r := c.Request
 		var token string
@@ -33,10 +37,10 @@ func Session(opts ...Option) gin.HandlerFunc {
 			token = cookie.Value
 		}
 
-		ctx, err := s.Load(r.Context(), token)
+		ctx, err = s.Load(ctx, token)
 		if err != nil {
 			msg := "Session check failed."
-			slog.With(logging.WithErr(err)).ErrorContext(ctx, msg)
+			logging.FromContext(ctx).With(logging.WithErr(err)).ErrorContext(ctx, msg)
 			c.AbortWithStatusJSON(http.StatusInternalServerError, response.NewErrorsWithMessage(http.StatusText(http.StatusInternalServerError)))
 			return
 		}
@@ -56,14 +60,14 @@ func Session(opts ...Option) gin.HandlerFunc {
 			_, _, err := s.Commit(ctx)
 			if err != nil {
 				msg := "Session check failed."
-				slog.With(logging.WithErr(err)).ErrorContext(ctx, msg)
+				logging.FromContext(ctx).With(logging.WithErr(err)).ErrorContext(ctx, msg)
 				c.AbortWithStatusJSON(http.StatusInternalServerError, response.NewErrorsWithMessage(http.StatusText(http.StatusInternalServerError)))
 				return
 			}
 			token, expiry, err := s.Commit(ctx)
 			if err != nil {
 				msg := "Session check failed."
-				slog.With(logging.WithErr(err)).ErrorContext(ctx, msg)
+				logging.FromContext(ctx).With(logging.WithErr(err)).ErrorContext(ctx, msg)
 				c.AbortWithStatusJSON(http.StatusInternalServerError, response.NewErrorsWithMessage(http.StatusText(http.StatusInternalServerError)))
 				return
 			}
@@ -71,8 +75,6 @@ func Session(opts ...Option) gin.HandlerFunc {
 		case scs.Destroyed:
 			s.WriteSessionCookie(ctx, w, "", time.Time{})
 		}
-
-		w.Header().Add("Vary", "Cookie")
 
 		if bw.code != 0 {
 			w.WriteHeader(bw.code)
@@ -98,6 +100,9 @@ func UnauthorizeRedirect(redirect string) gin.HandlerFunc {
 func Protected(repo social.UserRepository) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx := c.Request.Context()
+		ctx, span := tracer.Start(ctx, "")
+		defer span.End()
+		*c.Request = *c.Request.WithContext(ctx)
 		sm := GetContext(ctx)
 		buf := sm.GetString(ctx, LoginUser)
 		user, err := social.Decode(buf)
@@ -114,6 +119,8 @@ func Protected(repo social.UserRepository) gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+		log := logging.FromContext(ctx).With(slog.String("user", user.UserInfo.Subject))
+		*c.Request = *c.Request.WithContext(logging.ToContext(ctx, log))
 		SetAuthUser(c, user)
 		c.Next()
 	}

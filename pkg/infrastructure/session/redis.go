@@ -9,7 +9,7 @@ import (
 )
 
 type RedisStore struct {
-	cmd    redis.Cmdable
+	cmd    redis.UniversalClient
 	prefix string
 }
 
@@ -18,11 +18,11 @@ var (
 	_ scs.CtxStore = (*RedisStore)(nil)
 )
 
-func newRedis(cmd redis.Cmdable) *RedisStore {
+func newRedis(cmd redis.UniversalClient) *RedisStore {
 	return newRedisWithPrefix(cmd, "scs::session:")
 }
 
-func newRedisWithPrefix(cmd redis.Cmdable, prefix string) *RedisStore {
+func newRedisWithPrefix(cmd redis.UniversalClient, prefix string) *RedisStore {
 	return &RedisStore{
 		cmd:    cmd,
 		prefix: prefix,

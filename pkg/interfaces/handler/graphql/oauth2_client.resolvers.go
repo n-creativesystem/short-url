@@ -18,6 +18,8 @@ import (
 
 // CreateOAuthApplication is the resolver for the createOAuthApplication field.
 func (r *mutationResolver) CreateOAuthApplication(ctx context.Context, input models.OAuthApplicationInput) (*models.OAuthApplication, error) {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	user, err := authorize(ctx)
 	if err != nil {
 		return nil, err
@@ -37,6 +39,8 @@ func (r *mutationResolver) CreateOAuthApplication(ctx context.Context, input mod
 
 // UpdateOAuthApplication is the resolver for the updateOAuthApplication field.
 func (r *mutationResolver) UpdateOAuthApplication(ctx context.Context, id string, input models.OAuthApplicationInput) (*models.OAuthApplication, error) {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	user, err := authorize(ctx)
 	if err != nil {
 		return nil, err
@@ -52,6 +56,8 @@ func (r *mutationResolver) UpdateOAuthApplication(ctx context.Context, id string
 
 // DeleteOAuthApplication is the resolver for the deleteOAuthApplication field.
 func (r *mutationResolver) DeleteOAuthApplication(ctx context.Context, id string) (bool, error) {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	user, err := authorize(ctx)
 	if err != nil {
 		return false, err
@@ -64,6 +70,8 @@ func (r *mutationResolver) DeleteOAuthApplication(ctx context.Context, id string
 
 // OauthApplications is the resolver for the oauthApplications field.
 func (r *queryResolver) OauthApplications(ctx context.Context, token *string) (*models.OAuthApplicationType, error) {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	user, err := authorize(ctx)
 	if err != nil {
 		return nil, err
@@ -85,6 +93,8 @@ func (r *queryResolver) OauthApplications(ctx context.Context, token *string) (*
 
 // OauthApplication is the resolver for the oauthApplication field.
 func (r *queryResolver) OauthApplication(ctx context.Context, id string) (*models.OAuthApplication, error) {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	user, err := authorize(ctx)
 	if err != nil {
 		return nil, err

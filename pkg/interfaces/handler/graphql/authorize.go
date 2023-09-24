@@ -9,6 +9,8 @@ import (
 )
 
 func authorize(ctx context.Context) (string, error) {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	var user string
 
 	if v, ok := session.GetAuthUserWithContext(ctx); ok {

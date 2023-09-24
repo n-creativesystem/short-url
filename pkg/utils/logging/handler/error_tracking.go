@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"io"
 	"log/slog"
 )
 
@@ -17,11 +18,11 @@ type ErrorTracking struct {
 	ignore bool
 }
 
-func NewErrorTracking(handler slog.Handler) slog.Handler {
+func NewErrorTracking(handler slog.Handler) Handle {
 	return newErrorTracking(handler, false)
 }
 
-func newErrorTracking(handler slog.Handler, ignore bool) slog.Handler {
+func newErrorTracking(handler slog.Handler, ignore bool) Handle {
 	return &ErrorTracking{
 		Handler: handler,
 		ignore:  ignore,
@@ -49,4 +50,11 @@ func (h *ErrorTracking) WithAttrs(attrs []slog.Attr) slog.Handler {
 
 func (h *ErrorTracking) WithGroup(name string) slog.Handler {
 	return newErrorTracking(h.Handler.WithGroup(name), h.ignore)
+}
+
+func (h *ErrorTracking) Close() error {
+	if v, ok := h.Handler.(io.Closer); ok {
+		return v.Close()
+	}
+	return nil
 }

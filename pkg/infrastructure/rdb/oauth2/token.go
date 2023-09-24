@@ -2,7 +2,6 @@ package oauth2
 
 import (
 	"context"
-	"log/slog"
 	"time"
 
 	"github.com/go-oauth2/oauth2/v4"
@@ -69,11 +68,13 @@ func (impl *tokenImpl) clean(ctx context.Context) {
 
 func (impl *tokenImpl) error(ctx context.Context, err error) {
 	if err != nil {
-		slog.With(logging.WithErr(err)).ErrorContext(ctx, "OAUTH2-TOKEN")
+		logging.FromContext(ctx).With(logging.WithErr(err)).ErrorContext(ctx, "OAUTH2-TOKEN")
 	}
 }
 
 func (impl *tokenImpl) Create(ctx context.Context, info oauth2.TokenInfo) error {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	if impl.client != nil {
 		clientInfo, err := impl.client.GetByID(ctx, info.GetClientID())
 		if err != nil {
@@ -101,18 +102,26 @@ func (impl *tokenImpl) Create(ctx context.Context, info oauth2.TokenInfo) error 
 }
 
 func (impl *tokenImpl) RemoveByCode(ctx context.Context, code string) error {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	return impl.remove(ctx, oauth2token.CodeEQ(code))
 }
 
 func (impl *tokenImpl) RemoveByAccess(ctx context.Context, access string) error {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	return impl.remove(ctx, oauth2token.AccessEQ(access))
 }
 
 func (impl *tokenImpl) RemoveByRefresh(ctx context.Context, refresh string) error {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	return impl.remove(ctx, oauth2token.RefreshEQ(refresh))
 }
 
 func (impl *tokenImpl) remove(ctx context.Context, ps ...predicate.OAuth2Token) error {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	db := rdb.GetExecutor(ctx)
 	_, err := db.OAuth2Token.Delete().Where(ps...).Exec(ctx)
 	if checkNoRows(err) != nil {
@@ -122,6 +131,8 @@ func (impl *tokenImpl) remove(ctx context.Context, ps ...predicate.OAuth2Token) 
 }
 
 func (impl *tokenImpl) getToken(ctx context.Context, db *ent.Client, ps ...predicate.OAuth2Token) (*ent.OAuth2Token, error) {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	if v, err := db.OAuth2Token.Query().Where(ps...).First(ctx); err != nil {
 		if rdb.IsNotFoundRecord(err) {
 			return nil, repository.ErrRecordNotFound
@@ -133,6 +144,8 @@ func (impl *tokenImpl) getToken(ctx context.Context, db *ent.Client, ps ...predi
 }
 
 func (impl *tokenImpl) dbModelToToken(ctx context.Context, ps ...predicate.OAuth2Token) (oauth2.TokenInfo, error) {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	db := rdb.GetExecutor(ctx)
 	token, err := impl.getToken(ctx, db, ps...)
 	if err != nil {
@@ -146,14 +159,20 @@ func (impl *tokenImpl) dbModelToToken(ctx context.Context, ps ...predicate.OAuth
 }
 
 func (impl *tokenImpl) GetByCode(ctx context.Context, code string) (oauth2.TokenInfo, error) {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	return impl.dbModelToToken(ctx, oauth2token.CodeEQ(code))
 }
 
 func (impl *tokenImpl) GetByAccess(ctx context.Context, access string) (oauth2.TokenInfo, error) {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	return impl.dbModelToToken(ctx, oauth2token.AccessEQ(access))
 }
 
 func (impl *tokenImpl) GetByRefresh(ctx context.Context, refresh string) (oauth2.TokenInfo, error) {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	return impl.dbModelToToken(ctx, oauth2token.RefreshEQ(refresh))
 }
 

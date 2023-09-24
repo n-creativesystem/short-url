@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"io"
-	"log/slog"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -36,13 +35,16 @@ func NewShortHandler(service short.Service, opts ...ShortOption) *ShortURLHandle
 }
 
 func (h *ShortURLHandler) Redirect(c *gin.Context) {
+	ctx := c.Request.Context()
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
+	*c.Request = *c.Request.WithContext(ctx)
 	key := h.getKey(c)
 	v, err := key.Value()
 	if err != nil {
 		h.redirect(c, err)
 		return
 	}
-	ctx := c.Request.Context()
 	url, err := h.service.GetURL(ctx, v)
 	if err != nil {
 		h.redirect(c, err)
@@ -65,6 +67,10 @@ func (h *ShortURLHandler) Redirect(c *gin.Context) {
 // @Security OAuth2Application
 // @ID GenerateShortURL
 func (h *ShortURLHandler) GenerateShortURL(c *gin.Context) {
+	ctx := c.Request.Context()
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
+	*c.Request = *c.Request.WithContext(ctx)
 	token, ok := getContext[oauth2.TokenInfo](c, accessInfo)
 	if !ok {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, response.NewErrorsWithMessage(http.StatusText(http.StatusUnauthorized)))
@@ -77,10 +83,9 @@ func (h *ShortURLHandler) GenerateShortURL(c *gin.Context) {
 	if !validation(c, &req) {
 		return
 	}
-	ctx := c.Request.Context()
 	result, err := h.service.GenerateShortURL(ctx, req.URL, req.Key, token.GetUserID())
 	if err != nil {
-		slog.With(logging.WithErr(err)).ErrorContext(ctx, err.Error())
+		logging.FromContext(ctx).With(logging.WithErr(err)).ErrorContext(ctx, err.Error())
 		var clientErr *service.ClientError
 		if errors.As(err, &clientErr) {
 			errRes := response.NewErrorsWithMessage(clientErr.Error())
@@ -111,6 +116,10 @@ func (h *ShortURLHandler) GenerateShortURL(c *gin.Context) {
 // @Security OAuth2Application
 // @ID GenerateQRCode
 func (h *ShortURLHandler) GenerateQRCode(c *gin.Context) {
+	ctx := c.Request.Context()
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
+	*c.Request = *c.Request.WithContext(ctx)
 	_, ok := getContext[oauth2.TokenInfo](c, accessInfo)
 	if !ok {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, response.NewErrorsWithMessage(http.StatusText(http.StatusUnauthorized)))
@@ -122,10 +131,9 @@ func (h *ShortURLHandler) GenerateQRCode(c *gin.Context) {
 	if !validation(c, &req) {
 		return
 	}
-	ctx := c.Request.Context()
 	qrCode, err := h.service.GenerateQRCode(ctx, req.Key)
 	if err != nil {
-		slog.With(logging.WithErr(err)).ErrorContext(ctx, err.Error())
+		logging.FromContext(ctx).With(logging.WithErr(err)).ErrorContext(ctx, err.Error())
 		var clientErr *service.ClientError
 		if errors.As(err, &clientErr) {
 			errRes := response.NewErrorsWithMessage(clientErr.Error())
@@ -140,7 +148,7 @@ func (h *ShortURLHandler) GenerateQRCode(c *gin.Context) {
 	teeReader := io.TeeReader(qrCode, writer)
 	n, err := io.Copy(io.Discard, teeReader)
 	if err != nil {
-		slog.With(logging.WithErr(err)).ErrorContext(ctx, err.Error())
+		logging.FromContext(ctx).With(logging.WithErr(err)).ErrorContext(ctx, err.Error())
 		errRes := response.NewErrorsWithMessage("QR Code generation failed.")
 		c.AbortWithStatusJSON(http.StatusInternalServerError, errRes)
 		return
@@ -162,6 +170,10 @@ func (h *ShortURLHandler) GenerateQRCode(c *gin.Context) {
 // @Security OAuth2Application
 // @ID RemoveShortURL
 func (h *ShortURLHandler) Remove(c *gin.Context) {
+	ctx := c.Request.Context()
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
+	*c.Request = *c.Request.WithContext(ctx)
 	token, ok := getContext[oauth2.TokenInfo](c, accessInfo)
 	if !ok {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, response.NewErrorsWithMessage(http.StatusText(http.StatusUnauthorized)))
@@ -174,11 +186,10 @@ func (h *ShortURLHandler) Remove(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, errRes)
 		return
 	}
-	ctx := c.Request.Context()
 	err = h.service.Remove(ctx, v, token.GetUserID())
 	if err != nil {
 		if !errors.Is(err, service.ErrNotFound) {
-			slog.With(logging.WithErr(err)).ErrorContext(ctx, err.Error())
+			logging.FromContext(ctx).With(logging.WithErr(err)).ErrorContext(ctx, err.Error())
 			errRes := response.NewErrorsWithMessage("An error occurred while deleting the URL.")
 			c.JSON(http.StatusInternalServerError, errRes)
 			return
@@ -201,15 +212,18 @@ func (h *ShortURLHandler) Remove(c *gin.Context) {
 // @Security OAuth2Application
 // @ID ShortURLList
 func (h *ShortURLHandler) Shorts(c *gin.Context) {
+	ctx := c.Request.Context()
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
+	*c.Request = *c.Request.WithContext(ctx)
 	token, ok := getContext[oauth2.TokenInfo](c, accessInfo)
 	if !ok {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, response.NewErrorsWithMessage(http.StatusText(http.StatusUnauthorized)))
 		return
 	}
-	ctx := c.Request.Context()
 	values, err := h.service.FindAll(ctx, token.GetUserID())
 	if err != nil {
-		slog.With(logging.WithErr(err)).ErrorContext(ctx, err.Error())
+		logging.FromContext(ctx).With(logging.WithErr(err)).ErrorContext(ctx, err.Error())
 		errRes := response.NewErrorsWithMessage("An error occurred while deleting the URL.")
 		c.JSON(http.StatusInternalServerError, errRes)
 		return
@@ -246,7 +260,7 @@ func (h *ShortURLHandler) ServiceRouter(route gin.IRouter, middleware ...gin.Han
 
 func (h *ShortURLHandler) redirect(c *gin.Context, err error) {
 	ctx := c.Request.Context()
-	slog.With(logging.WithErr(err)).ErrorContext(ctx, err.Error())
+	logging.FromContext(ctx).With(logging.WithErr(err)).ErrorContext(ctx, err.Error())
 	c.Redirect(http.StatusTemporaryRedirect, utils.MustURL(h.option.appConfig.BaseURL, "/notfound"))
 }
 

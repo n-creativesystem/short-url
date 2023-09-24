@@ -45,6 +45,11 @@ func Init() func() {
 		cleanUps = append(cleanUps, cleanup)
 	}
 
-	logging.NewLogger(loggingHandler...)
+	h := logging.NewLogger(loggingHandler...)
+	log := slog.New(h)
+	slog.SetDefault(log)
+	cleanUps = append(cleanUps, func() {
+		_ = h.Close()
+	})
 	return cleanUpFn(cleanUps)
 }

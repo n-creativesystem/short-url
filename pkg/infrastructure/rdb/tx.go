@@ -10,6 +10,8 @@ import (
 )
 
 func BeginTx(ctx context.Context, opts *sql.TxOptions) (*ent.Tx, error) {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	client := GetClient()
 	if client == nil {
 		panic("database does not support context-aware transactions")
@@ -18,6 +20,8 @@ func BeginTx(ctx context.Context, opts *sql.TxOptions) (*ent.Tx, error) {
 }
 
 func begin(ctx context.Context, opt *tx.Options) (context.Context, bool, error) {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	// 既にトランザクションが開始されているかつ
 	// ネストしたトランザクションを許可していない場合は新たに開始しない
 	if _, ok := getTx(ctx); ok {
@@ -35,6 +39,8 @@ func begin(ctx context.Context, opt *tx.Options) (context.Context, bool, error) 
 }
 
 func GetExecutor(ctx context.Context) *ent.Client {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	if v, ok := getTx(ctx); ok {
 		return v.Client()
 	}
@@ -42,12 +48,16 @@ func GetExecutor(ctx context.Context) *ent.Client {
 }
 
 func getTx(ctx context.Context) (*ent.Tx, bool) {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	v := ent.TxFromContext(ctx)
 	ok := v != nil
 	return v, ok
 }
 
 func transaction(ctx context.Context, fn func(ctx context.Context) error, opt *tx.Options) error {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	ctx, isTxStart, err := begin(ctx, opt)
 	if err != nil {
 		return err
@@ -87,5 +97,7 @@ type beginner struct {
 }
 
 func (b *beginner) BeginTx(ctx context.Context, fn func(ctx context.Context) error) error {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	return transaction(ctx, fn, b.opt)
 }

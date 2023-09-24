@@ -13,6 +13,8 @@ import (
 
 // GenerateURL is the resolver for the generateURL field.
 func (r *mutationResolver) GenerateURL(ctx context.Context, input models.CreateURLInput) (*models.URL, error) {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	user, err := authorize(ctx)
 	if err != nil {
 		return nil, err
@@ -27,6 +29,8 @@ func (r *mutationResolver) GenerateURL(ctx context.Context, input models.CreateU
 
 // UpdateURL is the resolver for the updateURL field.
 func (r *mutationResolver) UpdateURL(ctx context.Context, key string, url url.URL) (*models.URL, error) {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	user, err := authorize(ctx)
 	if err != nil {
 		return nil, err
@@ -41,6 +45,8 @@ func (r *mutationResolver) UpdateURL(ctx context.Context, key string, url url.UR
 
 // DeleteURL is the resolver for the deleteURL field.
 func (r *mutationResolver) DeleteURL(ctx context.Context, key string) (bool, error) {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	user, err := authorize(ctx)
 	if err != nil {
 		return false, err
@@ -53,6 +59,8 @@ func (r *mutationResolver) DeleteURL(ctx context.Context, key string) (bool, err
 
 // Urls is the resolver for the urls field.
 func (r *queryResolver) Urls(ctx context.Context) (*models.URLType, error) {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	user, err := authorize(ctx)
 	if err != nil {
 		return nil, err
@@ -73,6 +81,8 @@ func (r *queryResolver) Urls(ctx context.Context) (*models.URLType, error) {
 
 // URL is the resolver for the url field.
 func (r *queryResolver) URL(ctx context.Context, key string) (*models.URL, error) {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	user, err := authorize(ctx)
 	if err != nil {
 		return nil, err

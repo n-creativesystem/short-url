@@ -27,6 +27,8 @@ func newRepository() *impl {
 }
 
 func (impl *impl) Register(ctx context.Context, user *social.User) (*social.User, error) {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	db := rdb.GetExecutor(ctx)
 	var saver interface {
 		Save(ctx context.Context) (*ent.Users, error)
@@ -76,6 +78,8 @@ func (impl *impl) Register(ctx context.Context, user *social.User) (*social.User
 }
 
 func (impl *impl) Login(ctx context.Context, email string) (*social.User, error) {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	v, err := impl.findOne(ctx, email)
 	if err != nil {
 		return nil, err
@@ -84,6 +88,8 @@ func (impl *impl) Login(ctx context.Context, email string) (*social.User, error)
 }
 
 func (impl *impl) findOne(ctx context.Context, email string) (*ent.Users, error) {
+	ctx, span := tracer.Start(ctx, "")
+	defer span.End()
 	db := rdb.GetExecutor(ctx)
 	v, err := db.Users.Query().Where(users.EmailHashEQ(hash.NewHash(email))).First(ctx)
 	if err != nil {

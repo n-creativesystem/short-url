@@ -23,6 +23,9 @@ func spanMiddleware() gin.HandlerFunc {
 }
 
 func GinMiddleware(route *gin.Engine, opts ...GinOption) {
+	if !IsEnable() {
+		return
+	}
 	o := defaultGinOption()
 	for _, opt := range opts {
 		opt.apply(&o)

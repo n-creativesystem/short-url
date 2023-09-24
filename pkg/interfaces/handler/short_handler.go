@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"io"
-	"log/slog"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -86,7 +85,7 @@ func (h *ShortURLHandler) GenerateShortURL(c *gin.Context) {
 	}
 	result, err := h.service.GenerateShortURL(ctx, req.URL, req.Key, token.GetUserID())
 	if err != nil {
-		slog.With(logging.WithErr(err)).ErrorContext(ctx, err.Error())
+		logging.FromContext(ctx).With(logging.WithErr(err)).ErrorContext(ctx, err.Error())
 		var clientErr *service.ClientError
 		if errors.As(err, &clientErr) {
 			errRes := response.NewErrorsWithMessage(clientErr.Error())
@@ -134,7 +133,7 @@ func (h *ShortURLHandler) GenerateQRCode(c *gin.Context) {
 	}
 	qrCode, err := h.service.GenerateQRCode(ctx, req.Key)
 	if err != nil {
-		slog.With(logging.WithErr(err)).ErrorContext(ctx, err.Error())
+		logging.FromContext(ctx).With(logging.WithErr(err)).ErrorContext(ctx, err.Error())
 		var clientErr *service.ClientError
 		if errors.As(err, &clientErr) {
 			errRes := response.NewErrorsWithMessage(clientErr.Error())
@@ -149,7 +148,7 @@ func (h *ShortURLHandler) GenerateQRCode(c *gin.Context) {
 	teeReader := io.TeeReader(qrCode, writer)
 	n, err := io.Copy(io.Discard, teeReader)
 	if err != nil {
-		slog.With(logging.WithErr(err)).ErrorContext(ctx, err.Error())
+		logging.FromContext(ctx).With(logging.WithErr(err)).ErrorContext(ctx, err.Error())
 		errRes := response.NewErrorsWithMessage("QR Code generation failed.")
 		c.AbortWithStatusJSON(http.StatusInternalServerError, errRes)
 		return
@@ -190,7 +189,7 @@ func (h *ShortURLHandler) Remove(c *gin.Context) {
 	err = h.service.Remove(ctx, v, token.GetUserID())
 	if err != nil {
 		if !errors.Is(err, service.ErrNotFound) {
-			slog.With(logging.WithErr(err)).ErrorContext(ctx, err.Error())
+			logging.FromContext(ctx).With(logging.WithErr(err)).ErrorContext(ctx, err.Error())
 			errRes := response.NewErrorsWithMessage("An error occurred while deleting the URL.")
 			c.JSON(http.StatusInternalServerError, errRes)
 			return
@@ -224,7 +223,7 @@ func (h *ShortURLHandler) Shorts(c *gin.Context) {
 	}
 	values, err := h.service.FindAll(ctx, token.GetUserID())
 	if err != nil {
-		slog.With(logging.WithErr(err)).ErrorContext(ctx, err.Error())
+		logging.FromContext(ctx).With(logging.WithErr(err)).ErrorContext(ctx, err.Error())
 		errRes := response.NewErrorsWithMessage("An error occurred while deleting the URL.")
 		c.JSON(http.StatusInternalServerError, errRes)
 		return
@@ -261,7 +260,7 @@ func (h *ShortURLHandler) ServiceRouter(route gin.IRouter, middleware ...gin.Han
 
 func (h *ShortURLHandler) redirect(c *gin.Context, err error) {
 	ctx := c.Request.Context()
-	slog.With(logging.WithErr(err)).ErrorContext(ctx, err.Error())
+	logging.FromContext(ctx).With(logging.WithErr(err)).ErrorContext(ctx, err.Error())
 	c.Redirect(http.StatusTemporaryRedirect, utils.MustURL(h.option.appConfig.BaseURL, "/notfound"))
 }
 

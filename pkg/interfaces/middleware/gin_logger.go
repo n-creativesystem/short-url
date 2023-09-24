@@ -3,7 +3,6 @@ package middleware
 import (
 	"errors"
 	"fmt"
-	"log/slog"
 	"math"
 	"net/http"
 	"os"
@@ -11,6 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	pkgErr "github.com/n-creativesystem/short-url/pkg/utils/errors"
+	"github.com/n-creativesystem/short-url/pkg/utils/logging"
 	"github.com/n-creativesystem/short-url/pkg/utils/logging/handler"
 )
 
@@ -41,6 +41,7 @@ func Logger(notLogged ...string) gin.HandlerFunc {
 			return
 		}
 		start := time.Now()
+		log := logging.FromContext(ctx)
 		c.Next()
 		stop := time.Since(start)
 		latency := int(math.Ceil(float64(stop.Nanoseconds()) / 1000000.0))
@@ -52,7 +53,7 @@ func Logger(notLogged ...string) gin.HandlerFunc {
 		if dataLength < 0 {
 			dataLength = 0
 		}
-		entry := slog.With(
+		entry := log.With(
 			"hostname", hostname,
 			"statusCode", statusCode,
 			"latency", fmt.Sprintf("%dms", latency),

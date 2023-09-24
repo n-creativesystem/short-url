@@ -1,7 +1,6 @@
 package router
 
 import (
-	"log/slog"
 	"net/http"
 
 	"github.com/alexedwards/scs/v2"
@@ -53,20 +52,16 @@ func newGinRouter() *gin.Engine {
 	route.Use(
 		otelgin.Middleware(apps.ServiceName()),
 	)
-	if sentry.IsEnable() {
-		sentry.GinMiddleware(route, sentry.WithRePanic(true))
-	}
-	if rollbar.IsEnable() {
-		rollbar.GinMiddleware(route)
-	}
-	
+	sentry.GinMiddleware(route, sentry.WithRePanic(true))
+	rollbar.GinMiddleware(route)
+
 	route.Use(middleware.Logger("/healthz"), gin.Recovery())
 	route.GET("/healthz", func(c *gin.Context) {
 		ctx := c.Request.Context()
-		db := interfaces.GetPing(interfaces.RDB)
+		db := interfaces.GetPing()
 		if err := db.PingContext(ctx); err != nil {
 			msg := "Health check failed."
-			slog.With(logging.WithErr(err)).ErrorContext(ctx, msg)
+			logging.FromContext(ctx).With(logging.WithErr(err)).ErrorContext(ctx, msg)
 			c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]string{"status": "ng"})
 		} else {
 			c.JSON(http.StatusOK, map[string]string{"status": "ok"})

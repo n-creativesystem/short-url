@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"log/slog"
-
 	"github.com/joho/godotenv"
 	"github.com/n-creativesystem/short-url/pkg/domain/config"
 	"github.com/n-creativesystem/short-url/pkg/infrastructure/rdb"
@@ -54,7 +52,7 @@ func migratorCommand() *cobra.Command {
 			ctx := cmd.Context()
 			_ = godotenv.Load(migratorArgs.envFiles...)
 			if err := rdb.Migration(ctx, args, migratorArgs.Convert()); err != nil {
-				slog.With(logging.WithErr(err)).ErrorContext(ctx, "Migration")
+				logging.FromContext(ctx).With(logging.WithErr(err)).ErrorContext(ctx, "Migration")
 			}
 		},
 	}

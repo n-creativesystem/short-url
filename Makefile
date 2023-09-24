@@ -152,3 +152,6 @@ run/uiserver:run/env
 run/apiserver:run/env
 	@export $$(cat .run.env | grep -v ^#) && go run main.go server api --port $(RUN_PORT) --driver $(RUN_DRIVER) --mode debug
 
+.PHONY: run/fe
+run/fe:
+	@cd frontend && pnpm dev

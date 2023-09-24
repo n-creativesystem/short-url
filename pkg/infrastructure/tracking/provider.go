@@ -2,7 +2,6 @@ package tracking
 
 import (
 	"context"
-	"log/slog"
 	"time"
 
 	"github.com/n-creativesystem/short-url/pkg/utils"
@@ -57,11 +56,11 @@ func NewTracerProvider(ctx context.Context, otelAgentAddr string) (trace.TracerP
 		cleanup = func() {
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			if err := sdkTP.ForceFlush(ctx); err != nil {
-				slog.With(logging.WithErr(err)).Error(err.Error())
+				logging.FromContext(ctx).With(logging.WithErr(err)).Error(err.Error())
 			}
 			ctx2, cancel2 := context.WithTimeout(context.Background(), 5*time.Second)
 			if err := sdkTP.Shutdown(ctx2); err != nil {
-				slog.With(logging.WithErr(err)).Error(err.Error())
+				logging.FromContext(ctx).With(logging.WithErr(err)).Error(err.Error())
 			}
 			cancel()
 			cancel2()

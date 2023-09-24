@@ -2,7 +2,6 @@ package oauth2
 
 import (
 	"context"
-	"log/slog"
 	"time"
 
 	"github.com/go-oauth2/oauth2/v4"
@@ -69,7 +68,7 @@ func (impl *tokenImpl) clean(ctx context.Context) {
 
 func (impl *tokenImpl) error(ctx context.Context, err error) {
 	if err != nil {
-		slog.With(logging.WithErr(err)).ErrorContext(ctx, "OAUTH2-TOKEN")
+		logging.FromContext(ctx).With(logging.WithErr(err)).ErrorContext(ctx, "OAUTH2-TOKEN")
 	}
 }
 

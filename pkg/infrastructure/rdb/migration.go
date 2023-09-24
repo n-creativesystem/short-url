@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"log/slog"
 	"os"
 	"path/filepath"
 	"time"
@@ -52,7 +51,7 @@ func Migration(ctx context.Context, args []string, migratorArgs MigratorArgs) er
 
 	defer func() {
 		if err := client.db.Close(); err != nil {
-			slog.With(logging.WithErr(err)).ErrorContext(ctx, "migrator: failed to close DB")
+			logging.FromContext(ctx).With(logging.WithErr(err)).ErrorContext(ctx, "migrator: failed to close DB")
 		}
 	}()
 

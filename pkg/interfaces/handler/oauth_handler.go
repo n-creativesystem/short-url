@@ -37,6 +37,20 @@ type OAuthHandler struct {
 	oauth2Store oauth2.TokenStore
 }
 
+func NewConfig() *server.Config {
+	return &server.Config{
+		TokenType:            "Bearer",
+		AllowedResponseTypes: []oauth2.ResponseType{oauth2.Code, oauth2.Token},
+		AllowedGrantTypes: []oauth2.GrantType{
+			oauth2.ClientCredentials,
+			oauth2.Refreshing,
+		},
+		AllowedCodeChallengeMethods: []oauth2.CodeChallengeMethod{
+			oauth2.CodeChallengePlain,
+			oauth2.CodeChallengeS256,
+		},
+	}
+}
 func NewOAuthHandler(service oauth2client.Service, tokenStore oauth2.TokenStore, appConfig *config.Application) *OAuthHandler {
 	manager := manage.NewDefaultManager()
 	twoWeekHour := (24 * time.Hour) * 14 // 14日
@@ -47,7 +61,7 @@ func NewOAuthHandler(service oauth2client.Service, tokenStore oauth2.TokenStore,
 
 	manager.MapTokenStorage(tokenStore)
 	manager.MapClientStorage(service)
-	srv := server.NewDefaultServer(manager)
+	srv := server.NewServer(NewConfig(), manager)
 	srv.SetAllowedResponseType(oauth2.Token)
 	srv.SetAllowedGrantType(oauth2.ClientCredentials, oauth2.Refreshing)
 	srv.SetClientInfoHandler(clientInfoHandler())

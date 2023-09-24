@@ -3,14 +3,8 @@ package interfaces
 import (
 	"context"
 
+	"github.com/n-creativesystem/short-url/pkg/domain/config"
 	"github.com/n-creativesystem/short-url/pkg/infrastructure/rdb"
-)
-
-type DriverName int
-
-const (
-	RDB DriverName = iota
-	DynamoDB
 )
 
 type PingContextExecutor interface {
@@ -21,10 +15,16 @@ type PingExecutor interface {
 	Ping() error
 }
 
-func GetPing(name DriverName) PingContextExecutor {
-	switch name {
-	case RDB:
+func GetPing() PingContextExecutor {
+	driver := config.GetDriver()
+	switch driver {
+	case config.MySQL, config.PostgreSQL, config.SQLite:
 		return rdb.GetDB()
+	default:
+		return noopPing{}
 	}
-	return nil
 }
+
+type noopPing struct{}
+
+func (noopPing) PingContext(ctx context.Context) error { return nil }

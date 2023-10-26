@@ -63,7 +63,7 @@ require (
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9
 	golang.org/x/oauth2 v0.12.0
 	google.golang.org/api v0.140.0
-	google.golang.org/grpc v1.58.1
+	google.golang.org/grpc v1.58.3
 	gopkg.in/DataDog/dd-trace-go.v1 v1.55.0
 	gopkg.in/yaml.v3 v3.0.1
 	modernc.org/sqlite v1.25.0

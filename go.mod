@@ -9,7 +9,7 @@ require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/alexedwards/scs/boltstore v0.0.0-20230327161757-10d4299e3b24
 	github.com/alexedwards/scs/v2 v2.6.0
-	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
+	github.com/asaskevich/govalidator/v11 v11.0.1
 	github.com/aws/aws-sdk-go-v2 v1.22.1
 	github.com/aws/aws-sdk-go-v2/config v1.21.0
 	github.com/aws/aws-sdk-go-v2/service/kms v1.26.0

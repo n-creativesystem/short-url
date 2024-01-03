@@ -63,7 +63,7 @@
     "openapi-typescript": "^6.2.6",
     "openapi2aspida": "^0.23.0",
     "prettier": "2.8.8",
-    "type-fest": "^3.11.1",
+    "type-fest": "^4.0.0",
     "typescript": "^5.0.2",
     "vite": "^4.3.9",
     "vitest": "^0.34.0"

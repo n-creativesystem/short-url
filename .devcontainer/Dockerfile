@@ -1,4 +1,4 @@
-FROM node:18.17.1-bullseye AS node
+FROM node:18.20.8-bullseye AS node
 
 FROM golang:1.21.1-bullseye
 

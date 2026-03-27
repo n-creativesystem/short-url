@@ -13,7 +13,7 @@ COPY frontend ./
 
 RUN pnpm build
 
-FROM --platform=$BUILDPLATFORM golang:1.21.1-bullseye as backend
+FROM --platform=$BUILDPLATFORM golang:1.24.6-bullseye as backend
 
 WORKDIR /workspace
 

@@ -1,6 +1,6 @@
 FROM node:18.17.1-bullseye AS node
 
-FROM golang:1.21.1-bullseye
+FROM golang:1.24.6-bullseye
 
 ARG GIT_VERSION=2.39.1
 

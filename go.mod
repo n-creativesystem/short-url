@@ -1,6 +1,6 @@
 module github.com/n-creativesystem/short-url
 
-go 1.21
+go 1.23.0
 
 require (
 	ariga.io/atlas v0.15.0
@@ -61,7 +61,7 @@ require (
 	go.uber.org/multierr v1.11.0
 	golang.org/x/crypto v0.17.0
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9
-	golang.org/x/oauth2 v0.13.0
+	golang.org/x/oauth2 v0.27.0
 	google.golang.org/api v0.149.0
 	google.golang.org/grpc v1.59.0
 	gopkg.in/DataDog/dd-trace-go.v1 v1.56.1
@@ -71,7 +71,7 @@ require (
 
 require (
 	cloud.google.com/go/compute v1.23.1 // indirect
-	cloud.google.com/go/compute/metadata v0.2.3 // indirect
+	cloud.google.com/go/compute/metadata v0.3.0 // indirect
 	github.com/DataDog/appsec-internal-go v1.0.0 // indirect
 	github.com/DataDog/datadog-agent/pkg/obfuscate v0.48.0 // indirect
 	github.com/DataDog/datadog-agent/pkg/remoteconfig/state v0.49.0-devel // indirect
